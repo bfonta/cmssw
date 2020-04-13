@@ -57,11 +57,11 @@ class KernelManagerHGCalRecHit {
  private:
   void after_();
   int get_shared_memory_size_(const int&, const int&, const int&, const int&);
-  void assign_and_transfer_to_device_();
-  void assign_and_transfer_to_device_(const KernelConstantData<HGCeeUncalibratedRecHitConstantData>*, KernelConstantData<HGCeeUncalibratedRecHitConstantData>*);
-  void assign_and_transfer_to_device_(const KernelConstantData<HGChefUncalibratedRecHitConstantData>*, KernelConstantData<HGChefUncalibratedRecHitConstantData>*);
-  void assign_and_transfer_to_device_(const KernelConstantData<HGChebUncalibratedRecHitConstantData>*, KernelConstantData<HGChebUncalibratedRecHitConstantData>*);
-  void transfer_to_host_and_synchronize_();
+  void transfer_soas_to_device_();
+  void transfer_constants_to_device_(const KernelConstantData<HGCeeUncalibratedRecHitConstantData>*, KernelConstantData<HGCeeUncalibratedRecHitConstantData>*);
+  void transfer_constants_to_device_(const KernelConstantData<HGChefUncalibratedRecHitConstantData>*, KernelConstantData<HGChefUncalibratedRecHitConstantData>*);
+  void transfer_constants_to_device_(const KernelConstantData<HGChebUncalibratedRecHitConstantData>*, KernelConstantData<HGChebUncalibratedRecHitConstantData>*);
+  void transfer_soa_to_host_and_synchronize_();
   void reuse_device_pointers_();
 
   int nbytes_host_;
