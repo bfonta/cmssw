@@ -11,30 +11,25 @@ HeterogeneousHGCalHEFRecHitProducer::HeterogeneousHGCalHEFRecHitProducer(const e
   cdata_.cterm_             = ps.getParameter<double>("noiseSiPar"); //float
   cdata_.rangeMatch_        = ps.getParameter<uint32_t>("rangeMatch");
   cdata_.rangeMask_         = ps.getParameter<uint32_t>("rangeMask");
-  cdata_.hgcHEF_isSiFE_     = ps.getParameter<bool>("HGCHEF_isSiFE");
-  vdata_.fCPerMIP           = ps.getParameter< std::vector<double> >("HGCHEF_fCPerMIP");
-  vdata_.cce                = ps.getParameter<edm::ParameterSet>("HGCHEF_cce").getParameter<std::vector<double> >("values");
-  vdata_.noise_fC           = ps.getParameter<edm::ParameterSet>("HGCHEF_noise_fC").getParameter<std::vector<double> >("values");
-  vdata_.rcorr              = ps.getParameter< std::vector<double> >("rcorr");
-  vdata_.weights            = ps.getParameter< std::vector<double> >("weights");
+  vdata_.fCPerMIP_          = ps.getParameter< std::vector<double> >("HGCHEF_fCPerMIP");
+  vdata_.cce_               = ps.getParameter<edm::ParameterSet>("HGCHEF_cce").getParameter<std::vector<double> >("values");
+  vdata_.noise_fC_          = ps.getParameter<edm::ParameterSet>("HGCHEF_noise_fC").getParameter<std::vector<double> >("values");
+  vdata_.rcorr_             = ps.getParameter< std::vector<double> >("rcorr");
+  vdata_.weights_           = ps.getParameter< std::vector<double> >("weights");
   cdata_.fhOffset_          = ps.getParameter<uint32_t>("offset"); //ddd_->layers(true);
-  cdata_.s_hgcHEF_fCPerMIP_ = vdata_.fCPerMIP.size();
-  cdata_.s_hgcHEF_cce_      = vdata_.cce.size();
-  cdata_.s_hgcHEF_noise_fC_ = vdata_.noise_fC.size();
-  cdata_.s_rcorr_           = vdata_.rcorr.size();
-  cdata_.s_weights_ = vdata_.weights.size();
+  cdata_.s_hgcHEF_fCPerMIP_ = vdata_.fCPerMIP_.size();
+  cdata_.s_hgcHEF_cce_      = vdata_.cce_.size();
+  cdata_.s_hgcHEF_noise_fC_ = vdata_.noise_fC_.size();
+  cdata_.s_rcorr_           = vdata_.rcorr_.size();
+  cdata_.s_weights_         = vdata_.weights_.size();
   cdata_.hgchefUncalib2GeV_ = 1e-6 / cdata_.hgcHEF_keV2DIGI_;
-  vdata_.waferTypeL = {0, 1, 2};//ddd_->retWaferTypeL(); if depends on geometry the allocation is tricky!
-  cdata_.s_waferTypeL_ = vdata_.waferTypeL.size();
+  vdata_.waferTypeL_        = {0, 1, 2};//ddd_->retWaferTypeL(); if depends on geometry the allocation is tricky!
+  cdata_.s_waferTypeL_      = vdata_.waferTypeL_.size();
 
   begin = std::chrono::steady_clock::now();
 
   tools_.reset(new hgcal::RecHitTools());
   stride_ = ( (nhitsmax_-1)/32 + 1 ) * 32; //align to warp boundary
-
-  allocate_memory_();
-
-  convert_constant_data_(h_kcdata_);
 
   produces<HGChefRecHitCollection>(collection_name_);
 }
@@ -57,6 +52,10 @@ HeterogeneousHGCalHEFRecHitProducer::~HeterogeneousHGCalHEFRecHitProducer()
 void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {
   const cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w), ctxState_};
   set_geometry_(setup);
+
+  allocate_memory_();
+  convert_constant_data_(h_kcdata_);
+
   event.getByToken(token_, handle_hef_);
   const auto &hits_hef = *handle_hef_;
 
@@ -67,7 +66,6 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
   KernelManagerHGCalRecHit kernel_manager(kmdata_);
   kernel_manager.run_kernels(h_kcdata_, d_kcdata_);
   new_soa_ = kernel_manager.get_output();
-
   rechits_ = std::make_unique<HGCRecHitCollection>();
   convert_soa_data_to_collection_(*rechits_, new_soa_, nhits);
 }
@@ -113,17 +111,17 @@ void HeterogeneousHGCalHEFRecHitProducer::set_geometry_(const edm::EventSetup& s
 void HeterogeneousHGCalHEFRecHitProducer::convert_constant_data_(KernelConstantData<HGChefUncalibratedRecHitConstantData> *kcdata)
 {
   for(int i=0; i<kcdata->data.s_hgcHEF_fCPerMIP_; ++i)
-    kcdata->data.hgcHEF_fCPerMIP_[i] = kcdata->vdata.fCPerMIP[i];
+    kcdata->data.hgcHEF_fCPerMIP_[i] = kcdata->vdata.fCPerMIP_[i];
   for(int i=0; i<kcdata->data.s_hgcHEF_cce_; ++i)
-    kcdata->data.hgcHEF_cce_[i] = kcdata->vdata.cce[i];
+    kcdata->data.hgcHEF_cce_[i] = kcdata->vdata.cce_[i];
   for(int i=0; i<kcdata->data.s_hgcHEF_noise_fC_; ++i)
-    kcdata->data.hgcHEF_noise_fC_[i] = kcdata->vdata.noise_fC[i];
+    kcdata->data.hgcHEF_noise_fC_[i] = kcdata->vdata.noise_fC_[i];
   for(int i=0; i<kcdata->data.s_rcorr_; ++i)
-    kcdata->data.rcorr_[i] = kcdata->vdata.rcorr[i];
+    kcdata->data.rcorr_[i] = kcdata->vdata.rcorr_[i];
   for(int i=0; i<kcdata->data.s_weights_; ++i)
-    kcdata->data.weights_[i] = kcdata->vdata.weights[i];
+    kcdata->data.weights_[i] = kcdata->vdata.weights_[i];
   for(int i=0; i<kcdata->data.s_waferTypeL_; ++i)
-    kcdata->data.waferTypeL_[i] = kcdata->vdata.waferTypeL[i];
+    kcdata->data.waferTypeL_[i] = kcdata->vdata.waferTypeL_[i];
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::convert_collection_data_to_soa_(const edm::SortedCollection<HGCUncalibratedRecHit>& hits, HGCUncalibratedRecHitSoA* d, const unsigned int& nhits)

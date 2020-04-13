@@ -34,11 +34,11 @@ class KernelConstantData {
 template <typename TYPE_IN, typename TYPE_OUT>
   class KernelModifiableData {
  public:
- KernelModifiableData(LENGTHSIZE nhits_, LENGTHSIZE stride_, TYPE_IN *h_in_, TYPE_IN *d_1_, TYPE_IN *d_2_, TYPE_OUT *d_out_, TYPE_OUT *h_out_):
+ KernelModifiableData(int nhits_, int stride_, TYPE_IN *h_in_, TYPE_IN *d_1_, TYPE_IN *d_2_, TYPE_OUT *d_out_, TYPE_OUT *h_out_):
   nhits(nhits_), stride(stride_), h_in(h_in_), d_1(d_1_), d_2(d_2_), d_out(d_out_), h_out(h_out_) {}
 
-  LENGTHSIZE nhits;
-  LENGTHSIZE stride;
+  int nhits;
+  int stride;
   TYPE_IN *h_in;
   TYPE_IN *d_1, *d_2;
   TYPE_OUT *d_out;
@@ -56,7 +56,7 @@ class KernelManagerHGCalRecHit {
 
  private:
   void after_();
-  LENGTHSIZE get_shared_memory_size_(const LENGTHSIZE&, const LENGTHSIZE&, const LENGTHSIZE&, const LENGTHSIZE&, const LENGTHSIZE&);
+  int get_shared_memory_size_(const int&, const int&, const int&, const int&);
   void assign_and_transfer_to_device_();
   void assign_and_transfer_to_device_(const KernelConstantData<HGCeeUncalibratedRecHitConstantData>*, KernelConstantData<HGCeeUncalibratedRecHitConstantData>*);
   void assign_and_transfer_to_device_(const KernelConstantData<HGChefUncalibratedRecHitConstantData>*, KernelConstantData<HGChefUncalibratedRecHitConstantData>*);
@@ -64,8 +64,8 @@ class KernelManagerHGCalRecHit {
   void transfer_to_host_and_synchronize_();
   void reuse_device_pointers_();
 
-  LENGTHSIZE nbytes_host_;
-  LENGTHSIZE nbytes_device_;
+  int nbytes_host_;
+  int nbytes_device_;
   KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA> *data_;
 };
 

@@ -29,12 +29,11 @@ namespace memory {
       kcdata->data.rcorr_          = kcdata->data.hgcEE_noise_fC_ + nelements[2];
       kcdata->data.weights_        = kcdata->data.rcorr_ + nelements[3];
       kcdata->data.waferTypeL_     = reinterpret_cast<int*>(kcdata->data.weights_ + nelements[4]);
-      kcdata->data.nbytes = std::get<0>(memsizes);
-      kcdata->data.ndelem = std::get<1>(memsizes) + 2;
-      kcdata->data.nfelem = std::get<2>(memsizes) + 4;
-      kcdata->data.nielem = std::get<3>(memsizes) + 0;
-      kcdata->data.nuelem = 2;
-      kcdata->data.nbelem = 1;
+      kcdata->data.nbytes_         = std::get<0>(memsizes);
+      kcdata->data.ndelem_         = std::get<1>(memsizes) + 2;
+      kcdata->data.nfelem_         = std::get<2>(memsizes) + 4;
+      kcdata->data.nielem_         = std::get<3>(memsizes) + 0;
+      kcdata->data.nuelem_         = 2;
     }
 
     //HEF: allocates memory for constants on the device
@@ -49,12 +48,11 @@ namespace memory {
       kcdata->data.rcorr_           = kcdata->data.hgcHEF_noise_fC_ + nelements[2];
       kcdata->data.weights_         = kcdata->data.rcorr_ + nelements[3];
       kcdata->data.waferTypeL_      = reinterpret_cast<int*>(kcdata->data.weights_ + nelements[4]);
-      kcdata->data.nbytes = std::get<0>(memsizes);
-      kcdata->data.ndelem = std::get<1>(memsizes) + 2;
-      kcdata->data.nfelem = std::get<2>(memsizes) + 4;
-      kcdata->data.nielem = std::get<3>(memsizes) + 0;
-      kcdata->data.nuelem = 3;
-      kcdata->data.nbelem = 1;
+      kcdata->data.nbytes_          = std::get<0>(memsizes);
+      kcdata->data.ndelem_          = std::get<1>(memsizes) + 2;
+      kcdata->data.nfelem_          = std::get<2>(memsizes) + 4;
+      kcdata->data.nielem_          = std::get<3>(memsizes) + 0;
+      kcdata->data.nuelem_          = 3;
     }
 
     //HEB: allocates memory for constants on the device
@@ -64,12 +62,11 @@ namespace memory {
       mem = cms::cuda::make_device_unique<double[]>(std::get<0>(memsizes), 0);
 
       kcdata->data.weights_  = mem.get();
-      kcdata->data.nbytes = std::get<0>(memsizes);
-      kcdata->data.ndelem = std::get<1>(memsizes) + 3;
-      kcdata->data.nfelem = std::get<2>(memsizes) + 0;
-      kcdata->data.nielem = std::get<3>(memsizes) + 0;
-      kcdata->data.nuelem = 3;
-      kcdata->data.nbelem = 1;
+      kcdata->data.nbytes_   = std::get<0>(memsizes);
+      kcdata->data.ndelem_   = std::get<1>(memsizes) + 3;
+      kcdata->data.nfelem_   = std::get<2>(memsizes) + 0;
+      kcdata->data.nielem_   = std::get<3>(memsizes) + 0;
+      kcdata->data.nuelem_   = 3;
     }
 
     //allocates memory for UncalibratedRecHits SoAs and RecHits SoAs on the device
@@ -126,12 +123,11 @@ namespace memory {
       kcdata->data.rcorr_          = kcdata->data.hgcEE_noise_fC_ + nelements[2];
       kcdata->data.weights_        = kcdata->data.rcorr_ + nelements[3];
       kcdata->data.waferTypeL_     = reinterpret_cast<int*>(kcdata->data.weights_ + nelements[4]);
-      kcdata->data.nbytes = std::get<0>(memsizes);
-      kcdata->data.ndelem = std::get<1>(memsizes) + 2;
-      kcdata->data.nfelem = std::get<2>(memsizes) + 0;
-      kcdata->data.nielem = std::get<3>(memsizes) + 0;
-      kcdata->data.nuelem = 2;
-      kcdata->data.nbelem = 1;
+      kcdata->data.nbytes_         = std::get<0>(memsizes);
+      kcdata->data.ndelem_         = std::get<1>(memsizes) + 2;
+      kcdata->data.nfelem_         = std::get<2>(memsizes) + 0;
+      kcdata->data.nielem_         = std::get<3>(memsizes) + 0;
+      kcdata->data.nuelem_         = 2;
     }
 
     //HEF: allocates memory for constants on the host
@@ -147,12 +143,11 @@ namespace memory {
       kcdata->data.rcorr_           = kcdata->data.hgcHEF_noise_fC_ + nelements[2];
       kcdata->data.weights_         = kcdata->data.rcorr_ + nelements[3];
       kcdata->data.waferTypeL_      = reinterpret_cast<int*>(kcdata->data.weights_ + nelements[4]);
-      kcdata->data.nbytes = std::get<0>(memsizes);
-      kcdata->data.ndelem = std::get<1>(memsizes) + 2;
-      kcdata->data.nfelem = std::get<2>(memsizes) + 0;
-      kcdata->data.nielem = std::get<3>(memsizes) + 0;
-      kcdata->data.nuelem = 3;
-      kcdata->data.nbelem = 1;
+      kcdata->data.nbytes_          = std::get<0>(memsizes);
+      kcdata->data.ndelem_          = std::get<1>(memsizes) + 2;
+      kcdata->data.nfelem_          = std::get<2>(memsizes) + 0;
+      kcdata->data.nielem_          = std::get<3>(memsizes) + 0;
+      kcdata->data.nuelem_          = 3;
     }
 
     //HEB: allocates memory for constants on the host
@@ -163,12 +158,11 @@ namespace memory {
       mem = cms::cuda::make_host_noncached_unique<double[]>(std::get<0>(memsizes), 0);
 
       kcdata->data.weights_ = mem.get();
-      kcdata->data.nbytes = std::get<0>(memsizes);
-      kcdata->data.ndelem = std::get<1>(memsizes) + 3;
-      kcdata->data.nfelem = std::get<2>(memsizes) + 0;
-      kcdata->data.nielem = std::get<3>(memsizes) + 0;
-      kcdata->data.nuelem = 3;
-      kcdata->data.nbelem = 1;
+      kcdata->data.nbytes_  = std::get<0>(memsizes);
+      kcdata->data.ndelem_  = std::get<1>(memsizes) + 3;
+      kcdata->data.nfelem_  = std::get<2>(memsizes) + 0;
+      kcdata->data.nielem_  = std::get<3>(memsizes) + 0;
+      kcdata->data.nuelem_  = 3;
     }
 
     //allocates pinned (non cached) memory for UncalibratedRecHits SoAs on the host

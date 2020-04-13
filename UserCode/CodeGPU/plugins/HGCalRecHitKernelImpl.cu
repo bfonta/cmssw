@@ -107,7 +107,7 @@ double get_fCPerMIP(const int& padding, double *& sd, const HGChefUncalibratedRe
 }
 
 __device__ 
-void set_shared_memory(int tid, double*& sd, float*& sf, uint32_t*& su, int*& si, bool*& sb, const HGCeeUncalibratedRecHitConstantData& cdata, const int& size1, const int& size2, const int& size3, const int& size4, const int& size5, const int& size6)
+void set_shared_memory(int tid, double*& sd, float*& sf, uint32_t*& su, int*& si, const HGCeeUncalibratedRecHitConstantData& cdata, const int& size1, const int& size2, const int& size3, const int& size4, const int& size5, const int& size6)
 {
   const int initial_pad = 2;
   if(tid == 0)
@@ -138,16 +138,15 @@ void set_shared_memory(int tid, double*& sd, float*& sf, uint32_t*& su, int*& si
     su[0] = cdata.rangeMatch_;
   else if(tid == size6 + 5)
     su[1] = cdata.rangeMask_;
-  else if(tid == size6 + 6)
-    sb[0] = cdata.hgcEE_isSiFE_;
 
   __syncthreads();
 }
 
 __device__ 
-void set_shared_memory(int tid, double*& sd, float*& sf, uint32_t*& su, int*& si, bool*& sb, const HGChefUncalibratedRecHitConstantData& cdata, const int& size1, const int& size2, const int& size3, const int& size4, const int& size5, const int& size6)
+void set_shared_memory(int tid, double*& sd, float*& sf, uint32_t*& su, int*& si, const HGChefUncalibratedRecHitConstantData& cdata, const int& size1, const int& size2, const int& size3, const int& size4, const int& size5, const int& size6)
 {
   const int initial_pad = 2;
+  /*
   if(tid == 0)
     sd[tid] = cdata.hgcHEF_keV2DIGI_;
   else if(tid == 1)
@@ -176,18 +175,40 @@ void set_shared_memory(int tid, double*& sd, float*& sf, uint32_t*& su, int*& si
     su[0] = cdata.rangeMatch_;
   else if(tid == size6 + 5)
     su[1] = cdata.rangeMask_;
-  /*
   else if(tid == size6 + 6)
     su[2] = cdata.fhOffset_;
   */
-  else if(tid == size6 + 6) //CHANGE
-    sb[0] = cdata.hgcHEF_isSiFE_;
+
+  if(tid == 0)
+    {
+      sd[0] = cdata.hgcHEF_keV2DIGI_;
+      sd[1] = cdata.hgchefUncalib2GeV_;
+      for(unsigned int i=initial_pad; i<size1; ++i)
+	sd[i] = cdata.hgcHEF_fCPerMIP_[i-initial_pad];
+      for(unsigned int i=size1; i<size2; ++i)
+	sd[i] = cdata.hgcHEF_cce_[i-size1];
+      for(unsigned int i=size2; i<size3; ++i)
+	sd[i] = cdata.hgcHEF_noise_fC_[i-size2];  
+      for(unsigned int i=size3; i<size4; ++i)
+	sd[i] = cdata.rcorr_[i-size3];
+      for(unsigned int i=size4; i<size5; ++i)
+	sd[i] = cdata.weights_[i-size4];
+      for(unsigned int i=size5; i<size6; ++i)
+	si[i-size5] = cdata.waferTypeL_[i-size5];
+      sf[0] = (cdata.xmin_ > 0) ? cdata.xmin_ : 0.1;
+      sf[1] = cdata.xmax_;
+      sf[2] = cdata.aterm_;
+      sf[3] = cdata.cterm_;
+      su[0] = cdata.rangeMatch_;
+      su[1] = cdata.rangeMask_;
+      su[2] = cdata.fhOffset_;
+    }
 
   __syncthreads();
 }
 
 __device__ 
-void set_shared_memory(int tid, double*& sd, float*& sf, uint32_t*& su, bool*& sb, const HGChebUncalibratedRecHitConstantData& cdata, const int& size1)
+void set_shared_memory(int tid, double*& sd, float*& sf, uint32_t*& su, const HGChebUncalibratedRecHitConstantData& cdata, const int& size1)
 {
   const int initial_pad = 3;
   if(tid == 0)
@@ -204,8 +225,6 @@ void set_shared_memory(int tid, double*& sd, float*& sf, uint32_t*& su, bool*& s
     su[1] = cdata.rangeMask_;
   else if(tid == size1 + 2)
     su[2] = cdata.fhOffset_;
-  else if(tid == size1 + 3)
-    sb[0] = cdata.hgcHEB_isSiFE_;
 
   __syncthreads();
 }
@@ -246,11 +265,10 @@ void ee_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const 
 
   extern __shared__ double s[];
   double   *sd = s;
-  float    *sf = (float*)   (sd + cdata.ndelem);
-  uint32_t *su = (uint32_t*)(sf + cdata.nfelem);
-  int      *si = (int*)     (su + cdata.nuelem);
-  bool     *sb = (bool*)    (si + cdata.nielem);
-  set_shared_memory(threadIdx.x, sd, sf, su, si, sb, cdata, size1, size2, size3, size4, size5, size6);
+  float    *sf = (float*)   (sd + cdata.ndelem_);
+  uint32_t *su = (uint32_t*)(sf + cdata.nfelem_);
+  int      *si = (int*)     (su + cdata.nuelem_);
+  set_shared_memory(threadIdx.x, sd, sf, su, si, cdata, size1, size2, size3, size4, size5, size6);
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
@@ -279,13 +297,11 @@ void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
 
   extern __shared__ double s[];
   double   *sd = s;
-  float    *sf = (float*)   (sd + cdata.ndelem);
-  uint32_t *su = (uint32_t*)(sf + cdata.nfelem);
-  int      *si = (int*)     (su + cdata.nuelem);
-  bool     *sb = (bool*)    (si + cdata.nielem);
+  float    *sf = (float*)   (sd + cdata.ndelem_);
+  uint32_t *su = (uint32_t*)(sf + cdata.nfelem_);
+  int      *si = (int*)     (su + cdata.nuelem_);
 
-  set_shared_memory(threadIdx.x, sd, sf, su, si, sb, cdata, size1, size2, size3, size4, size5, size6);
-
+  set_shared_memory(threadIdx.x, sd, sf, su, si, cdata, size1, size2, size3, size4, size5, size6);
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
       double l = layer(src_soa.id[tid], 0); //no offset
@@ -295,9 +311,7 @@ void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
       double cce_correction = get_cce_correction(size1, sd, cdata);
       double fCPerMIP = get_fCPerMIP(2, sd, cdata);
       double sigmaNoiseGeV = 1e-3 * weight * rcorr * __fdividef( noise,  fCPerMIP );
-      printf("before %u,%u,%u,%u \n", dst_soa.son[110], dst_soa.son[13], dst_soa.son[650], dst_soa.son[114]);
       make_rechit(i, dst_soa, src_soa, false, weight, rcorr, cce_correction, sigmaNoiseGeV, sf);
-      printf("after %u,%u,%u,%u \n", dst_soa.son[110], dst_soa.son[13], dst_soa.son[650], dst_soa.son[114]);
     }
 }
 
@@ -310,10 +324,9 @@ void heb_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
 
   extern __shared__ double s[];
   double   *sd = s;
-  float    *sf = (float*)   (sd + cdata.ndelem);
-  uint32_t *su = (uint32_t*)(sf + cdata.nfelem);
-  bool     *sb = (bool*)    (su + cdata.nielem);
-  set_shared_memory(threadIdx.x, sd, sf, su, sb, cdata, size1);
+  float    *sf = (float*)   (sd + cdata.ndelem_);
+  uint32_t *su = (uint32_t*)(sf + cdata.nfelem_);
+  set_shared_memory(threadIdx.x, sd, sf, su, cdata, size1);
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {

@@ -27,19 +27,19 @@ void KernelManagerHGCalRecHit::assign_and_transfer_to_device_()
 
 void KernelManagerHGCalRecHit::assign_and_transfer_to_device_(const KernelConstantData<HGCeeUncalibratedRecHitConstantData> *h_kcdata, KernelConstantData<HGCeeUncalibratedRecHitConstantData> *d_kcdata)
 {
-  cudaCheck( cudaMemcpyAsync( d_kcdata->data.hgcEE_fCPerMIP_, h_kcdata->data.hgcEE_fCPerMIP_, h_kcdata->data.nbytes, cudaMemcpyHostToDevice) );
+  cudaCheck( cudaMemcpyAsync( d_kcdata->data.hgcEE_fCPerMIP_, h_kcdata->data.hgcEE_fCPerMIP_, h_kcdata->data.nbytes_, cudaMemcpyHostToDevice) );
   after_();
 }
 
 void KernelManagerHGCalRecHit::assign_and_transfer_to_device_(const KernelConstantData<HGChefUncalibratedRecHitConstantData> *h_kcdata, KernelConstantData<HGChefUncalibratedRecHitConstantData> *d_kcdata)
 {
-  cudaCheck( cudaMemcpyAsync( d_kcdata->data.hgcHEF_fCPerMIP_, h_kcdata->data.hgcHEF_fCPerMIP_, h_kcdata->data.nbytes, cudaMemcpyHostToDevice) );
+  cudaCheck( cudaMemcpyAsync( d_kcdata->data.hgcHEF_fCPerMIP_, h_kcdata->data.hgcHEF_fCPerMIP_, h_kcdata->data.nbytes_, cudaMemcpyHostToDevice) );
   after_();
 }
 
 void KernelManagerHGCalRecHit::assign_and_transfer_to_device_(const KernelConstantData<HGChebUncalibratedRecHitConstantData> *h_kcdata, KernelConstantData<HGChebUncalibratedRecHitConstantData> *d_kcdata)
 {
-  cudaCheck( cudaMemcpyAsync( d_kcdata->data.weights_, h_kcdata->data.weights_, h_kcdata->data.nbytes, cudaMemcpyHostToDevice) );
+  cudaCheck( cudaMemcpyAsync( d_kcdata->data.weights_, h_kcdata->data.weights_, h_kcdata->data.nbytes_, cudaMemcpyHostToDevice) );
   after_();
 }
 
@@ -55,13 +55,12 @@ void KernelManagerHGCalRecHit::reuse_device_pointers_()
   after_();
 }
 
-int KernelManagerHGCalRecHit::get_shared_memory_size_(const int& nd, const int& nf, const int& nu, const int& ni, const int& nb) {
+int KernelManagerHGCalRecHit::get_shared_memory_size_(const int& nd, const int& nf, const int& nu, const int& ni) {
   int dmem = nd*sizeof(double);
   int fmem = nf*sizeof(float);
   int umem = nu*sizeof(uint32_t);
   int imem = ni*sizeof(int);
-  int bmem = nb*sizeof(bool);
-  return dmem + fmem + umem + imem + bmem;
+  return dmem + fmem + umem + imem;
 }
 
 void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGCeeUncalibratedRecHitConstantData> *h_kcdata, KernelConstantData<HGCeeUncalibratedRecHitConstantData> *d_kcdata)
@@ -70,7 +69,7 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGCeeUncalib
   assign_and_transfer_to_device_();
 
   printf("%d blocks being launched with %d threads (%d in total) for %d ee hits.\n", nblocks_.x, nthreads_.x, nblocks_.x*nthreads_.x, data_->nhits);
-  int nbytes_shared = get_shared_memory_size_(h_kcdata->data.ndelem, h_kcdata->data.nfelem, h_kcdata->data.nuelem, h_kcdata->data.nielem, h_kcdata->data.nbelem);
+  int nbytes_shared = get_shared_memory_size_(h_kcdata->data.ndelem_, h_kcdata->data.nfelem_, h_kcdata->data.nuelem_, h_kcdata->data.nielem_);
 
   /*
   ee_step1<<<nblocks_, nthreads_>>>( *(data_->d_2), *(data_->d_1), d_kcdata->data, data_->nhits );
@@ -90,7 +89,7 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChefUncali
   assign_and_transfer_to_device_();
 
   printf("%d blocks being launched with %d threads (%d in total) for %d hef hits.\n", nblocks_.x, nthreads_.x, nblocks_.x*nthreads_.x, data_->nhits);
-  int nbytes_shared = get_shared_memory_size_(h_kcdata->data.ndelem, h_kcdata->data.nfelem, h_kcdata->data.nuelem, h_kcdata->data.nielem, h_kcdata->data.nbelem);
+  int nbytes_shared = get_shared_memory_size_(h_kcdata->data.ndelem_, h_kcdata->data.nfelem_, h_kcdata->data.nuelem_, h_kcdata->data.nielem_);
 
   /*
   hef_step1<<<nblocks_,nthreads_>>>( *(data_->d_2), *(data_->d_1), d_kcdata->data, data_->nhits);
@@ -109,7 +108,7 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChebUncali
   assign_and_transfer_to_device_();
 
   printf("%d blocks being launched with %d threads (%d in total) for %d heb hits.\n", nblocks_.x, nthreads_.x, nblocks_.x*nthreads_.x, data_->nhits);
-  int nbytes_shared = get_shared_memory_size_(h_kcdata->data.ndelem, h_kcdata->data.nfelem, h_kcdata->data.nuelem, h_kcdata->data.nielem, h_kcdata->data.nbelem);
+  int nbytes_shared = get_shared_memory_size_(h_kcdata->data.ndelem_, h_kcdata->data.nfelem_, h_kcdata->data.nuelem_, h_kcdata->data.nielem_);
 
   /*
   heb_step1<<<nblocks_, nthreads_>>>( *(data_->d_2), *(data_->d_1), d_kcdata->data, data_->nhits);

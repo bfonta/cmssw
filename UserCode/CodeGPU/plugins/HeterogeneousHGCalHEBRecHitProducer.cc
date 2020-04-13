@@ -8,10 +8,9 @@ HeterogeneousHGCalHEBRecHitProducer::HeterogeneousHGCalHEBRecHitProducer(const e
   cdata_.hgcHEB_noise_MIP_  = ps.getParameter<edm::ParameterSet>("HGCHEB_noise_MIP").getParameter<double>("noise_MIP");
   cdata_.rangeMatch_        = ps.getParameter<uint32_t>("rangeMatch");
   cdata_.rangeMask_         = ps.getParameter<uint32_t>("rangeMask");
-  cdata_.hgcHEB_isSiFE_     = ps.getParameter<bool>("HGCHEB_isSiFE");
-  vdata_.weights            = ps.getParameter< std::vector<double> >("weights");
+  vdata_.weights_           = ps.getParameter< std::vector<double> >("weights");
   cdata_.fhOffset_          = ps.getParameter<uint32_t>("offset"); //ddd_->layers(true);
-  cdata_.s_weights_ = vdata_.weights.size();
+  cdata_.s_weights_         = vdata_.weights_.size();
   cdata_.hgchebUncalib2GeV_ = 1e-6 / cdata_.hgcHEB_keV2DIGI_;
 
   begin = std::chrono::steady_clock::now();
@@ -20,7 +19,6 @@ HeterogeneousHGCalHEBRecHitProducer::HeterogeneousHGCalHEBRecHitProducer(const e
   stride_ = ( (nhitsmax_-1)/32 + 1 ) * 32; //align to warp boundary
 
   allocate_memory_();
-
   convert_constant_data_(h_kcdata_);
 
   produces<HGChebRecHitCollection>(collection_name_);
@@ -44,6 +42,10 @@ HeterogeneousHGCalHEBRecHitProducer::~HeterogeneousHGCalHEBRecHitProducer()
 void HeterogeneousHGCalHEBRecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {
   const cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w), ctxState_};
   set_geometry_(setup);
+
+  allocate_memory_();
+  convert_constant_data_(h_kcdata_);
+  
   event.getByToken(token_, handle_heb_);
   const auto &hits_heb = *handle_heb_;
 
@@ -101,7 +103,7 @@ void HeterogeneousHGCalHEBRecHitProducer::set_geometry_(const edm::EventSetup& s
 void HeterogeneousHGCalHEBRecHitProducer::convert_constant_data_(KernelConstantData<HGChebUncalibratedRecHitConstantData> *kcdata)
 {
   for(int i=0; i<kcdata->data.s_weights_; ++i)
-    kcdata->data.weights_[i] = kcdata->vdata.weights[i];
+    kcdata->data.weights_[i] = kcdata->vdata.weights_[i];
 }
 
 void HeterogeneousHGCalHEBRecHitProducer::convert_collection_data_to_soa_(const edm::SortedCollection<HGCUncalibratedRecHit>& hits, HGCUncalibratedRecHitSoA* d, const unsigned int& nhits)
