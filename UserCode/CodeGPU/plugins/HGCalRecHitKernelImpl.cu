@@ -31,16 +31,16 @@ __device__
 void make_rechit(unsigned int tid, HGCRecHitSoA& dst_soa, HGCUncalibratedRecHitSoA& src_soa, const bool &heb_flag, 
 		 const double &weight, const double &rcorr, const double &cce_correction, const double &sigmaNoiseGeV, float *& sf)
 {
-  dst_soa.id[tid] = src_soa.id[tid];
-  dst_soa.energy[tid] = src_soa.amplitude[tid] * weight * 0.001f;
+  dst_soa.id_[tid] = src_soa.id_[tid];
+  dst_soa.energy_[tid] = src_soa.amplitude_[tid] * weight * 0.001f;
   if(!heb_flag)
-    dst_soa.energy[tid] *=  __fdividef(rcorr, cce_correction);
-  dst_soa.time[tid] = src_soa.jitter[tid];
-  dst_soa.flagBits[tid] |= (0x1 << HGCRecHit::kGood);
-  float son = __fdividef( dst_soa.energy[tid], sigmaNoiseGeV);
+    dst_soa.energy_[tid] *=  __fdividef(rcorr, cce_correction);
+  dst_soa.time_[tid] = src_soa.jitter_[tid];
+  dst_soa.flagBits_[tid] |= (0x1 << HGCRecHit::kGood);
+  float son = __fdividef( dst_soa.energy_[tid], sigmaNoiseGeV);
   float son_norm = fminf(32.f, son) / 32.f * ((1 << 8)-1);
   long int son_round = lroundf( son_norm );
-  dst_soa.son[tid] = static_cast<uint8_t>( son_round );
+  dst_soa.son_[tid] = static_cast<uint8_t>( son_round );
 
   if(heb_flag==0)
     {
@@ -48,10 +48,10 @@ void make_rechit(unsigned int tid, HGCRecHitSoA& dst_soa, HGCUncalibratedRecHitS
       float max = fmaxf(son, sf[0]); //this max trick avoids if...elseif...else condition
       float aterm = sf[2];
       float cterm = sf[3];
-      dst_soa.timeError[tid] = sqrt( __fdividef(aterm,max)*__fdividef(aterm,max) + cterm*cterm );
+      dst_soa.timeError_[tid] = sqrt( __fdividef(aterm,max)*__fdividef(aterm,max) + cterm*cterm );
     }
   else
-    dst_soa.timeError[tid] = -1;
+    dst_soa.timeError_[tid] = -1;
 }
 
 __device__ 
@@ -236,7 +236,7 @@ void ee_step1(HGCUncalibratedRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa
   unsigned int tid = blockDim.x * blockIdx.x + threadIdx.x;
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
-      dst_soa.amplitude[i] = src_soa.amplitude[i];
+      dst_soa.amplitude_[i] = src_soa.amplitude_[i];
     }
   */
 }
@@ -272,7 +272,7 @@ void ee_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const 
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
-      double l = layer(src_soa.id[tid], 0); //no offset
+      double l = layer(src_soa.id_[tid], 0); //no offset
       double weight = get_weight_from_layer(size4, l, sd);
       double rcorr = get_thickness_correction(size3, sd, cdata);
       double noise = get_noise(size2, sd, cdata);
@@ -304,7 +304,7 @@ void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
   set_shared_memory(threadIdx.x, sd, sf, su, si, cdata, size1, size2, size3, size4, size5, size6);
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
-      double l = layer(src_soa.id[tid], 0); //no offset
+      double l = layer(src_soa.id_[tid], 0); //no offset
       double weight = get_weight_from_layer(size4, l, sd);
       double rcorr = get_thickness_correction(size3, sd, cdata);
       double noise = get_noise(size2, sd, cdata);
@@ -330,7 +330,7 @@ void heb_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
-      double l = layer(src_soa.id[tid], su[2]);
+      double l = layer(src_soa.id_[tid], su[2]);
       double weight = get_weight_from_layer(3, l, sd);
       double noise = sd[2];
       double sigmaNoiseGeV = 1e-3 * noise * weight;

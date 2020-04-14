@@ -3,16 +3,16 @@
 
 class HGCUncalibratedRecHitSoA {
 public:
-  float *amplitude;
-  float *pedestal;
-  float *jitter;
-  float *chi2;
-  float *OOTamplitude;
-  float *OOTchi2;
-  uint32_t *flags;
-  uint32_t *aux;
-  uint32_t *id;
-  int nbytes;
+  float *amplitude_;
+  float *pedestal_;
+  float *jitter_;
+  float *chi2_;
+  float *OOTamplitude_;
+  float *OOTchi2_;
+  uint32_t *flags_;
+  uint32_t *aux_;
+  uint32_t *id_;
+  int nbytes_;
 };
 
 #endif //CUDADATAFORMATS_HGCUNCAIBRATEDRECHITSOA_H

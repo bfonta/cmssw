@@ -110,33 +110,33 @@ void HeterogeneousHGCalHEFRecHitProducer::set_geometry_(const edm::EventSetup& s
 
 void HeterogeneousHGCalHEFRecHitProducer::convert_constant_data_(KernelConstantData<HGChefUncalibratedRecHitConstantData> *kcdata)
 {
-  for(int i=0; i<kcdata->data.s_hgcHEF_fCPerMIP_; ++i)
-    kcdata->data.hgcHEF_fCPerMIP_[i] = kcdata->vdata.fCPerMIP_[i];
-  for(int i=0; i<kcdata->data.s_hgcHEF_cce_; ++i)
-    kcdata->data.hgcHEF_cce_[i] = kcdata->vdata.cce_[i];
-  for(int i=0; i<kcdata->data.s_hgcHEF_noise_fC_; ++i)
-    kcdata->data.hgcHEF_noise_fC_[i] = kcdata->vdata.noise_fC_[i];
-  for(int i=0; i<kcdata->data.s_rcorr_; ++i)
-    kcdata->data.rcorr_[i] = kcdata->vdata.rcorr_[i];
-  for(int i=0; i<kcdata->data.s_weights_; ++i)
-    kcdata->data.weights_[i] = kcdata->vdata.weights_[i];
-  for(int i=0; i<kcdata->data.s_waferTypeL_; ++i)
-    kcdata->data.waferTypeL_[i] = kcdata->vdata.waferTypeL_[i];
+  for(int i=0; i<kcdata->data_.s_hgcHEF_fCPerMIP_; ++i)
+    kcdata->data_.hgcHEF_fCPerMIP_[i] = kcdata->vdata_.fCPerMIP_[i];
+  for(int i=0; i<kcdata->data_.s_hgcHEF_cce_; ++i)
+    kcdata->data_.hgcHEF_cce_[i] = kcdata->vdata_.cce_[i];
+  for(int i=0; i<kcdata->data_.s_hgcHEF_noise_fC_; ++i)
+    kcdata->data_.hgcHEF_noise_fC_[i] = kcdata->vdata_.noise_fC_[i];
+  for(int i=0; i<kcdata->data_.s_rcorr_; ++i)
+    kcdata->data_.rcorr_[i] = kcdata->vdata_.rcorr_[i];
+  for(int i=0; i<kcdata->data_.s_weights_; ++i)
+    kcdata->data_.weights_[i] = kcdata->vdata_.weights_[i];
+  for(int i=0; i<kcdata->data_.s_waferTypeL_; ++i)
+    kcdata->data_.waferTypeL_[i] = kcdata->vdata_.waferTypeL_[i];
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::convert_collection_data_to_soa_(const edm::SortedCollection<HGCUncalibratedRecHit>& hits, HGCUncalibratedRecHitSoA* d, const unsigned int& nhits)
 {
   for(unsigned int i=0; i<nhits; ++i)
     {
-      d->amplitude[i] = hits[i].amplitude();
-      d->pedestal[i] = hits[i].pedestal();
-      d->jitter[i] = hits[i].jitter();
-      d->chi2[i] = hits[i].chi2();
-      d->OOTamplitude[i] = hits[i].outOfTimeEnergy();
-      d->OOTchi2[i] = hits[i].outOfTimeChi2();
-      d->flags[i] = hits[i].flags();
-      d->aux[i] = 0;
-      d->id[i] = hits[i].id().rawId();
+      d->amplitude_[i] = hits[i].amplitude();
+      d->pedestal_[i] = hits[i].pedestal();
+      d->jitter_[i] = hits[i].jitter();
+      d->chi2_[i] = hits[i].chi2();
+      d->OOTamplitude_[i] = hits[i].outOfTimeEnergy();
+      d->OOTchi2_[i] = hits[i].outOfTimeChi2();
+      d->flags_[i] = hits[i].flags();
+      d->aux_[i] = 0;
+      d->id_[i] = hits[i].id().rawId();
     }
 }
 
@@ -145,8 +145,8 @@ void HeterogeneousHGCalHEFRecHitProducer::convert_soa_data_to_collection_(HGCRec
   rechits.reserve(nhits);
   for(uint i=0; i<nhits; ++i)
     {
-      DetId id_converted( d->id[i] );
-      rechits.emplace_back( HGCRecHit(id_converted, d->energy[i], d->time[i], 0, d->flagBits[i]) );
+      DetId id_converted( d->id_[i] );
+      rechits.emplace_back( HGCRecHit(id_converted, d->energy_[i], d->time_[i], 0, d->flagBits_[i]) );
     }
 }
 

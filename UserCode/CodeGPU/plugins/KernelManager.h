@@ -21,28 +21,28 @@ extern __constant__ uint32_t calo_rechit_masks[];
 template <typename T>
 class KernelConstantData {
  public:
- KernelConstantData(T& data_, HGCConstantVectorData& vdata_): data(data_), vdata(vdata_) {
+ KernelConstantData(T& data, HGCConstantVectorData& vdata): data_(data), vdata_(vdata) {
     if( ! (std::is_same<T, HGCeeUncalibratedRecHitConstantData>::value or std::is_same<T, HGChefUncalibratedRecHitConstantData>::value or std::is_same<T, HGChebUncalibratedRecHitConstantData>::value ))
       {
 	throw cms::Exception("WrongTemplateType") << "The KernelConstantData class does not support this type.";
       }
   }
-  T data;
-  HGCConstantVectorData vdata;
+  T data_;
+  HGCConstantVectorData vdata_;
 };
 
 template <typename TYPE_IN, typename TYPE_OUT>
   class KernelModifiableData {
  public:
- KernelModifiableData(int nhits_, int stride_, TYPE_IN *h_in_, TYPE_IN *d_1_, TYPE_IN *d_2_, TYPE_OUT *d_out_, TYPE_OUT *h_out_):
-  nhits(nhits_), stride(stride_), h_in(h_in_), d_1(d_1_), d_2(d_2_), d_out(d_out_), h_out(h_out_) {}
+ KernelModifiableData(int nhits, int stride, TYPE_IN *h_in, TYPE_IN *d_1, TYPE_IN *d_2, TYPE_OUT *d_out, TYPE_OUT *h_out):
+  nhits_(nhits), stride_(stride), h_in_(h_in), d_1_(d_1), d_2_(d_2), d_out_(d_out), h_out_(h_out) {}
 
-  int nhits;
-  int stride;
-  TYPE_IN *h_in;
-  TYPE_IN *d_1, *d_2;
-  TYPE_OUT *d_out;
-  TYPE_OUT *h_out;
+  int nhits_; //number of hits in the input event collection being processed
+  int stride_; //modified number of hits so that warp (32 threads) boundary alignment is guaranteed
+  TYPE_IN *h_in_; //host input data SoA
+  TYPE_IN *d_1_, *d_2_; //device SoAs that handle all the processing steps applied to the input data. The pointers may be reused (ans swapped)
+  TYPE_OUT *d_out_; //device SoA that stores the conversion of the hits to the new collection format
+  TYPE_OUT *h_out_; //host SoA which receives the converted output collection from the GPU
 };
 
 class KernelManagerHGCalRecHit {
