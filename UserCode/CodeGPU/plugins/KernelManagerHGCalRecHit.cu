@@ -1,7 +1,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <inttypes.h>
-#include "KernelManager.h"
+#include "KernelManagerHGCalRecHit.h"
 #include "HGCalRecHitKernelImpl.cuh"
 
 dim3 nblocks_;

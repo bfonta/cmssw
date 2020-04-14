@@ -1,5 +1,5 @@
-#ifndef CUDADATAFORMATS_HGCUNCALIBRATEDRECHITSOA_H
-#define CUDADATAFORMATS_HGCUNCALIBRATEDRECHITSOA_H 1
+#ifndef CudaDataFormats_HGCal_HGCUncalibratedRecHitSoA_h
+#define CudaDataFormats_HGCal_HGCUncalibratedRecHitSoA_h
 
 class HGCUncalibratedRecHitSoA {
 public:
@@ -15,4 +15,4 @@ public:
   int nbytes_;
 };
 
-#endif //CUDADATAFORMATS_HGCUNCAIBRATEDRECHITSOA_H
+#endif

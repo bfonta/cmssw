@@ -1,5 +1,5 @@
-#ifndef _KERNELMANAGER_H
-#define _KERNELMANAGER_H
+#ifndef RecoLocalCalo_HGCalRecProducers_KernelManager_HGCalRecHit_h
+#define RecoLocalCalo_HGCalRecProducers_KernelManager_HGCalRecHit_h
 
 #include "FWCore/Utilities/interface/Exception.h"
 #include "DataFormats/DetId/interface/DetId.h"
@@ -69,4 +69,4 @@ class KernelManagerHGCalRecHit {
   KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA> *data_;
 };
 
-#endif //_KERNELMANAGER_H_
+#endif //RecoLocalCalo_HGCalRecProducers_KernelManager_HGCalRecHit_h

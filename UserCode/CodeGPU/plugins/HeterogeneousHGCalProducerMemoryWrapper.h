@@ -1,5 +1,5 @@
-#ifndef _HETEROGENEOUSHGCALPRODUCERMEMORYWRAPPER_H_
-#define _HETEROGENEOUSHGCALPRODUCERMEMORYWRAPPER_H_
+#ifndef RecoLocalCalo_HGCalRecProducers_HeterogeneousHGCalProducerMemoryWrapper_h
+#define RecoLocalCalo_HGCalRecProducers_HeterogeneousHGCalProducerMemoryWrapper_h
 
 #include <cstdio>
 #include <iostream>
@@ -27,7 +27,7 @@
 #include "HeterogeneousCore/CUDAUtilities/interface/host_noncached_unique_ptr.h"
 #include "HeterogeneousCore/CUDAUtilities/interface/host_unique_ptr.h"
 
-#include "KernelManager.h"
+#include "KernelManagerHGCalRecHit.h"
 
 namespace memory {
   namespace allocation {
@@ -48,4 +48,4 @@ namespace memory {
   }
 }
 							
-#endif // _HETEROGENEOUSHGCALPRODUCERMEMORYWRAPPER_H_
+#endif //RecoLocalCalo_HGCalRecProducers_HeterogeneousHGCalProducerMemoryWrapper_h

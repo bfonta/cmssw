@@ -1,5 +1,5 @@
-#ifndef CUDADATAFORMATS_HGCRECHITSOA_H
-#define CUDADATAFORMATS_HGCRECHITSOA_H 1
+#ifndef CudaDataFormats_HGCal_HGCRecHitSoA_h
+#define CudaDataFormats_HGCal_HGCRecHitSoA_h
 
 class HGCRecHitSoA {
  public:
@@ -12,4 +12,4 @@ class HGCRecHitSoA {
   int nbytes_;
 };
 
-#endif //CUDADATAFORMATS_HGCRECHITSOA_H
+#endif

@@ -33,7 +33,7 @@
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
 #include "HeterogeneousHGCalProducerMemoryWrapper.h"
-#include "KernelManager.h"
+#include "KernelManagerHGCalRecHit.h"
 
 class HeterogeneousHGCalHEBRecHitProducer: public edm::stream::EDProducer<edm::ExternalWork> 
 {
