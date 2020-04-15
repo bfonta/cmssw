@@ -1,5 +1,4 @@
 #include "HeterogeneousHGCalProducerMemoryWrapper.h"
-#include "Types.h"
 
 namespace memory {
   namespace allocation {    

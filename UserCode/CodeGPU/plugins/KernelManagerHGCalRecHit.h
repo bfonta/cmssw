@@ -6,7 +6,7 @@
 #include "HeterogeneousCore/CUDAUtilities/interface/cudaCompat.h"
 #include "HeterogeneousCore/CUDAUtilities/interface/cudaCheck.h"
 #include "HGCalRecHitKernelImpl.cuh"
-#include "Types.h"
+//#include "Types.h"
 
 #include <vector>
 #include <algorithm> //std::swap  
