@@ -196,13 +196,6 @@ void set_shared_memory(const int& tid, double*& sd, float*& sf, uint32_t*& su, c
 __global__
 void ee_step1(HGCUncalibratedRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const HGCeeUncalibratedRecHitConstantData cdata, int length)
 {
-  /*
-  unsigned int tid = blockDim.x * blockIdx.x + threadIdx.x;
-  for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
-    {
-      dst_soa.amplitude_[i] = src_soa.amplitude_[i];
-    }
-  */
 }
 
 __global__
@@ -304,20 +297,3 @@ void heb_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
       make_rechit(i, dst_soa, src_soa, true, weight, 0., 0., sigmaNoiseGeV, sf);
     }
 }
-
-/*
-=======
->>>>>>> b5bfc7e2f47f926abb3dcd21cdf5e2094e53dd3f
-//declared as extern in DataFormats/CaloRecHit/interface/CaloRecHit.h
-#ifdef __CUDA_ARCH__
-__constant__ uint32_t calo_rechit_masks[] = {0x00000000u, 0x00000001u, 0x00000003u, 0x00000007u, 0x0000000fu, 0x0000001fu,
-					     0x0000003fu, 0x0000007fu, 0x000000ffu, 0x000001ffu, 0x000003ffu, 0x000007ffu,
-					     0x00000fffu, 0x00001fffu, 0x00003fffu, 0x00007fffu, 0x0000ffffu, 0x0001ffffu,
-					     0x0003ffffu, 0x0007ffffu, 0x000fffffu, 0x001fffffu, 0x003fffffu, 0x007fffffu,
-					     0x00ffffffu, 0x01ffffffu, 0x03ffffffu, 0x07ffffffu, 0x0fffffffu, 0x1fffffffu,
-					     0x3fffffffu, 0x7fffffffu, 0xffffffffu};
-#endif
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-*/
