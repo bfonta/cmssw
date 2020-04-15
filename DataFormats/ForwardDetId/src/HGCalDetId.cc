@@ -30,6 +30,11 @@ HGCalDetId::HGCalDetId(ForwardSubdetector subdet, int zp, int lay, int wafertype
     id_ |= ((zp & kHGCalZsideMask) << kHGCalZsideOffset);
 }
 
+#ifndef __CUDA_ARCH__
+constexpr 
+#else
+constexpr __host__ __device__
+#endif
 HGCalDetId::HGCalDetId(const DetId& gen) { id_ = gen.rawId(); }
 
 HGCalDetId& HGCalDetId::operator=(const DetId& gen) {

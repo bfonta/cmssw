@@ -4,13 +4,10 @@
 #include "KernelManagerHGCalRecHit.h"
 #include "HGCalRecHitKernelImpl.cuh"
 
-dim3 nblocks_;
-constexpr dim3 nthreads_(256); //some kernels will potentially not allocate shared memory properly with a lower number
-
 KernelManagerHGCalRecHit::KernelManagerHGCalRecHit(KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA> *data):
   data_(data)
 {
-  nblocks_ = (data_->nhits_ + nthreads_.x - 1) / nthreads_.x;
+  ::nblocks_ = (data_->nhits_ + ::nthreads_.x - 1) / ::nthreads_.x;
   nbytes_host_ = (data_->h_out_)->nbytes_ * data_->stride_;
   nbytes_device_ = (data_->d_1_)->nbytes_ * data_->stride_;
 }
@@ -68,16 +65,16 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGCeeUncalib
   transfer_constants_to_device_(h_kcdata, d_kcdata);
   transfer_soas_to_device_();
 
-  printf("%d blocks being launched with %d threads (%d in total) for %d ee hits.\n", nblocks_.x, nthreads_.x, nblocks_.x*nthreads_.x, data_->nhits_);
+  printf("%d blocks being launched with %d threads (%d in total) for %d ee hits.\n", ::nblocks_.x, ::nthreads_.x, ::nblocks_.x*::nthreads_.x, data_->nhits_);
   int nbytes_shared = get_shared_memory_size_(h_kcdata->data_.ndelem_, h_kcdata->data_.nfelem_, h_kcdata->data_.nuelem_, h_kcdata->data_.nielem_);
 
   /*
-  ee_step1<<<nblocks_, nthreads_>>>( *(data_->d_2_), *(data_->d_1_), d_kcdata->data_, data_->nhits_ );
+  ee_step1<<<::nblocks_, ::nthreads_>>>( *(data_->d_2_), *(data_->d_1_), d_kcdata->data_, data_->nhits_ );
   after_();
   reuse_device_pointers_();
   */
 
-  ee_to_rechit<<<nblocks_, nthreads_, nbytes_shared>>>( *(data_->d_out_), *(data_->d_1_), d_kcdata->data_, data_->nhits_ );
+  ee_to_rechit<<<::nblocks_, ::nthreads_, nbytes_shared>>>( *(data_->d_out_), *(data_->d_1_), d_kcdata->data_, data_->nhits_ );
   after_();
 
   transfer_soa_to_host_and_synchronize_();
@@ -88,16 +85,16 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChefUncali
   transfer_constants_to_device_(h_kcdata, d_kcdata);
   transfer_soas_to_device_();
 
-  printf("%d blocks being launched with %d threads (%d in total) for %d hef hits.\n", nblocks_.x, nthreads_.x, nblocks_.x*nthreads_.x, data_->nhits_);
+  printf("%d blocks being launched with %d threads (%d in total) for %d hef hits.\n", ::nblocks_.x, ::nthreads_.x, ::nblocks_.x*::nthreads_.x, data_->nhits_);
   int nbytes_shared = get_shared_memory_size_(h_kcdata->data_.ndelem_, h_kcdata->data_.nfelem_, h_kcdata->data_.nuelem_, h_kcdata->data_.nielem_);
 
   /*
-  hef_step1<<<nblocks_,nthreads_>>>( *(data_->d_2), *(data_->d_1_), d_kcdata->data, data_->nhits_);
+  hef_step1<<<::nblocks_,::nthreads_>>>( *(data_->d_2), *(data_->d_1_), d_kcdata->data, data_->nhits_);
   after_();
   reuse_device_pointers_();
   */
 
-  hef_to_rechit<<<nblocks_,nthreads_, nbytes_shared>>>( *(data_->d_out_), *(data_->d_1_), d_kcdata->data_, data_->nhits_ );
+  hef_to_rechit<<<::nblocks_,::nthreads_, nbytes_shared>>>( *(data_->d_out_), *(data_->d_1_), d_kcdata->data_, data_->nhits_ );
   after_();
   transfer_soa_to_host_and_synchronize_();
 }
@@ -107,16 +104,16 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChebUncali
   transfer_constants_to_device_(h_kcdata, d_kcdata);
   transfer_soas_to_device_();
 
-  printf("%d blocks being launched with %d threads (%d in total) for %d heb hits.\n", nblocks_.x, nthreads_.x, nblocks_.x*nthreads_.x, data_->nhits_);
+  printf("%d blocks being launched with %d threads (%d in total) for %d heb hits.\n", ::nblocks_.x, ::nthreads_.x, ::nblocks_.x*::nthreads_.x, data_->nhits_);
   int nbytes_shared = get_shared_memory_size_(h_kcdata->data_.ndelem_, h_kcdata->data_.nfelem_, h_kcdata->data_.nuelem_, h_kcdata->data_.nielem_);
 
   /*
-  heb_step1<<<nblocks_, nthreads_>>>( *(data_->d_2_), *(data_->d_1_), d_kcdata->data_, data_->nhits_);
+  heb_step1<<<::nblocks_, ::nthreads_>>>( *(data_->d_2_), *(data_->d_1_), d_kcdata->data_, data_->nhits_);
   after_();
   reuse_device_pointers_();
   */
 
-  heb_to_rechit<<<nblocks_, nthreads_, nbytes_shared>>>( *(data_->d_out_), *(data_->d_1_), d_kcdata->data_, data_->nhits_ );
+  heb_to_rechit<<<::nblocks_, ::nthreads_, nbytes_shared>>>( *(data_->d_out_), *(data_->d_1_), d_kcdata->data_, data_->nhits_ );
   after_();
 
   transfer_soa_to_host_and_synchronize_();

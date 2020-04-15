@@ -26,7 +26,14 @@ public:
   /** Constructor from subdetector, zplus, layer, module, cell numbers */
   HGCalDetId(ForwardSubdetector subdet, int zp, int lay, int wafertype, int wafer, int cell);
   /** Constructor from a generic cell id */
-  HGCalDetId(const DetId& id);
+
+#ifndef __CUDA_ARCH__
+  constexpr
+#else
+  constexpr __host__ __device__ 
+#endif
+    HGCalDetId(const DetId& id);
+
   /** Assignment from a generic cell id */
   HGCalDetId& operator=(const DetId& id);
 
@@ -43,7 +50,7 @@ public:
   int waferType() const { return ((id_ >> kHGCalWaferTypeOffset) & kHGCalWaferTypeMask ? 1 : -1); }
 
   /// get the layer #
-  int layer() const { return (id_ >> kHGCalLayerOffset) & kHGCalLayerMask; }
+  constexpr int layer() const { return (id_ >> kHGCalLayerOffset) & kHGCalLayerMask; }
 
   /// get the z-side of the cell (1/-1)
   int zside() const { return ((id_ >> kHGCalZsideOffset) & kHGCalZsideMask ? 1 : -1); }

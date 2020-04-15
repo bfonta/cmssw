@@ -31,11 +31,6 @@
 
 namespace memory {
   namespace allocation {
-    /*
-    namespace {
-      std::tuple<LENGTHSIZE, LENGTHSIZE, LENGTHSIZE, LENGTHSIZE> get_memory_sizes_(const std::vector<LENGTHSIZE>&, const LENGTHSIZE&, const LENGTHSIZE&, const LENGTHSIZE&);
-    }
-    */
     void host(KernelConstantData<HGCeeUncalibratedRecHitConstantData>*, cms::cuda::host::noncached::unique_ptr<double[]>&);
     void host(KernelConstantData<HGChefUncalibratedRecHitConstantData>*, cms::cuda::host::noncached::unique_ptr<double[]>&);
     void host(KernelConstantData<HGChebUncalibratedRecHitConstantData>*, cms::cuda::host::noncached::unique_ptr<double[]>&);
