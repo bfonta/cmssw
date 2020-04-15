@@ -18,6 +18,11 @@
 extern __constant__ uint32_t calo_rechit_masks[];
 #endif
 
+namespace {
+  dim3 nblocks_;
+  constexpr dim3 nthreads_(256); //some kernels will potentially not allocate shared memory properly with a lower number
+}
+
 template <typename T>
 class KernelConstantData {
  public:
