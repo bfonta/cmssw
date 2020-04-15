@@ -2,8 +2,10 @@
 #include <cuda_runtime.h>
 #include <inttypes.h>
 #include "DataFormats/HGCRecHit/interface/HGCRecHit.h"
+#include "DataFormats/ForwardDetId/interface/HGCalDetId.h"
 #include "HGCalRecHitKernelImpl.cuh"
 
+/*
 __device__
 int wafer(uint32_t id)
 {
@@ -11,6 +13,15 @@ int wafer(uint32_t id)
   static const int kHGCalWaferMask = 0x3FF;
   return (id >> kHGCalWaferOffset) & kHGCalWaferMask; 
 }
+*/
+/*
+__device__
+int layer_device(uint32_t id, unsigned int offset)
+{
+  int layer = HGCalDetId(id).layer();
+  return layer + offset;
+}
+*/
 
 __device__
 int layer(uint32_t id, unsigned int offset)
@@ -107,7 +118,7 @@ double get_fCPerMIP(const int& padding, double *& sd, const HGChefUncalibratedRe
 }
 
 __device__ 
-void set_shared_memory(int tid, double*& sd, float*& sf, uint32_t*& su, int*& si, const HGCeeUncalibratedRecHitConstantData& cdata, const int& size1, const int& size2, const int& size3, const int& size4, const int& size5, const int& size6)
+void set_shared_memory(const int& tid, double*& sd, float*& sf, uint32_t*& su, int*& si, const HGCeeUncalibratedRecHitConstantData& cdata, const int& size1, const int& size2, const int& size3, const int& size4, const int& size5, const int& size6)
 {
   const int initial_pad = 2;
   if(tid == 0)
@@ -138,47 +149,12 @@ void set_shared_memory(int tid, double*& sd, float*& sf, uint32_t*& su, int*& si
     su[0] = cdata.rangeMatch_;
   else if(tid == size6 + 5)
     su[1] = cdata.rangeMask_;
-
-  __syncthreads();
 }
 
 __device__ 
-void set_shared_memory(int tid, double*& sd, float*& sf, uint32_t*& su, int*& si, const HGChefUncalibratedRecHitConstantData& cdata, const int& size1, const int& size2, const int& size3, const int& size4, const int& size5, const int& size6)
+void set_shared_memory(const int& tid, double*& sd, float*& sf, uint32_t*& su, int*& si, const HGChefUncalibratedRecHitConstantData& cdata, const int& size1, const int& size2, const int& size3, const int& size4, const int& size5, const int& size6)
 {
   const int initial_pad = 2;
-  /*
-  if(tid == 0)
-    sd[tid] = cdata.hgcHEF_keV2DIGI_;
-  else if(tid == 1)
-    sd[tid] = cdata.hgchefUncalib2GeV_;
-  else if(tid >= initial_pad && tid < size1)
-    sd[tid] = cdata.hgcHEF_fCPerMIP_[tid-initial_pad];
-  else if(tid >= size1 && tid < size2)
-    sd[tid] = cdata.hgcHEF_cce_[tid-size1];
-  else if(tid >= size2 && tid < size3)
-    sd[tid] = cdata.hgcHEF_noise_fC_[tid-size2];  
-  else if(tid >= size3 && tid < size4)
-    sd[tid] = cdata.rcorr_[tid - size3];
-  else if(tid >= size4 && tid < size5)
-    sd[tid] = cdata.weights_[tid - size4];
-  else if(tid >= size5 && tid < size6)
-    si[tid - size5] = cdata.waferTypeL_[tid - size5];
-  else if(tid == size6)
-    sf[0] = (cdata.xmin_ > 0) ? cdata.xmin_ : 0.1;
-  else if(tid == size6 + 1)
-    sf[1] = cdata.xmax_;
-  else if(tid == size6 + 2)
-    sf[2] = cdata.aterm_;
-  else if(tid == size6 + 3)
-    sf[3] = cdata.cterm_;
-  else if(tid == size6 + 4)
-    su[0] = cdata.rangeMatch_;
-  else if(tid == size6 + 5)
-    su[1] = cdata.rangeMask_;
-  else if(tid == size6 + 6)
-    su[2] = cdata.fhOffset_;
-  */
-
   if(tid == 0)
     {
       sd[0] = cdata.hgcHEF_keV2DIGI_;
@@ -203,12 +179,10 @@ void set_shared_memory(int tid, double*& sd, float*& sf, uint32_t*& su, int*& si
       su[1] = cdata.rangeMask_;
       su[2] = cdata.fhOffset_;
     }
-
-  __syncthreads();
 }
 
 __device__ 
-void set_shared_memory(int tid, double*& sd, float*& sf, uint32_t*& su, const HGChebUncalibratedRecHitConstantData& cdata, const int& size1)
+void set_shared_memory(const int& tid, double*& sd, float*& sf, uint32_t*& su, const HGChebUncalibratedRecHitConstantData& cdata, const int& size1)
 {
   const int initial_pad = 3;
   if(tid == 0)
@@ -225,8 +199,6 @@ void set_shared_memory(int tid, double*& sd, float*& sf, uint32_t*& su, const HG
     su[1] = cdata.rangeMask_;
   else if(tid == size1 + 2)
     su[2] = cdata.fhOffset_;
-
-  __syncthreads();
 }
 
 __global__
@@ -269,10 +241,11 @@ void ee_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const 
   uint32_t *su = (uint32_t*)(sf + cdata.nfelem_);
   int      *si = (int*)     (su + cdata.nuelem_);
   set_shared_memory(threadIdx.x, sd, sf, su, si, cdata, size1, size2, size3, size4, size5, size6);
+  __syncthreads();
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
-      double l = layer(src_soa.id_[tid], 0); //no offset
+      int l = /*HGCalDetId(src_soa.id_[tid]).layer();*/layer(src_soa.id_[tid], 0); //no offset
       double weight = get_weight_from_layer(size4, l, sd);
       double rcorr = get_thickness_correction(size3, sd, cdata);
       double noise = get_noise(size2, sd, cdata);
@@ -300,11 +273,12 @@ void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
   float    *sf = (float*)   (sd + cdata.ndelem_);
   uint32_t *su = (uint32_t*)(sf + cdata.nfelem_);
   int      *si = (int*)     (su + cdata.nuelem_);
-
   set_shared_memory(threadIdx.x, sd, sf, su, si, cdata, size1, size2, size3, size4, size5, size6);
+  __syncthreads();
+
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
-      double l = layer(src_soa.id_[tid], 0); //no offset
+      int l = /*HGCalDetId(src_soa.id_[tid]).layer();*/layer(src_soa.id_[tid], 0); //no offset
       double weight = get_weight_from_layer(size4, l, sd);
       double rcorr = get_thickness_correction(size3, sd, cdata);
       double noise = get_noise(size2, sd, cdata);
@@ -327,10 +301,11 @@ void heb_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
   float    *sf = (float*)   (sd + cdata.ndelem_);
   uint32_t *su = (uint32_t*)(sf + cdata.nfelem_);
   set_shared_memory(threadIdx.x, sd, sf, su, cdata, size1);
+  __syncthreads();
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
-      double l = layer(src_soa.id_[tid], su[2]);
+      int l = /*HGCalDetId(src_soa.id_[tid]).layer();*/layer(src_soa.id_[tid], su[2]); //with offset
       double weight = get_weight_from_layer(3, l, sd);
       double noise = sd[2];
       double sigmaNoiseGeV = 1e-3 * noise * weight;
