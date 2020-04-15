@@ -17,8 +17,6 @@
 #include "FWCore/Utilities/interface/EDGetToken.h"
 #include "FWCore/Utilities/interface/EDPutToken.h"
 #include "FWCore/Utilities/interface/InputTag.h"
-#include "FWCore/ServiceRegistry/interface/Service.h"
-#include "CommonTools/UtilAlgos/interface/TFileService.h"
 
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
 #include "Geometry/HGCalGeometry/interface/HGCalGeometry.h"
@@ -28,9 +26,6 @@
 #include "HeterogeneousCore/CUDACore/interface/ContextState.h"
 #include "HeterogeneousCore/CUDAServices/interface/CUDAService.h"
 #include "HeterogeneousCore/CUDAUtilities/interface/cudaCheck.h"
-
-#include "FWCore/ServiceRegistry/interface/Service.h"
-#include "CommonTools/UtilAlgos/interface/TFileService.h"
 
 #include "HeterogeneousHGCalProducerMemoryWrapper.h"
 #include "KernelManagerHGCalRecHit.h"
@@ -81,15 +76,6 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
   KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA> *kmdata_;
   KernelConstantData<HGChefUncalibratedRecHitConstantData> *h_kcdata_;
   KernelConstantData<HGChefUncalibratedRecHitConstantData> *d_kcdata_;
-
-  //print to ROOT histograms
-  TH1F *histo1_, *histo2_, *histo3_;
-  TH1I *histo4_;
-  edm::Service<TFileService> fs;
-
-  //time measurement 
-  std::chrono::steady_clock::time_point begin;
-  std::chrono::steady_clock::time_point end;
 };
 
 #endif //HeterogeneousHGCalHEFRecHitProducer_h

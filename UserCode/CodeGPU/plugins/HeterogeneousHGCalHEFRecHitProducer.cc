@@ -26,8 +26,6 @@ HeterogeneousHGCalHEFRecHitProducer::HeterogeneousHGCalHEFRecHitProducer(const e
   vdata_.waferTypeL_        = {0, 1, 2};//ddd_->retWaferTypeL(); if depends on geometry the allocation is tricky!
   cdata_.s_waferTypeL_      = vdata_.waferTypeL_.size();
 
-  begin = std::chrono::steady_clock::now();
-
   tools_.reset(new hgcal::RecHitTools());
   stride_ = ( (nhitsmax_-1)/32 + 1 ) * 32; //align to warp boundary
 
@@ -44,9 +42,6 @@ HeterogeneousHGCalHEFRecHitProducer::~HeterogeneousHGCalHEFRecHitProducer()
   delete d_newhits_;
   delete d_newhits_final_;
   delete h_newhits_;
-
-  end = std::chrono::steady_clock::now();
-  std::cout << "Time difference (heterogeneous) = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " [ms]" << std::endl;
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {

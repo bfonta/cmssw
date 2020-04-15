@@ -13,8 +13,6 @@ HeterogeneousHGCalHEBRecHitProducer::HeterogeneousHGCalHEBRecHitProducer(const e
   cdata_.s_weights_         = vdata_.weights_.size();
   cdata_.hgchebUncalib2GeV_ = 1e-6 / cdata_.hgcHEB_keV2DIGI_;
 
-  begin = std::chrono::steady_clock::now();
-
   tools_.reset(new hgcal::RecHitTools());
   stride_ = ( (nhitsmax_-1)/32 + 1 ) * 32; //align to warp boundary
 
@@ -34,9 +32,6 @@ HeterogeneousHGCalHEBRecHitProducer::~HeterogeneousHGCalHEBRecHitProducer()
   delete d_newhits_;
   delete d_newhits_final_;
   delete h_newhits_;
-
-  end = std::chrono::steady_clock::now();
-  std::cout << "Time difference (heterogeneous) = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " [ms]" << std::endl;
 }
 
 void HeterogeneousHGCalHEBRecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {
