@@ -65,7 +65,6 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGCeeUncalib
   transfer_constants_to_device_(h_kcdata, d_kcdata);
   transfer_soas_to_device_();
 
-  printf("%d blocks being launched with %d threads (%d in total) for %d ee hits.\n", ::nblocks_.x, ::nthreads_.x, ::nblocks_.x*::nthreads_.x, data_->nhits_);
   int nbytes_shared = get_shared_memory_size_(h_kcdata->data_.ndelem_, h_kcdata->data_.nfelem_, h_kcdata->data_.nuelem_, h_kcdata->data_.nielem_);
 
   /*
@@ -85,7 +84,6 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChefUncali
   transfer_constants_to_device_(h_kcdata, d_kcdata);
   transfer_soas_to_device_();
 
-  printf("%d blocks being launched with %d threads (%d in total) for %d hef hits.\n", ::nblocks_.x, ::nthreads_.x, ::nblocks_.x*::nthreads_.x, data_->nhits_);
   int nbytes_shared = get_shared_memory_size_(h_kcdata->data_.ndelem_, h_kcdata->data_.nfelem_, h_kcdata->data_.nuelem_, h_kcdata->data_.nielem_);
 
   /*
@@ -104,7 +102,6 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChebUncali
   transfer_constants_to_device_(h_kcdata, d_kcdata);
   transfer_soas_to_device_();
 
-  printf("%d blocks being launched with %d threads (%d in total) for %d heb hits.\n", ::nblocks_.x, ::nthreads_.x, ::nblocks_.x*::nthreads_.x, data_->nhits_);
   int nbytes_shared = get_shared_memory_size_(h_kcdata->data_.ndelem_, h_kcdata->data_.nfelem_, h_kcdata->data_.nuelem_, h_kcdata->data_.nielem_);
 
   /*
