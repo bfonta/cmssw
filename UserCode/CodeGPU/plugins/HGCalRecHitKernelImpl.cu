@@ -122,33 +122,28 @@ void set_shared_memory(const int& tid, double*& sd, float*& sf, uint32_t*& su, i
 {
   const int initial_pad = 2;
   if(tid == 0)
-    sd[tid] = cdata.hgcEE_keV2DIGI_;
-  else if(tid == 1)
-    sd[tid] = cdata.hgceeUncalib2GeV_;
-  else if(tid >= initial_pad && tid < size1)
-    sd[tid] = cdata.hgcEE_fCPerMIP_[tid-2];
-  else if(tid >= size1 && tid < size2)
-    sd[tid] = cdata.hgcEE_cce_[tid-size1];
-  else if(tid >= size2 && tid < size3)
-    sd[tid] = cdata.hgcEE_noise_fC_[tid-size2];
-  else if(tid >= size3 && tid < size4)
-    sd[tid] = cdata.rcorr_[tid - size3];
-  else if(tid >= size4 && tid < size5)
-    sd[tid] = cdata.weights_[tid - size4];
-  else if(tid >= size5 && tid < size6)
-    si[tid - size5] = cdata.waferTypeL_[tid - size5];
-  else if(tid == size6)
-    sf[0] = (cdata.xmin_ > 0) ? cdata.xmin_ : 0.1;
-  else if(tid == size6 + 1)
-    sf[1] = cdata.xmax_;
-  else if(tid == size6 + 2)
-    sf[2] = cdata.aterm_;
-  else if(tid == size6 + 3)
-    sf[3] = cdata.cterm_;
-  else if(tid == size6 + 4)
-    su[0] = cdata.rangeMatch_;
-  else if(tid == size6 + 5)
-    su[1] = cdata.rangeMask_;
+    {
+      sd[0] = cdata.hgcEE_keV2DIGI_;
+      sd[1] = cdata.hgceeUncalib2GeV_;
+      for(unsigned int i=initial_pad; i<size1; ++i)
+	sd[i] = cdata.hgcEE_fCPerMIP_[i-initial_pad];
+      for(unsigned int i=size1; i<size2; ++i)
+	sd[i] = cdata.hgcEE_cce_[i-size1];
+      for(unsigned int i=size2; i<size3; ++i)
+	sd[i] = cdata.hgcEE_noise_fC_[i-size2];  
+      for(unsigned int i=size3; i<size4; ++i)
+	sd[i] = cdata.rcorr_[i-size3];
+      for(unsigned int i=size4; i<size5; ++i)
+	sd[i] = cdata.weights_[i-size4];
+      for(unsigned int i=size5; i<size6; ++i)
+	si[i-size5] = cdata.waferTypeL_[i-size5];
+      sf[0] = (cdata.xmin_ > 0) ? cdata.xmin_ : 0.1;
+      sf[1] = cdata.xmax_;
+      sf[2] = cdata.aterm_;
+      sf[3] = cdata.cterm_;
+      su[0] = cdata.rangeMatch_;
+      su[1] = cdata.rangeMask_;
+    }
 }
 
 __device__ 
@@ -186,19 +181,16 @@ void set_shared_memory(const int& tid, double*& sd, float*& sf, uint32_t*& su, c
 {
   const int initial_pad = 3;
   if(tid == 0)
-    sd[tid] = cdata.hgcHEB_keV2DIGI_;
-  else if(tid == 1)
-    sd[tid] = cdata.hgchebUncalib2GeV_;
-  else if(tid == 2)
-    sd[tid] = cdata.hgcHEB_noise_MIP_;
-  else if(tid >= initial_pad && tid < size1)
-    sd[tid] = cdata.weights_[tid - initial_pad];
-  else if(tid == size1)
-    su[0] = cdata.rangeMatch_;
-  else if(tid == size1 + 1)
-    su[1] = cdata.rangeMask_;
-  else if(tid == size1 + 2)
-    su[2] = cdata.fhOffset_;
+    {
+      sd[0] = cdata.hgcHEB_keV2DIGI_;
+      sd[1] = cdata.hgchebUncalib2GeV_;
+      sd[2] = cdata.hgcHEB_noise_MIP_;
+      for(unsigned int i=initial_pad; i<size1; ++i)
+	sd[i] = cdata.weights_[i-initial_pad];
+      su[0] = cdata.rangeMatch_;
+      su[1] = cdata.rangeMask_;
+      su[2] = cdata.fhOffset_;
+    }
 }
 
 __global__
