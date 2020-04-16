@@ -57,9 +57,8 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
   kmdata_ = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(nhits, stride_, old_soa_, d_oldhits_, d_newhits_, d_newhits_final_, h_newhits_);
   KernelManagerHGCalRecHit kernel_manager(kmdata_);
   kernel_manager.run_kernels(h_kcdata_, d_kcdata_);
-  new_soa_ = kernel_manager.get_output();
   rechits_ = std::make_unique<HGCRecHitCollection>();
-  convert_soa_data_to_collection_(*rechits_, new_soa_, nhits);
+  convert_soa_data_to_collection_(*rechits_, h_newhits_, nhits);
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::produce(edm::Event& event, const edm::EventSetup& setup)
@@ -140,7 +139,7 @@ void HeterogeneousHGCalHEFRecHitProducer::convert_soa_data_to_collection_(HGCRec
     {
       DetId id_converted( d->id_[i] );
       if(i<20)
-	std::cout << d->energy_[i] << ", " << d->time_[i] << ", " << d->son_[i] << std::endl;
+	std::cout << d->energy_[i] << ", " << d->id_[i] << ", " << d->flagBits_[i] << ", " << d->son_[i] << std::endl;
       rechits.emplace_back( HGCRecHit(id_converted, d->energy_[i], d->time_[i], 0, d->flagBits_[i]) );
     }
 }

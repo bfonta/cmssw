@@ -71,7 +71,7 @@ class HeterogeneousHGCalEERecHitProducer: public edm::stream::EDProducer<edm::Ex
   void convert_constant_data_(KernelConstantData<HGCeeUncalibratedRecHitConstantData>*);
 
   HGCUncalibratedRecHitSoA *old_soa_ = nullptr, *d_oldhits_ = nullptr, *d_newhits_ = nullptr;
-  HGCRecHitSoA *new_soa_ = nullptr, *d_newhits_final_ = nullptr, *h_newhits_ = nullptr;
+  HGCRecHitSoA *d_newhits_final_ = nullptr, *h_newhits_ = nullptr;
   KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA> *kmdata_;
   KernelConstantData<HGCeeUncalibratedRecHitConstantData> *h_kcdata_;
   KernelConstantData<HGCeeUncalibratedRecHitConstantData> *d_kcdata_;

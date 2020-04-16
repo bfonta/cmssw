@@ -44,10 +44,9 @@ void HeterogeneousHGCalHEBRecHitProducer::acquire(edm::Event const& event, edm::
   kmdata_ = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(nhits, stride_, old_soa_, d_oldhits_, d_newhits_, d_newhits_final_, h_newhits_);
   KernelManagerHGCalRecHit kernel_manager(kmdata_);
   kernel_manager.run_kernels(h_kcdata_, d_kcdata_);
-  new_soa_ = kernel_manager.get_output();
 
   rechits_ = std::make_unique<HGCRecHitCollection>();
-  convert_soa_data_to_collection_(*rechits_, new_soa_, nhits);
+  convert_soa_data_to_collection_(*rechits_, h_newhits_, nhits);
 }
 
 void HeterogeneousHGCalHEBRecHitProducer::produce(edm::Event& event, const edm::EventSetup& setup)
