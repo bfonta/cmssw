@@ -32,7 +32,6 @@ namespace memory {
       kcdata->data_.ndelem_         = std::get<1>(memsizes) + 2;
       kcdata->data_.nfelem_         = std::get<2>(memsizes) + 4;
       kcdata->data_.nielem_         = std::get<3>(memsizes) + 0;
-      kcdata->data_.nuelem_         = 2;
     }
 
     //HEF: allocates memory for constants on the device
@@ -51,7 +50,7 @@ namespace memory {
       kcdata->data_.ndelem_          = std::get<1>(memsizes) + 2;
       kcdata->data_.nfelem_          = std::get<2>(memsizes) + 4;
       kcdata->data_.nielem_          = std::get<3>(memsizes) + 0;
-      kcdata->data_.nuelem_          = 3;
+      kcdata->data_.nuelem_          = 1;
     }
 
     //HEB: allocates memory for constants on the device
@@ -65,7 +64,7 @@ namespace memory {
       kcdata->data_.ndelem_   = std::get<1>(memsizes) + 3;
       kcdata->data_.nfelem_   = std::get<2>(memsizes) + 0;
       kcdata->data_.nielem_   = std::get<3>(memsizes) + 0;
-      kcdata->data_.nuelem_   = 3;
+      kcdata->data_.nuelem_   = 1;
     }
 
     //allocates memory for UncalibratedRecHits SoAs and RecHits SoAs on the device
@@ -126,7 +125,6 @@ namespace memory {
       kcdata->data_.ndelem_         = std::get<1>(memsizes) + 2;
       kcdata->data_.nfelem_         = std::get<2>(memsizes) + 0;
       kcdata->data_.nielem_         = std::get<3>(memsizes) + 0;
-      kcdata->data_.nuelem_         = 2;
     }
 
     //HEF: allocates memory for constants on the host
@@ -146,7 +144,7 @@ namespace memory {
       kcdata->data_.ndelem_          = std::get<1>(memsizes) + 2;
       kcdata->data_.nfelem_          = std::get<2>(memsizes) + 0;
       kcdata->data_.nielem_          = std::get<3>(memsizes) + 0;
-      kcdata->data_.nuelem_          = 3;
+      kcdata->data_.nuelem_          = 1;
     }
 
     //HEB: allocates memory for constants on the host
@@ -161,7 +159,7 @@ namespace memory {
       kcdata->data_.ndelem_  = std::get<1>(memsizes) + 3;
       kcdata->data_.nfelem_  = std::get<2>(memsizes) + 0;
       kcdata->data_.nielem_  = std::get<3>(memsizes) + 0;
-      kcdata->data_.nuelem_  = 3;
+      kcdata->data_.nuelem_  = 1;
     }
 
     //allocates pinned (non cached) memory for UncalibratedRecHits SoAs on the host

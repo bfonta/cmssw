@@ -63,6 +63,7 @@ void make_rechit(unsigned int tid, HGCRecHitSoA& dst_soa, HGCUncalibratedRecHitS
     }
   else
     dst_soa.timeError_[tid] = -1;
+  printf("CHECK %u\n", dst_soa.son_[tid]);
 }
 
 __device__ 
@@ -118,7 +119,7 @@ double get_fCPerMIP(const int& padding, double *& sd, const HGChefUncalibratedRe
 }
 
 __device__ 
-void set_shared_memory(const int& tid, double*& sd, float*& sf, uint32_t*& su, int*& si, const HGCeeUncalibratedRecHitConstantData& cdata, const int& size1, const int& size2, const int& size3, const int& size4, const int& size5, const int& size6)
+void set_shared_memory(const int& tid, double*& sd, float*& sf, int*& si, const HGCeeUncalibratedRecHitConstantData& cdata, const int& size1, const int& size2, const int& size3, const int& size4, const int& size5, const int& size6)
 {
   const int initial_pad = 2;
   if(tid == 0)
@@ -141,8 +142,6 @@ void set_shared_memory(const int& tid, double*& sd, float*& sf, uint32_t*& su, i
       sf[1] = cdata.xmax_;
       sf[2] = cdata.aterm_;
       sf[3] = cdata.cterm_;
-      su[0] = cdata.rangeMatch_;
-      su[1] = cdata.rangeMask_;
     }
 }
 
@@ -170,9 +169,7 @@ void set_shared_memory(const int& tid, double*& sd, float*& sf, uint32_t*& su, i
       sf[1] = cdata.xmax_;
       sf[2] = cdata.aterm_;
       sf[3] = cdata.cterm_;
-      su[0] = cdata.rangeMatch_;
-      su[1] = cdata.rangeMask_;
-      su[2] = cdata.fhOffset_;
+      su[0] = cdata.fhOffset_;
     }
 }
 
@@ -187,9 +184,7 @@ void set_shared_memory(const int& tid, double*& sd, float*& sf, uint32_t*& su, c
       sd[2] = cdata.hgcHEB_noise_MIP_;
       for(unsigned int i=initial_pad; i<size1; ++i)
 	sd[i] = cdata.weights_[i-initial_pad];
-      su[0] = cdata.rangeMatch_;
-      su[1] = cdata.rangeMask_;
-      su[2] = cdata.fhOffset_;
+      su[0] = cdata.fhOffset_;
     }
 }
 
@@ -223,14 +218,13 @@ void ee_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const 
   extern __shared__ double s[];
   double   *sd = s;
   float    *sf = (float*)   (sd + cdata.ndelem_);
-  uint32_t *su = (uint32_t*)(sf + cdata.nfelem_);
-  int      *si = (int*)     (su + cdata.nuelem_);
-  set_shared_memory(threadIdx.x, sd, sf, su, si, cdata, size1, size2, size3, size4, size5, size6);
+  int      *si = (int*)     (sf + cdata.nfelem_);
+  set_shared_memory(threadIdx.x, sd, sf, si, cdata, size1, size2, size3, size4, size5, size6);
   __syncthreads();
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
-      int l = /*HGCalDetId(src_soa.id_[tid]).layer();*/layer(src_soa.id_[tid], 0); //no offset
+      int l = layer(src_soa.id_[tid], 0); //no offset
       double weight = get_weight_from_layer(size4, l, sd);
       double rcorr = get_thickness_correction(size3, sd, cdata);
       double noise = get_noise(size2, sd, cdata);
@@ -263,7 +257,7 @@ void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
-      int l = /*HGCalDetId(src_soa.id_[tid]).layer();*/layer(src_soa.id_[tid], 0); //no offset
+      int l = layer(src_soa.id_[tid], 0); //no offset
       double weight = get_weight_from_layer(size4, l, sd);
       double rcorr = get_thickness_correction(size3, sd, cdata);
       double noise = get_noise(size2, sd, cdata);
@@ -290,7 +284,7 @@ void heb_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
-      int l = /*HGCalDetId(src_soa.id_[tid]).layer();*/layer(src_soa.id_[tid], su[2]); //with offset
+      int l = layer(src_soa.id_[tid], su[0]); //with offset
       double weight = get_weight_from_layer(3, l, sd);
       double noise = sd[2];
       double sigmaNoiseGeV = 1e-3 * noise * weight;

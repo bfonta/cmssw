@@ -8,8 +8,6 @@ HeterogeneousHGCalEERecHitProducer::HeterogeneousHGCalEERecHitProducer(const edm
   cdata_.xmax_             = ps.getParameter<double>("maxValSiPar"); //float
   cdata_.aterm_            = ps.getParameter<double>("constSiPar"); //float
   cdata_.cterm_            = ps.getParameter<double>("noiseSiPar"); //float
-  cdata_.rangeMatch_       = ps.getParameter<uint32_t>("rangeMatch");
-  cdata_.rangeMask_        = ps.getParameter<uint32_t>("rangeMask");
   vdata_.fCPerMIP_         = ps.getParameter< std::vector<double> >("HGCEE_fCPerMIP");
   vdata_.cce_              = ps.getParameter<edm::ParameterSet>("HGCEE_cce").getParameter<std::vector<double> >("values");
   vdata_.noise_fC_         = ps.getParameter<edm::ParameterSet>("HGCEE_noise_fC").getParameter<std::vector<double> >("values");

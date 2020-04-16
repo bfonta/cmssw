@@ -5,8 +5,6 @@ HeterogeneousHGCalHEBRecHitProducer::HeterogeneousHGCalHEBRecHitProducer(const e
 {
   cdata_.hgcHEB_keV2DIGI_   = ps.getParameter<double>("HGCHEB_keV2DIGI");
   cdata_.hgcHEB_noise_MIP_  = ps.getParameter<edm::ParameterSet>("HGCHEB_noise_MIP").getParameter<double>("noise_MIP");
-  cdata_.rangeMatch_        = ps.getParameter<uint32_t>("rangeMatch");
-  cdata_.rangeMask_         = ps.getParameter<uint32_t>("rangeMask");
   vdata_.weights_           = ps.getParameter< std::vector<double> >("weights");
   cdata_.fhOffset_          = ps.getParameter<uint32_t>("offset"); //ddd_->layers(true);
   cdata_.s_weights_         = vdata_.weights_.size();

@@ -65,7 +65,7 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGCeeUncalib
   transfer_constants_to_device_(h_kcdata, d_kcdata);
   transfer_soas_to_device_();
 
-  int nbytes_shared = get_shared_memory_size_(h_kcdata->data_.ndelem_, h_kcdata->data_.nfelem_, h_kcdata->data_.nuelem_, h_kcdata->data_.nielem_);
+  int nbytes_shared = get_shared_memory_size_(h_kcdata->data_.ndelem_, h_kcdata->data_.nfelem_, 0, h_kcdata->data_.nielem_);
 
   /*
   ee_step1<<<::nblocks_, ::nthreads_>>>( *(data_->d_2_), *(data_->d_1_), d_kcdata->data_, data_->nhits_ );
