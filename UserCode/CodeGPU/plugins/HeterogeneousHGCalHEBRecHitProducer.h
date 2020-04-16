@@ -55,11 +55,11 @@ class HeterogeneousHGCalHEBRecHitProducer: public edm::stream::EDProducer<edm::E
 
   //memory
   void allocate_memory_();
-  cms::cuda::host::noncached::unique_ptr<double[]> h_mem_const_;
-  cms::cuda::device::unique_ptr<double[]> d_mem_const_;
-  cms::cuda::host::noncached::unique_ptr<float[]> h_mem_in_;
-  cms::cuda::device::unique_ptr<float[]> d_mem_;
-  cms::cuda::host::unique_ptr<float[]> h_mem_out_;
+  cms::cuda::host::noncached::unique_ptr<std::byte[]> h_mem_const_;
+  cms::cuda::device::unique_ptr<std::byte[]> d_mem_const_;
+  cms::cuda::host::noncached::unique_ptr<std::byte[]> h_mem_in_;
+  cms::cuda::device::unique_ptr<std::byte[]> d_mem_;
+  cms::cuda::host::unique_ptr<std::byte[]> h_mem_out_;
 
   //geometry
   void set_geometry_(const edm::EventSetup&);

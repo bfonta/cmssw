@@ -3,7 +3,6 @@
 HeterogeneousHGCalEERecHitProducer::HeterogeneousHGCalEERecHitProducer(const edm::ParameterSet& ps):
   token_(consumes<HGCUncalibratedRecHitCollection>(ps.getParameter<edm::InputTag>("HGCEEUncalibRecHitsTok")))
 {
-  nhitsmax_                = ps.getParameter<uint32_t>("nhitsmax");
   cdata_.hgcEE_keV2DIGI_   = ps.getParameter<double>("HGCEE_keV2DIGI");
   cdata_.xmin_             = ps.getParameter<double>("minValSiPar"); //float
   cdata_.xmax_             = ps.getParameter<double>("maxValSiPar"); //float
@@ -26,7 +25,6 @@ HeterogeneousHGCalEERecHitProducer::HeterogeneousHGCalEERecHitProducer(const edm
   cdata_.s_waferTypeL_     = vdata_.waferTypeL_.size();
 
   tools_.reset(new hgcal::RecHitTools());
-  stride_ = ( (nhitsmax_-1)/32 + 1 ) * 32; //align to warp boundary
 
   produces<HGCeeRecHitCollection>(collection_name_);
 }
@@ -47,16 +45,17 @@ void HeterogeneousHGCalEERecHitProducer::acquire(edm::Event const& event, edm::E
   const cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w), ctxState_};
   set_geometry_(setup);
 
+  event.getByToken(token_, handle_ee_);
+  const auto &hits_ee = *handle_ee_;
+  unsigned int nhits = hits_ee.size();
+  stride_ = ( (nhits-1)/32 + 1 ) * 32; //align to warp boundary
+
   allocate_memory_();
   convert_constant_data_(h_kcdata_);
 
-  event.getByToken(token_, handle_ee_);
-  const auto &hits_ee = *handle_ee_;
-
-  unsigned int nhits = hits_ee.size();
   convert_collection_data_to_soa_(hits_ee, old_soa_, nhits);
 
-  kmdata_ = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(nhitsmax_, stride_, old_soa_, d_oldhits_, d_newhits_, d_newhits_final_, h_newhits_);
+  kmdata_ = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(nhits, stride_, old_soa_, d_oldhits_, d_newhits_, d_newhits_final_, h_newhits_);
   KernelManagerHGCalRecHit kernel_manager(kmdata_);
   kernel_manager.run_kernels(h_kcdata_, d_kcdata_);
   new_soa_ = kernel_manager.get_output();
@@ -86,11 +85,11 @@ void HeterogeneousHGCalEERecHitProducer::allocate_memory_()
   //_allocate pinned memory for constants on the device
   memory::allocation::device(d_kcdata_, d_mem_const_);
   //_allocate memory for hits on the host
-  memory::allocation::host(nhitsmax_, old_soa_, h_mem_in_);
+  memory::allocation::host(stride_, old_soa_, h_mem_in_);
   //_allocate memory for hits on the device
-  memory::allocation::device(nhitsmax_, d_oldhits_, d_newhits_, d_newhits_final_, d_mem_);
+  memory::allocation::device(stride_, d_oldhits_, d_newhits_, d_newhits_final_, d_mem_);
   //_allocate memory for hits on the host
-  memory::allocation::host(nhitsmax_, h_newhits_, h_mem_out_);
+  memory::allocation::host(stride_, h_newhits_, h_mem_out_);
 }
 
 void HeterogeneousHGCalEERecHitProducer::set_geometry_(const edm::EventSetup& setup)

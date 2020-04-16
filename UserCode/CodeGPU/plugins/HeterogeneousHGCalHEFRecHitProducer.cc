@@ -3,7 +3,6 @@
 HeterogeneousHGCalHEFRecHitProducer::HeterogeneousHGCalHEFRecHitProducer(const edm::ParameterSet& ps):
   token_(consumes<HGCUncalibratedRecHitCollection>(ps.getParameter<edm::InputTag>("HGCHEFUncalibRecHitsTok")))
 {
-  nhitsmax_                 = ps.getParameter<uint32_t>("nhitsmax");
   cdata_.hgcHEF_keV2DIGI_   = ps.getParameter<double>("HGCHEF_keV2DIGI");
   cdata_.xmin_              = ps.getParameter<double>("minValSiPar"); //float
   cdata_.xmax_              = ps.getParameter<double>("maxValSiPar"); //float
@@ -27,7 +26,6 @@ HeterogeneousHGCalHEFRecHitProducer::HeterogeneousHGCalHEFRecHitProducer(const e
   cdata_.s_waferTypeL_      = vdata_.waferTypeL_.size();
 
   tools_.reset(new hgcal::RecHitTools());
-  stride_ = ( (nhitsmax_-1)/32 + 1 ) * 32; //align to warp boundary
 
   produces<HGChefRecHitCollection>(collection_name_);
 }
@@ -48,16 +46,17 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
   const cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w), ctxState_};
   set_geometry_(setup);
 
-  allocate_memory_();
-  convert_constant_data_(h_kcdata_);
-
   event.getByToken(token_, handle_hef_);
   const auto &hits_hef = *handle_hef_;
 
   unsigned int nhits = hits_hef.size();
+  stride_ = ( (nhits-1)/32 + 1 ) * 32; //align to warp boundary
+  allocate_memory_();
+  convert_constant_data_(h_kcdata_);
+
   convert_collection_data_to_soa_(hits_hef, old_soa_, nhits);
 
-  kmdata_ = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(nhitsmax_, stride_, old_soa_, d_oldhits_, d_newhits_, d_newhits_final_, h_newhits_);
+  kmdata_ = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(nhits, stride_, old_soa_, d_oldhits_, d_newhits_, d_newhits_final_, h_newhits_);
   KernelManagerHGCalRecHit kernel_manager(kmdata_);
   kernel_manager.run_kernels(h_kcdata_, d_kcdata_);
   new_soa_ = kernel_manager.get_output();
@@ -141,6 +140,8 @@ void HeterogeneousHGCalHEFRecHitProducer::convert_soa_data_to_collection_(HGCRec
   for(uint i=0; i<nhits; ++i)
     {
       DetId id_converted( d->id_[i] );
+      if(i<20)
+	std::cout << d->energy_[i] << ", " << d->time_[i] << ", " << d->son_[i] << std::endl;
       rechits.emplace_back( HGCRecHit(id_converted, d->energy_[i], d->time_[i], 0, d->flagBits_[i]) );
     }
 }

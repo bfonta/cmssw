@@ -33,7 +33,6 @@ process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool( False )) #add option for edmStreams
 process.HeterogeneousHGCalEERecHitProducer = cms.EDProducer('HeterogeneousHGCalEERecHitProducer',
                                                             HGCEEUncalibRecHitsTok = cms.InputTag('HGCalUncalibRecHit', 'HGCEEUncalibRecHits'),
-                                                            nhitsmax       = cms.uint32(40000),
                                                             HGCEE_keV2DIGI = HGCalRecHit.__dict__['HGCEE_keV2DIGI'],
                                                             minValSiPar    = HGCalRecHit.__dict__['minValSiPar'],
                                                             maxValSiPar    = HGCalRecHit.__dict__['maxValSiPar'],
@@ -50,7 +49,6 @@ process.HeterogeneousHGCalEERecHitProducer = cms.EDProducer('HeterogeneousHGCalE
 )
 process.HeterogeneousHGCalHEFRecHitProducer = cms.EDProducer('HeterogeneousHGCalHEFRecHitProducer',
                                                              HGCHEFUncalibRecHitsTok = cms.InputTag('HGCalUncalibRecHit', 'HGCHEFUncalibRecHits'),
-                                                             nhitsmax        = cms.uint32(6000),
                                                              HGCHEF_keV2DIGI  = HGCalRecHit.__dict__['HGCHEF_keV2DIGI'],
                                                              minValSiPar     = HGCalRecHit.__dict__['minValSiPar'],
                                                              maxValSiPar     = HGCalRecHit.__dict__['maxValSiPar'],
@@ -68,7 +66,6 @@ process.HeterogeneousHGCalHEFRecHitProducer = cms.EDProducer('HeterogeneousHGCal
                                                          )
 process.HeterogeneousHGCalHEBRecHitProducer = cms.EDProducer('HeterogeneousHGCalHEBRecHitProducer',
                                                              HGCHEBUncalibRecHitsTok = cms.InputTag('HGCalUncalibRecHit', 'HGCHEBUncalibRecHits'),
-                                                             nhitsmax         = cms.uint32(1000),
                                                              HGCHEB_keV2DIGI  = HGCalRecHit.__dict__['HGCHEB_keV2DIGI'],
                                                              HGCHEB_noise_MIP = HGCalRecHit.__dict__['HGCHEB_noise_MIP'],
                                                              minValSiPar      = HGCalRecHit.__dict__['minValSiPar'],
@@ -84,8 +81,8 @@ process.HeterogeneousHGCalHEBRecHitProducer = cms.EDProducer('HeterogeneousHGCal
 
 fNameOut = 'out'
 #convert this to a task!!!!!
-process.task = cms.Task( process.HeterogeneousHGCalEERecHitProducer, process.HeterogeneousHGCalHEFRecHitProducer, process.HeterogeneousHGCalHEBRecHitProducer )
-#process.task = cms.Task( process.HeterogeneousHGCalHEFRecHitProducer )
+#process.task = cms.Task( process.HeterogeneousHGCalEERecHitProducer, process.HeterogeneousHGCalHEFRecHitProducer, process.HeterogeneousHGCalHEBRecHitProducer )
+process.task = cms.Task( process.HeterogeneousHGCalHEFRecHitProducer )
 process.path = cms.Path( process.task )
 
 process.TFileService = cms.Service("TFileService", 

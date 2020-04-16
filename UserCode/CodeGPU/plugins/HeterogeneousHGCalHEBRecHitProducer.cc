@@ -3,7 +3,6 @@
 HeterogeneousHGCalHEBRecHitProducer::HeterogeneousHGCalHEBRecHitProducer(const edm::ParameterSet& ps):
   token_(consumes<HGCUncalibratedRecHitCollection>(ps.getParameter<edm::InputTag>("HGCHEBUncalibRecHitsTok")))
 {
-  nhitsmax_                 = ps.getParameter<uint32_t>("nhitsmax");
   cdata_.hgcHEB_keV2DIGI_   = ps.getParameter<double>("HGCHEB_keV2DIGI");
   cdata_.hgcHEB_noise_MIP_  = ps.getParameter<edm::ParameterSet>("HGCHEB_noise_MIP").getParameter<double>("noise_MIP");
   cdata_.rangeMatch_        = ps.getParameter<uint32_t>("rangeMatch");
@@ -14,10 +13,6 @@ HeterogeneousHGCalHEBRecHitProducer::HeterogeneousHGCalHEBRecHitProducer(const e
   cdata_.hgchebUncalib2GeV_ = 1e-6 / cdata_.hgcHEB_keV2DIGI_;
 
   tools_.reset(new hgcal::RecHitTools());
-  stride_ = ( (nhitsmax_-1)/32 + 1 ) * 32; //align to warp boundary
-
-  allocate_memory_();
-  convert_constant_data_(h_kcdata_);
 
   produces<HGChebRecHitCollection>(collection_name_);
 }
@@ -37,17 +32,18 @@ HeterogeneousHGCalHEBRecHitProducer::~HeterogeneousHGCalHEBRecHitProducer()
 void HeterogeneousHGCalHEBRecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {
   const cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w), ctxState_};
   set_geometry_(setup);
-
-  allocate_memory_();
-  convert_constant_data_(h_kcdata_);
   
   event.getByToken(token_, handle_heb_);
   const auto &hits_heb = *handle_heb_;
 
   unsigned int nhits = hits_heb.size();
+  stride_ = ( (nhits-1)/32 + 1 ) * 32; //align to warp boundary
+  allocate_memory_();
+  convert_constant_data_(h_kcdata_);
+
   convert_collection_data_to_soa_(hits_heb, old_soa_, nhits);
 
-  kmdata_ = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(nhitsmax_, stride_, old_soa_, d_oldhits_, d_newhits_, d_newhits_final_, h_newhits_);
+  kmdata_ = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(nhits, stride_, old_soa_, d_oldhits_, d_newhits_, d_newhits_final_, h_newhits_);
   KernelManagerHGCalRecHit kernel_manager(kmdata_);
   kernel_manager.run_kernels(h_kcdata_, d_kcdata_);
   new_soa_ = kernel_manager.get_output();
