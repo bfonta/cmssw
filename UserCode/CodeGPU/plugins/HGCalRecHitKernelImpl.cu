@@ -184,7 +184,7 @@ void set_shared_memory(const int& tid, double*& sd, float*& sf, uint32_t*& su, c
       sd[2] = cdata.hgcHEB_noise_MIP_;
       for(unsigned int i=initial_pad; i<size1; ++i)
 	sd[i] = cdata.weights_[i-initial_pad];
-      su[0] = cdata.fhOffset_;
+      su[0] = cdata.bhOffset_;
     }
 }
 
@@ -257,7 +257,7 @@ void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
-      int l = layer(src_soa.id_[tid], 0); //no offset
+      int l = layer(src_soa.id_[tid], su[0]); //with offset
       double weight = get_weight_from_layer(size4, l, sd);
       double rcorr = get_thickness_correction(size3, sd, cdata);
       double noise = get_noise(size2, sd, cdata);

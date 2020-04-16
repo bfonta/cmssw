@@ -97,7 +97,8 @@ void HeterogeneousHGCalHEFRecHitProducer::set_geometry_(const edm::EventSetup& s
   handle_str = "HGCalHESiliconSensitive";
   edm::ESHandle<HGCalGeometry> handle;
   setup.get<IdealGeometryRecord>().get(handle_str, handle);
-  ddd_ = &(handle->topology().dddConstants());
+  //ddd_ = &(handle->topology().dddConstants());
+  //cdata_.fhOffset_ = ddd_->layers(true); see RecoLocalCalo/HGCalRecAlgos/src/RecHitTools.cc
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::convert_constant_data_(KernelConstantData<HGChefUncalibratedRecHitConstantData> *kcdata)

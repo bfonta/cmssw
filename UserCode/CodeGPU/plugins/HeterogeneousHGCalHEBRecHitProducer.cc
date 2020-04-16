@@ -6,7 +6,7 @@ HeterogeneousHGCalHEBRecHitProducer::HeterogeneousHGCalHEBRecHitProducer(const e
   cdata_.hgcHEB_keV2DIGI_   = ps.getParameter<double>("HGCHEB_keV2DIGI");
   cdata_.hgcHEB_noise_MIP_  = ps.getParameter<edm::ParameterSet>("HGCHEB_noise_MIP").getParameter<double>("noise_MIP");
   vdata_.weights_           = ps.getParameter< std::vector<double> >("weights");
-  cdata_.fhOffset_          = ps.getParameter<uint32_t>("offset"); //ddd_->layers(true);
+  cdata_.bhOffset_          = ps.getParameter<uint32_t>("offset"); //ddd_->layers(true);
   cdata_.s_weights_         = vdata_.weights_.size();
   cdata_.hgchebUncalib2GeV_ = 1e-6 / cdata_.hgcHEB_keV2DIGI_;
 
@@ -85,8 +85,8 @@ void HeterogeneousHGCalHEBRecHitProducer::set_geometry_(const edm::EventSetup& s
   handle_str = "HGCalHEScintillatorSensitive";
   edm::ESHandle<HGCalGeometry> handle;
   setup.get<IdealGeometryRecord>().get(handle_str, handle);
-  ddd_ = &(handle->topology().dddConstants());
-  cdata_.fhOffset_ = ddd_->layers(true);
+  //ddd_ = &(handle->topology().dddConstants());
+  //cdata_.bhOffset_ = fhOffset + ddd_->layers(true); see RecoLocalCalo/HGCalRecAlgos/src/RecHitTools.cc
 }
 
 void HeterogeneousHGCalHEBRecHitProducer::convert_constant_data_(KernelConstantData<HGChebUncalibratedRecHitConstantData> *kcdata)
