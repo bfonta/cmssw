@@ -63,7 +63,6 @@ void make_rechit(unsigned int tid, HGCRecHitSoA& dst_soa, HGCUncalibratedRecHitS
     }
   else
     dst_soa.timeError_[tid] = -1;
-  printf("CHECK %u\n", dst_soa.son_[tid]);
 }
 
 __device__ 

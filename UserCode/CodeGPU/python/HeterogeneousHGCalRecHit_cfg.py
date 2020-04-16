@@ -85,11 +85,6 @@ fNameOut = 'out'
 process.task = cms.Task( process.HeterogeneousHGCalHEFRecHitProducer )
 process.path = cms.Path( process.task )
 
-process.TFileService = cms.Service("TFileService", 
-                                   fileName = cms.string("histo.root"),
-                                   closeFileFast = cms.untracked.bool(True) #safe as long as the file doesn't contain multiple references to the same object, for example a histogram and a TCanvas containing that histogram.
-)
-
 process.out = cms.OutputModule("PoolOutputModule",
                                fileName = cms.untracked.string(fNameOut+".root"))
 process.outpath = cms.EndPath(process.out)

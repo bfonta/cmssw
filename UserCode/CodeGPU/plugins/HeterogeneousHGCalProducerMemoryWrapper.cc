@@ -187,8 +187,6 @@ namespace memory {
       std::vector<int> sizes = { 3*sizeof(float), 2*sizeof(uint32_t), sizeof(uint8_t) };
       int size_tot = std::accumulate(sizes.begin(), sizes.end(), 0);
       mem = cms::cuda::make_host_unique<std::byte[]>(nhits * size_tot, 0);
-      std::cout << "SIZES host: " << size_tot << ", " << nhits * size_tot << std::endl;
-
       soa->energy_     = reinterpret_cast<float*>(mem.get());
       soa->time_       = soa->energy_     + nhits;
       soa->timeError_  = soa->time_       + nhits;
