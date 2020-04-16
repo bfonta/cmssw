@@ -31,15 +31,15 @@
 
 namespace memory {
   namespace allocation {
-    void host(KernelConstantData<HGCeeUncalibratedRecHitConstantData>*, cms::cuda::host::noncached::unique_ptr<double[]>&);
-    void host(KernelConstantData<HGChefUncalibratedRecHitConstantData>*, cms::cuda::host::noncached::unique_ptr<double[]>&);
-    void host(KernelConstantData<HGChebUncalibratedRecHitConstantData>*, cms::cuda::host::noncached::unique_ptr<double[]>&);
-    void host(const int&, HGCUncalibratedRecHitSoA*, cms::cuda::host::noncached::unique_ptr<float[]>&);
-    void host(const int&, HGCRecHitSoA*, cms::cuda::host::unique_ptr<float[]>&);
-    void device(KernelConstantData<HGCeeUncalibratedRecHitConstantData>*, cms::cuda::device::unique_ptr<double[]>&);
-    void device(KernelConstantData<HGChefUncalibratedRecHitConstantData>*, cms::cuda::device::unique_ptr<double[]>&);
-    void device(KernelConstantData<HGChebUncalibratedRecHitConstantData>*, cms::cuda::device::unique_ptr<double[]>&);
-    void device(const int&, HGCUncalibratedRecHitSoA*, HGCUncalibratedRecHitSoA*, HGCRecHitSoA*, cms::cuda::device::unique_ptr<float[]>&);
+    void host(KernelConstantData<HGCeeUncalibratedRecHitConstantData>*, cms::cuda::host::noncached::unique_ptr<std::byte[]>&);
+    void host(KernelConstantData<HGChefUncalibratedRecHitConstantData>*, cms::cuda::host::noncached::unique_ptr<std::byte[]>&);
+    void host(KernelConstantData<HGChebUncalibratedRecHitConstantData>*, cms::cuda::host::noncached::unique_ptr<std::byte[]>&);
+    void host(const int&, HGCUncalibratedRecHitSoA*, cms::cuda::host::noncached::unique_ptr<std::byte[]>&);
+    void host(const int&, HGCRecHitSoA*, cms::cuda::host::unique_ptr<std::byte[]>&);
+    void device(KernelConstantData<HGCeeUncalibratedRecHitConstantData>*, cms::cuda::device::unique_ptr<std::byte[]>&);
+    void device(KernelConstantData<HGChefUncalibratedRecHitConstantData>*, cms::cuda::device::unique_ptr<std::byte[]>&);
+    void device(KernelConstantData<HGChebUncalibratedRecHitConstantData>*, cms::cuda::device::unique_ptr<std::byte[]>&);
+    void device(const int&, HGCUncalibratedRecHitSoA*, HGCUncalibratedRecHitSoA*, HGCRecHitSoA*, cms::cuda::device::unique_ptr<std::byte[]>&);
   }
 }
 							

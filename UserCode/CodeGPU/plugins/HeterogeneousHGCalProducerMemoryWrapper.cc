@@ -17,12 +17,12 @@ namespace memory {
     }
 
     //EE: allocates memory for constants on the device
-    void device(KernelConstantData<HGCeeUncalibratedRecHitConstantData> *kcdata, cms::cuda::device::unique_ptr<double[]>& mem) {
+    void device(KernelConstantData<HGCeeUncalibratedRecHitConstantData> *kcdata, cms::cuda::device::unique_ptr<std::byte[]>& mem) {
       const std::vector<int> nelements = {kcdata->data_.s_hgcEE_fCPerMIP_, kcdata->data_.s_hgcEE_cce_, kcdata->data_.s_hgcEE_noise_fC_, kcdata->data_.s_rcorr_, kcdata->data_.s_weights_, kcdata->data_.s_waferTypeL_};
       auto memsizes = get_memory_sizes_(nelements, 5, 0, 1);
-      mem = cms::cuda::make_device_unique<double[]>(std::get<0>(memsizes), 0);
+      mem = cms::cuda::make_device_unique<std::byte[]>(std::get<0>(memsizes), 0);
 
-      kcdata->data_.hgcEE_fCPerMIP_ = mem.get();
+      kcdata->data_.hgcEE_fCPerMIP_ = reinterpret_cast<double*>(mem.get());
       kcdata->data_.hgcEE_cce_      = kcdata->data_.hgcEE_fCPerMIP_ + nelements[0];
       kcdata->data_.hgcEE_noise_fC_ = kcdata->data_.hgcEE_cce_ + nelements[1];
       kcdata->data_.rcorr_          = kcdata->data_.hgcEE_noise_fC_ + nelements[2];
@@ -36,12 +36,12 @@ namespace memory {
     }
 
     //HEF: allocates memory for constants on the device
-    void device(KernelConstantData<HGChefUncalibratedRecHitConstantData> *kcdata, cms::cuda::device::unique_ptr<double[]>& mem) {
+    void device(KernelConstantData<HGChefUncalibratedRecHitConstantData> *kcdata, cms::cuda::device::unique_ptr<std::byte[]>& mem) {
       const std::vector<int> nelements = {kcdata->data_.s_hgcHEF_fCPerMIP_, kcdata->data_.s_hgcHEF_cce_, kcdata->data_.s_hgcHEF_noise_fC_, kcdata->data_.s_rcorr_, kcdata->data_.s_weights_, kcdata->data_.s_waferTypeL_};
       auto memsizes = get_memory_sizes_(nelements, 5, 0, 1);
-      mem = cms::cuda::make_device_unique<double[]>(std::get<0>(memsizes), 0);
+      mem = cms::cuda::make_device_unique<std::byte[]>(std::get<0>(memsizes), 0);
 
-      kcdata->data_.hgcHEF_fCPerMIP_ = mem.get();
+      kcdata->data_.hgcHEF_fCPerMIP_ = reinterpret_cast<double*>(mem.get());
       kcdata->data_.hgcHEF_cce_      = kcdata->data_.hgcHEF_fCPerMIP_ + nelements[0];
       kcdata->data_.hgcHEF_noise_fC_ = kcdata->data_.hgcHEF_cce_ + nelements[1];
       kcdata->data_.rcorr_           = kcdata->data_.hgcHEF_noise_fC_ + nelements[2];
@@ -55,12 +55,12 @@ namespace memory {
     }
 
     //HEB: allocates memory for constants on the device
-    void device(KernelConstantData<HGChebUncalibratedRecHitConstantData> *kcdata, cms::cuda::device::unique_ptr<double[]>& mem) {
+    void device(KernelConstantData<HGChebUncalibratedRecHitConstantData> *kcdata, cms::cuda::device::unique_ptr<std::byte[]>& mem) {
       const std::vector<int> nelements = {kcdata->data_.s_weights_};
       auto memsizes = get_memory_sizes_(nelements, 1, 0, 0);
-      mem = cms::cuda::make_device_unique<double[]>(std::get<0>(memsizes), 0);
+      mem = cms::cuda::make_device_unique<std::byte[]>(std::get<0>(memsizes), 0);
 
-      kcdata->data_.weights_  = mem.get();
+      kcdata->data_.weights_  = reinterpret_cast<double*>(mem.get());
       kcdata->data_.nbytes_   = std::get<0>(memsizes);
       kcdata->data_.ndelem_   = std::get<1>(memsizes) + 3;
       kcdata->data_.nfelem_   = std::get<2>(memsizes) + 0;
@@ -69,15 +69,15 @@ namespace memory {
     }
 
     //allocates memory for UncalibratedRecHits SoAs and RecHits SoAs on the device
-    void device(const int& nhits, HGCUncalibratedRecHitSoA* soa1, HGCUncalibratedRecHitSoA* soa2, HGCRecHitSoA* soa3, cms::cuda::device::unique_ptr<float[]>& mem)
+    void device(const int& nhits, HGCUncalibratedRecHitSoA* soa1, HGCUncalibratedRecHitSoA* soa2, HGCRecHitSoA* soa3, cms::cuda::device::unique_ptr<std::byte[]>& mem)
     {
       std::vector<int> sizes = {6*sizeof(float), 3*sizeof(uint32_t),                     //soa1
 				6*sizeof(float), 3*sizeof(uint32_t),                     //soa2
 				3*sizeof(float), 2*sizeof(uint32_t), 1*sizeof(uint8_t)}; //soa3
       int size_tot = std::accumulate( sizes.begin(), sizes.end(), 0);
-      mem = cms::cuda::make_device_unique<float[]>(nhits * size_tot, 0);
+      mem = cms::cuda::make_device_unique<std::byte[]>(nhits * size_tot, 0);
 
-      soa1->amplitude_     = mem.get();
+      soa1->amplitude_     = reinterpret_cast<float*>(mem.get());
       soa1->pedestal_      = soa1->amplitude_    + nhits;
       soa1->jitter_        = soa1->pedestal_     + nhits;
       soa1->chi2_          = soa1->jitter_       + nhits;
@@ -110,13 +110,13 @@ namespace memory {
     }
 
     //EE: allocates memory for constants on the host
-    void host(KernelConstantData<HGCeeUncalibratedRecHitConstantData>* kcdata, cms::cuda::host::noncached::unique_ptr<double[]>& mem)
+    void host(KernelConstantData<HGCeeUncalibratedRecHitConstantData>* kcdata, cms::cuda::host::noncached::unique_ptr<std::byte[]>& mem)
     {
       const std::vector<int> nelements = {kcdata->data_.s_hgcEE_fCPerMIP_, kcdata->data_.s_hgcEE_cce_, kcdata->data_.s_hgcEE_noise_fC_, kcdata->data_.s_rcorr_, kcdata->data_.s_weights_, kcdata->data_.s_waferTypeL_};
       auto memsizes = get_memory_sizes_(nelements, 5, 0, 1);
-      mem = cms::cuda::make_host_noncached_unique<double[]>(std::get<0>(memsizes), 0);
+      mem = cms::cuda::make_host_noncached_unique<std::byte[]>(std::get<0>(memsizes), 0);
 
-      kcdata->data_.hgcEE_fCPerMIP_ = mem.get();
+      kcdata->data_.hgcEE_fCPerMIP_ = reinterpret_cast<double*>(mem.get());
       kcdata->data_.hgcEE_cce_      = kcdata->data_.hgcEE_fCPerMIP_ + nelements[0];
       kcdata->data_.hgcEE_noise_fC_ = kcdata->data_.hgcEE_cce_ + nelements[1];
       kcdata->data_.rcorr_          = kcdata->data_.hgcEE_noise_fC_ + nelements[2];
@@ -130,13 +130,13 @@ namespace memory {
     }
 
     //HEF: allocates memory for constants on the host
-    void host(KernelConstantData<HGChefUncalibratedRecHitConstantData>* kcdata, cms::cuda::host::noncached::unique_ptr<double[]>& mem)
+    void host(KernelConstantData<HGChefUncalibratedRecHitConstantData>* kcdata, cms::cuda::host::noncached::unique_ptr<std::byte[]>& mem)
     {
       const std::vector<int> nelements = {kcdata->data_.s_hgcHEF_fCPerMIP_, kcdata->data_.s_hgcHEF_cce_, kcdata->data_.s_hgcHEF_noise_fC_, kcdata->data_.s_rcorr_, kcdata->data_.s_weights_, kcdata->data_.s_waferTypeL_};
       auto memsizes = get_memory_sizes_(nelements, 5, 0, 1);
-      mem = cms::cuda::make_host_noncached_unique<double[]>(std::get<0>(memsizes), 0);
+      mem = cms::cuda::make_host_noncached_unique<std::byte[]>(std::get<0>(memsizes), 0);
 
-      kcdata->data_.hgcHEF_fCPerMIP_ = mem.get();
+      kcdata->data_.hgcHEF_fCPerMIP_ = reinterpret_cast<double*>(mem.get());
       kcdata->data_.hgcHEF_cce_      = kcdata->data_.hgcHEF_fCPerMIP_ + nelements[0];
       kcdata->data_.hgcHEF_noise_fC_ = kcdata->data_.hgcHEF_cce_ + nelements[1];
       kcdata->data_.rcorr_           = kcdata->data_.hgcHEF_noise_fC_ + nelements[2];
@@ -150,13 +150,13 @@ namespace memory {
     }
 
     //HEB: allocates memory for constants on the host
-    void host(KernelConstantData<HGChebUncalibratedRecHitConstantData>* kcdata, cms::cuda::host::noncached::unique_ptr<double[]>& mem)
+    void host(KernelConstantData<HGChebUncalibratedRecHitConstantData>* kcdata, cms::cuda::host::noncached::unique_ptr<std::byte[]>& mem)
     {
       const std::vector<int> nelements = {kcdata->data_.s_weights_};
       auto memsizes = get_memory_sizes_(nelements, 1, 0, 0);
-      mem = cms::cuda::make_host_noncached_unique<double[]>(std::get<0>(memsizes), 0);
+      mem = cms::cuda::make_host_noncached_unique<std::byte[]>(std::get<0>(memsizes), 0);
 
-      kcdata->data_.weights_ = mem.get();
+      kcdata->data_.weights_ = reinterpret_cast<double*>(mem.get());
       kcdata->data_.nbytes_  = std::get<0>(memsizes);
       kcdata->data_.ndelem_  = std::get<1>(memsizes) + 3;
       kcdata->data_.nfelem_  = std::get<2>(memsizes) + 0;
@@ -165,13 +165,13 @@ namespace memory {
     }
 
     //allocates pinned (non cached) memory for UncalibratedRecHits SoAs on the host
-    void host(const int& nhits, HGCUncalibratedRecHitSoA* soa, cms::cuda::host::noncached::unique_ptr<float[]>& mem)
+    void host(const int& nhits, HGCUncalibratedRecHitSoA* soa, cms::cuda::host::noncached::unique_ptr<std::byte[]>& mem)
     {
       std::vector<int> sizes = { 6*sizeof(float), 3*sizeof(uint32_t) };
       int size_tot = std::accumulate(sizes.begin(), sizes.end(), 0);
-      mem = cms::cuda::make_host_noncached_unique<float[]>(nhits * size_tot, 0);
+      mem = cms::cuda::make_host_noncached_unique<std::byte[]>(nhits * size_tot, 0);
 
-      soa->amplitude_     = mem.get();
+      soa->amplitude_     = reinterpret_cast<float*>(mem.get());
       soa->pedestal_      = soa->amplitude_    + nhits;
       soa->jitter_        = soa->pedestal_     + nhits;
       soa->chi2_          = soa->jitter_       + nhits;
@@ -184,13 +184,13 @@ namespace memory {
     }
 
     //allocates memory for RecHits SoAs on the host
-    void host(const int& nhits, HGCRecHitSoA* soa, cms::cuda::host::unique_ptr<float[]>& mem)
+    void host(const int& nhits, HGCRecHitSoA* soa, cms::cuda::host::unique_ptr<std::byte[]>& mem)
     {
       std::vector<int> sizes = { 3*sizeof(float), 2*sizeof(uint32_t), sizeof(uint8_t) };
       int size_tot = std::accumulate(sizes.begin(), sizes.end(), 0);
-      mem = cms::cuda::make_host_unique<float[]>(nhits * size_tot, 0);
+      mem = cms::cuda::make_host_unique<std::byte[]>(nhits * size_tot, 0);
 
-      soa->energy_     = mem.get();
+      soa->energy_     = reinterpret_cast<float*>(mem.get());
       soa->time_       = soa->energy_     + nhits;
       soa->timeError_  = soa->time_       + nhits;
       soa->id_         = reinterpret_cast<uint32_t*>(soa->timeError_ + nhits);
