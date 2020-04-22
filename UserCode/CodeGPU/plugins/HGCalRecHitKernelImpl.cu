@@ -4,6 +4,7 @@
 #include "DataFormats/HGCRecHit/interface/HGCRecHit.h"
 #include "DataFormats/ForwardDetId/interface/HGCalDetId.h"
 #include "HGCalRecHitKernelImpl.cuh"
+#include "HGCalDetIdTools.h"
 
 /*
 __device__
@@ -13,15 +14,6 @@ int wafer(uint32_t id)
   static const int kHGCalWaferMask = 0x3FF;
   return (id >> kHGCalWaferOffset) & kHGCalWaferMask; 
 }
-*/
-/*
-__device__
-int layer_device(uint32_t id, unsigned int offset)
-{
-  int layer = HGCalDetId(id).layer();
-  return layer + offset;
-}
-*/
 
 __device__
 int layer(uint32_t id, unsigned int offset)
@@ -31,6 +23,7 @@ int layer(uint32_t id, unsigned int offset)
   int layer = (id >> kHGCalLayerOffset) & kHGCalLayerMask; 
   return layer + offset;
 }
+*/
 
 __device__ 
 double get_weight_from_layer(const int& padding, const int& layer, double*& sd)
@@ -223,8 +216,7 @@ void ee_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const 
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
-      int l = layer(src_soa.id_[tid], 0); //no offset
-      double weight = get_weight_from_layer(size4, l, sd);
+      double weight = get_weight_from_layer(size4, src_soa.layer_[i], sd);
       double rcorr = get_thickness_correction(size3, sd, cdata);
       double noise = get_noise(size2, sd, cdata);
       double cce_correction = get_cce_correction(size1, sd, cdata);
@@ -256,8 +248,7 @@ void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
-      int l = layer(src_soa.id_[tid], su[0]); //with offset
-      double weight = get_weight_from_layer(size4, l, sd);
+      double weight = get_weight_from_layer(size4, src_soa.layer_[i], sd);
       double rcorr = get_thickness_correction(size3, sd, cdata);
       double noise = get_noise(size2, sd, cdata);
       double cce_correction = get_cce_correction(size1, sd, cdata);
@@ -283,8 +274,7 @@ void heb_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
-      int l = layer(src_soa.id_[tid], su[0]); //with offset
-      double weight = get_weight_from_layer(3, l, sd);
+      double weight = get_weight_from_layer(3, src_soa.layer_[i], sd);
       double noise = sd[2];
       double sigmaNoiseGeV = 1e-3 * noise * weight;
       make_rechit(i, dst_soa, src_soa, true, weight, 0., 0., sigmaNoiseGeV, sf);

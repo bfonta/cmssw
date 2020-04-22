@@ -12,6 +12,8 @@ public:
   uint32_t *flags_; //uncalibrechit flags describing its status (DataFormats/HGCRecHit/interface/HGCUncalibratedRecHit.h); to be propagated to the rechits
   uint32_t *aux_; //aux word; first 8 bits contain time (jitter) error
   uint32_t *id_; //uncalibrechit detector id
+  uint32_t *wafer_; //uncalibrechit wafer id
+  uint32_t *layer_; //uncalibrechit layer nuber
   int nbytes_; //number of bytes of the SoA
 };
 

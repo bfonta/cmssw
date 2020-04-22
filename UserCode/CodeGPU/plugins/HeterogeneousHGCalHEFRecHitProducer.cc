@@ -129,6 +129,8 @@ void HeterogeneousHGCalHEFRecHitProducer::convert_collection_data_to_soa_(const 
       d->flags_[i] = hits[i].flags();
       d->aux_[i] = 0;
       d->id_[i] = hits[i].id().rawId();
+      d->wafer_[i] = 1; //CHANGE!!! use the geometry
+      d->layer_[i] = 1; //CHANGE!!! use the geometry
     }
 }
 
