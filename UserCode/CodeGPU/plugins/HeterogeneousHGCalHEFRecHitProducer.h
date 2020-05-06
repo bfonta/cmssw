@@ -17,8 +17,6 @@
 #include "FWCore/Utilities/interface/EDGetToken.h"
 #include "FWCore/Utilities/interface/EDPutToken.h"
 #include "FWCore/Utilities/interface/InputTag.h"
-#include "FWCore/ServiceRegistry/interface/Service.h"
-#include "CommonTools/UtilAlgos/interface/TFileService.h"
 
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
 #include "Geometry/HGCalGeometry/interface/HGCalGeometry.h"
@@ -29,11 +27,8 @@
 #include "HeterogeneousCore/CUDAServices/interface/CUDAService.h"
 #include "HeterogeneousCore/CUDAUtilities/interface/cudaCheck.h"
 
-#include "FWCore/ServiceRegistry/interface/Service.h"
-#include "CommonTools/UtilAlgos/interface/TFileService.h"
-
 #include "HeterogeneousHGCalProducerMemoryWrapper.h"
-#include "KernelManager.h"
+#include "KernelManagerHGCalRecHit.h"
 
 class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::ExternalWork> 
 {
@@ -60,11 +55,11 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
 
   //memory
   void allocate_memory_();
-  cms::cuda::host::noncached::unique_ptr<double[]> h_mem_const_;
-  cms::cuda::device::unique_ptr<double[]> d_mem_const_;
-  cms::cuda::host::noncached::unique_ptr<float[]> h_mem_in_;
-  cms::cuda::device::unique_ptr<float[]> d_mem_;
-  cms::cuda::host::unique_ptr<float[]> h_mem_out_;
+  cms::cuda::host::noncached::unique_ptr<std::byte[]> h_mem_const_;
+  cms::cuda::device::unique_ptr<std::byte[]> d_mem_const_;
+  cms::cuda::host::noncached::unique_ptr<std::byte[]> h_mem_in_;
+  cms::cuda::device::unique_ptr<std::byte[]> d_mem_;
+  cms::cuda::host::unique_ptr<std::byte[]> h_mem_out_;
 
   //geometry
   void set_geometry_(const edm::EventSetup&);
@@ -77,19 +72,10 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
   void convert_constant_data_(KernelConstantData<HGChefUncalibratedRecHitConstantData>*);
 
   HGCUncalibratedRecHitSoA *old_soa_ = nullptr, *d_oldhits_ = nullptr, *d_newhits_ = nullptr;
-  HGCRecHitSoA *new_soa_ = nullptr, *d_newhits_final_ = nullptr, *h_newhits_ = nullptr;
+  HGCRecHitSoA *d_newhits_final_ = nullptr, *h_newhits_ = nullptr;
   KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA> *kmdata_;
   KernelConstantData<HGChefUncalibratedRecHitConstantData> *h_kcdata_;
   KernelConstantData<HGChefUncalibratedRecHitConstantData> *d_kcdata_;
-
-  //print to ROOT histograms
-  TH1F *histo1_, *histo2_, *histo3_;
-  TH1I *histo4_;
-  edm::Service<TFileService> fs;
-
-  //time measurement 
-  std::chrono::steady_clock::time_point begin;
-  std::chrono::steady_clock::time_point end;
 };
 
 #endif //HeterogeneousHGCalHEFRecHitProducer_h

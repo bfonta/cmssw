@@ -21,7 +21,7 @@ process.load('SimCalorimetry.HGCalSimProducers.hgcalDigitizer_cfi')
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32( 10 ))
 
-fNames = ['file:/afs/cern.ch/work/b/bfontana/public/ntuple_selection_1000.root']
+fNames = ['file:/afs/cern.ch/user/b/bfontana/CMSSW_11_0_0_pre11_Patatrack/src/UserCode/Samples/20495.0_CloseByParticleGun_CE_E_Front_200um+CE_E_Front_200um_2026D41_GenSimHLBeamSpotFull+DigiFullTrigger_2026D41+RecoFullGlobal_2026D41+HARVESTFullGlobal_2026D41/step3.root']
 keep = 'keep *'
 drop = 'drop CSCDetIdCSCALCTPreTriggerDigiMuonDigiCollection_simCscTriggerPrimitiveDigis__HLT'
 process.source = cms.Source("PoolSource",
@@ -33,7 +33,6 @@ process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool( False )) #add option for edmStreams
 process.HeterogeneousHGCalEERecHitProducer = cms.EDProducer('HeterogeneousHGCalEERecHitProducer',
                                                             HGCEEUncalibRecHitsTok = cms.InputTag('HGCalUncalibRecHit', 'HGCEEUncalibRecHits'),
-                                                            nhitsmax       = cms.uint32(40000),
                                                             HGCEE_keV2DIGI = HGCalRecHit.__dict__['HGCEE_keV2DIGI'],
                                                             minValSiPar    = HGCalRecHit.__dict__['minValSiPar'],
                                                             maxValSiPar    = HGCalRecHit.__dict__['maxValSiPar'],
@@ -50,7 +49,6 @@ process.HeterogeneousHGCalEERecHitProducer = cms.EDProducer('HeterogeneousHGCalE
 )
 process.HeterogeneousHGCalHEFRecHitProducer = cms.EDProducer('HeterogeneousHGCalHEFRecHitProducer',
                                                              HGCHEFUncalibRecHitsTok = cms.InputTag('HGCalUncalibRecHit', 'HGCHEFUncalibRecHits'),
-                                                             nhitsmax        = cms.uint32(6000),
                                                              HGCHEF_keV2DIGI  = HGCalRecHit.__dict__['HGCHEF_keV2DIGI'],
                                                              minValSiPar     = HGCalRecHit.__dict__['minValSiPar'],
                                                              maxValSiPar     = HGCalRecHit.__dict__['maxValSiPar'],
@@ -68,7 +66,6 @@ process.HeterogeneousHGCalHEFRecHitProducer = cms.EDProducer('HeterogeneousHGCal
                                                          )
 process.HeterogeneousHGCalHEBRecHitProducer = cms.EDProducer('HeterogeneousHGCalHEBRecHitProducer',
                                                              HGCHEBUncalibRecHitsTok = cms.InputTag('HGCalUncalibRecHit', 'HGCHEBUncalibRecHits'),
-                                                             nhitsmax         = cms.uint32(1000),
                                                              HGCHEB_keV2DIGI  = HGCalRecHit.__dict__['HGCHEB_keV2DIGI'],
                                                              HGCHEB_noise_MIP = HGCalRecHit.__dict__['HGCHEB_noise_MIP'],
                                                              minValSiPar      = HGCalRecHit.__dict__['minValSiPar'],
@@ -84,14 +81,9 @@ process.HeterogeneousHGCalHEBRecHitProducer = cms.EDProducer('HeterogeneousHGCal
 
 fNameOut = 'out'
 #convert this to a task!!!!!
-process.task = cms.Task( process.HeterogeneousHGCalEERecHitProducer, process.HeterogeneousHGCalHEFRecHitProducer, process.HeterogeneousHGCalHEBRecHitProducer )
-#process.task = cms.Task( process.HeterogeneousHGCalHEFRecHitProducer )
+#process.task = cms.Task( process.HeterogeneousHGCalEERecHitProducer, process.HeterogeneousHGCalHEFRecHitProducer, process.HeterogeneousHGCalHEBRecHitProducer )
+process.task = cms.Task( process.HeterogeneousHGCalHEFRecHitProducer )
 process.path = cms.Path( process.task )
-
-process.TFileService = cms.Service("TFileService", 
-                                   fileName = cms.string("histo.root"),
-                                   closeFileFast = cms.untracked.bool(True) #safe as long as the file doesn't contain multiple references to the same object, for example a histogram and a TCanvas containing that histogram.
-)
 
 process.out = cms.OutputModule("PoolOutputModule",
                                fileName = cms.untracked.string(fNameOut+".root"))
