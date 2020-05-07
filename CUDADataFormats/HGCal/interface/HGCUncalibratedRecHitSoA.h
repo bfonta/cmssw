@@ -1,5 +1,5 @@
-#ifndef CudaDataFormats_HGCal_HGCUncalibratedRecHitSoA_h
-#define CudaDataFormats_HGCal_HGCUncalibratedRecHitSoA_h
+#ifndef CUDADataFormats_HGCal_HGCUncalibratedRecHitSoA_h
+#define CUDADataFormats_HGCal_HGCUncalibratedRecHitSoA_h
 
 class HGCUncalibratedRecHitSoA {
 public:
