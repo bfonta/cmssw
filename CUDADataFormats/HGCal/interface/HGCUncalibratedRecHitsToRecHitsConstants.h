@@ -1,5 +1,5 @@
-#ifndef CudaDataFormats_HGCal_HGCUncalibratedRecHitsToRecHitsConstants_h
-#define CudaDataFormats_HGCal_HGCUncalibratedRecHitsToRecHitsConstants_h
+#ifndef CUDADataFormats_HGCal_HGCUncalibratedRecHitsToRecHitsConstants_h
+#define CUDADataFormats_HGCal_HGCUncalibratedRecHitsToRecHitsConstants_h
 
 #include <vector>
 
