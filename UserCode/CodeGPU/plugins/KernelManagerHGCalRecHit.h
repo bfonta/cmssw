@@ -6,6 +6,7 @@
 #include "HeterogeneousCore/CUDAUtilities/interface/cudaCompat.h"
 #include "HeterogeneousCore/CUDAUtilities/interface/cudaCheck.h"
 #include "HGCalRecHitKernelImpl.cuh"
+#include "CUDADataFormats/HGCal/interface/HGCConditions.h"
 //#include "Types.h"
 
 #include <vector>
@@ -52,7 +53,7 @@ template <typename TYPE_IN, typename TYPE_OUT>
 
 class KernelManagerHGCalRecHit {
  public:
-  KernelManagerHGCalRecHit(KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>*);
+  KernelManagerHGCalRecHit(KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>*, const HeterogeneousConditionsESProduct*);
   ~KernelManagerHGCalRecHit();
   void run_kernels(const KernelConstantData<HGCeeUncalibratedRecHitConstantData>*, KernelConstantData<HGCeeUncalibratedRecHitConstantData>*);
   void run_kernels(const KernelConstantData<HGChefUncalibratedRecHitConstantData>*, KernelConstantData<HGChefUncalibratedRecHitConstantData>*);
@@ -72,6 +73,7 @@ class KernelManagerHGCalRecHit {
   int nbytes_host_;
   int nbytes_device_;
   KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA> *data_;
+  const HeterogeneousConditionsESProduct* d_conds_;
 };
 
 #endif //RecoLocalCalo_HGCalRecProducers_KernelManager_HGCalRecHit_h

@@ -7,6 +7,7 @@
 #include "CUDADataFormats/HGCal/interface/HGCUncalibratedRecHitSoA.h"
 #include "CUDADataFormats/HGCal/interface/HGCRecHitSoA.h"
 #include "CUDADataFormats/HGCal/interface/HGCUncalibratedRecHitsToRecHitsConstants.h"
+#include "CUDADataFormats/HGCal/interface/HGCConditions.h"
 
 __global__
 void ee_step1(HGCUncalibratedRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, HGCeeUncalibratedRecHitConstantData cdata, int length);
@@ -21,7 +22,7 @@ __global__
 void ee_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, HGCeeUncalibratedRecHitConstantData cdata, int length);
 
 __global__
-void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, HGChefUncalibratedRecHitConstantData cdata, int length);
+void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, HGChefUncalibratedRecHitConstantData cdata, const HeterogeneousConditionsESProduct*, int length);
 
 __global__
 void heb_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, HGChebUncalibratedRecHitConstantData cdata, int length);
