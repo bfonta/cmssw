@@ -29,6 +29,7 @@
 
 #include "HeterogeneousHGCalProducerMemoryWrapper.h"
 #include "KernelManagerHGCalRecHit.h"
+#include "HeterogeneousHGCalESProduct.h"
 
 class HeterogeneousHGCalHEBRecHitProducer: public edm::stream::EDProducer<edm::ExternalWork> 
 {
@@ -60,6 +61,9 @@ class HeterogeneousHGCalHEBRecHitProducer: public edm::stream::EDProducer<edm::E
   cms::cuda::host::noncached::unique_ptr<std::byte[]> h_mem_in_;
   cms::cuda::device::unique_ptr<std::byte[]> d_mem_;
   cms::cuda::host::unique_ptr<std::byte[]> h_mem_out_;
+
+  //conditions
+  void set_conditions(HeterogeneousConditionsESProduct&, const unsigned int&, const edm::SortedCollection<HGCUncalibratedRecHit>&);
 
   //geometry
   void set_geometry_(const edm::EventSetup&);

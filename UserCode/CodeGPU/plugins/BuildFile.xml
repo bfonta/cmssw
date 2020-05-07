@@ -1,4 +1,4 @@
-<library name="HeterogeneousUncalibRecHits" file="HeterogeneousHGCalEERecHitProducer.cc HeterogeneousHGCalHEFRecHitProducer.cc HeterogeneousHGCalHEBRecHitProducer.cc  TEST_HeterogeneousESProduct.cc HeterogeneousHGCalProducerMemoryWrapper.cc KernelManagerHGCalRecHit.cu HGCalRecHitKernelImpl.cu">
+<library name="HeterogeneousUncalibRecHits" file="HeterogeneousHGCalEERecHitProducer.cc HeterogeneousHGCalHEFRecHitProducer.cc HeterogeneousHGCalHEBRecHitProducer.cc  HeterogeneousHGCalESProduct.cc HeterogeneousHGCalProducerMemoryWrapper.cc KernelManagerHGCalRecHit.cu HGCalRecHitKernelImpl.cu">
   <use name="cuda"/>
   <use name="HeterogeneousCore/CUDACore"/>
   <use name="HeterogeneousCore/CUDAUtilities"/>

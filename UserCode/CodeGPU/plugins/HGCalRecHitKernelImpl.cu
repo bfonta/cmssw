@@ -6,25 +6,6 @@
 #include "HGCalRecHitKernelImpl.cuh"
 #include "HGCalDetIdTools.h"
 
-/*
-__device__
-int wafer(uint32_t id)
-{
-  static const int kHGCalWaferOffset = 8;
-  static const int kHGCalWaferMask = 0x3FF;
-  return (id >> kHGCalWaferOffset) & kHGCalWaferMask; 
-}
-
-__device__
-int layer(uint32_t id, unsigned int offset)
-{
-  static const int kHGCalLayerOffset = 20;
-  static const int kHGCalLayerMask = 0x1F;
-  int layer = (id >> kHGCalLayerOffset) & kHGCalLayerMask; 
-  return layer + offset;
-}
-*/
-
 __device__ 
 double get_weight_from_layer(const int& padding, const int& layer, double*& sd)
 {
@@ -227,7 +208,7 @@ void ee_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const 
 }
 
 __global__
-void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const HGChefUncalibratedRecHitConstantData cdata, int length)
+void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const HGChefUncalibratedRecHitConstantData cdata, const HeterogeneousConditionsESProduct* conds, int length)
 {
   unsigned int tid = blockDim.x * blockIdx.x + threadIdx.x;
 
@@ -248,6 +229,8 @@ void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
+      printf("layer: %d, wafer: %d\n", conds->layer[0], conds->wafer[0]);
+
       double weight = get_weight_from_layer(size4, src_soa.layer_[i], sd);
       double rcorr = get_thickness_correction(size3, sd, cdata);
       double noise = get_noise(size2, sd, cdata);
