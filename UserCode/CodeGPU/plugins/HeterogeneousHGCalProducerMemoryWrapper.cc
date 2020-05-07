@@ -37,7 +37,7 @@ namespace memory {
     constexpr unsigned int int_hgchebconstants_soa = 0;
   }
   
-  namespace allocation {    
+  namespace allocation {
     namespace {
       //returns total number of bytes, number of 'double' elements and number of 'float' elements
       std::tuple<int, int, int, int> get_memory_sizes_(const std::vector<int>& fixed_sizes, const int& ndoubles, const int& nfloats, const int& nints)
