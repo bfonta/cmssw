@@ -1,12 +1,12 @@
 #include "UserCode/CodeGPU/plugins/HeterogeneousHGCalESProduct.h"
 
-HeterogeneousConditionsESProductWrapper::HeterogeneousConditionsESProductWrapper(int const& nelements, HeterogeneousConditionsESProduct const& cpuConditions):
-  nelements_(nelements) 
+HeterogeneousConditionsESProductWrapper::HeterogeneousConditionsESProductWrapper(unsigned int const& nelements, unsigned int const& stride, HeterogeneousConditionsESProduct const& cpuConditions):
+  stride_(stride)
 {
-  chunk_ = 2*sizeof(int)*nelements_;
+  chunk_ = 2*sizeof(int)*stride_;
   cudaCheck(cudaMallocHost(&this->layer_, chunk_));
-  this->wafer_ = this->layer_ + sizeof(int)*nelements_;
-  for(unsigned int i=0; i<nelements_; ++i)
+  this->wafer_ = this->layer_ + sizeof(int)*stride_;
+  for(unsigned int i=0; i<nelements; ++i)
     {
       this->layer_[i] = cpuConditions.layer[i];
       this->wafer_[i] = cpuConditions.wafer[i];
@@ -32,7 +32,7 @@ HeterogeneousConditionsESProduct const *HeterogeneousConditionsESProductWrapper:
 
 	    // Allocate the payload array(s) on device memory.
 	    cudaCheck(cudaMalloc(&data.host->layer, chunk_));
-	    data.host->wafer = data.host->layer + sizeof(int)*nelements_;
+	    data.host->wafer = data.host->layer + sizeof(int)*stride_;
 
 	    // Allocate the payload object on the device memory.
 	    cudaCheck(cudaMalloc(&data.device, sizeof(HeterogeneousConditionsESProduct)));
