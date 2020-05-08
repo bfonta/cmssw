@@ -10,7 +10,7 @@ class HeterogeneousConditionsESProductWrapper {
  public:
   // Constructor takes the standard CPU ESProduct, and transforms the
   // necessary data to array(s) in pinned host memory
-  HeterogeneousConditionsESProductWrapper(int const&, HeterogeneousConditionsESProduct const&);
+  HeterogeneousConditionsESProductWrapper(unsigned int const&, unsigned int const&, HeterogeneousConditionsESProduct const&);
   
   // Deallocates all pinned host memory
   ~HeterogeneousConditionsESProductWrapper();
@@ -22,8 +22,8 @@ class HeterogeneousConditionsESProductWrapper {
   // Holds the data in pinned CPU memory
   int *layer_;
   int *wafer_;
-  size_t nelements_;
-  size_t chunk_;
+  unsigned int stride_;
+  unsigned int chunk_;
 
   // Helper struct to hold all information that has to be allocated and
   // deallocated per device

@@ -229,7 +229,7 @@ void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
-      printf("layer: %d, wafer: %d\n", conds->layer[0], conds->wafer[0]);
+      printf("layer: %d, %d\n", conds->layer[i], conds->wafer[i]);
 
       double weight = get_weight_from_layer(size4, src_soa.layer_[i], sd);
       double rcorr = get_thickness_correction(size3, sd, cdata);

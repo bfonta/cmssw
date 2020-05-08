@@ -52,7 +52,7 @@ void HeterogeneousHGCalEERecHitProducer::acquire(edm::Event const& event, edm::E
 
   HeterogeneousConditionsESProduct h_conds;
   set_conditions(h_conds, stride_, hits_ee);
-  HeterogeneousConditionsESProductWrapper esproduct(stride_, h_conds);
+  HeterogeneousConditionsESProductWrapper esproduct(nhits, stride_, h_conds);
   const HeterogeneousConditionsESProduct* d_conds = esproduct.getHeterogeneousConditionsESProductAsync(0 /*set cudaStream here*/);
 
   convert_constant_data_(h_kcdata_);
