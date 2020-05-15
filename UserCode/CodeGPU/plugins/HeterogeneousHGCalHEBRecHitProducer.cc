@@ -38,24 +38,16 @@ void HeterogeneousHGCalHEBRecHitProducer::acquire(edm::Event const& event, edm::
   stride_ = ( (nhits-1)/32 + 1 ) * 32; //align to warp boundary
   allocate_memory_();
 
-  HeterogeneousConditionsESProduct h_conds;
-  set_conditions(h_conds, stride_, hits_heb);
-  HeterogeneousConditionsESProductWrapper esproduct(nhits, stride_, h_conds);
-  const HeterogeneousConditionsESProduct* d_conds = esproduct.getHeterogeneousConditionsESProductAsync(0 /*set cudaStream here*/);
-
   convert_constant_data_(h_kcdata_);
 
   convert_collection_data_to_soa_(hits_heb, old_soa_, nhits);
 
   kmdata_ = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(nhits, stride_, old_soa_, d_oldhits_, d_newhits_, d_newhits_final_, h_newhits_);
-  KernelManagerHGCalRecHit kernel_manager(kmdata_, d_conds);
+  KernelManagerHGCalRecHit kernel_manager(kmdata_);
   kernel_manager.run_kernels(h_kcdata_, d_kcdata_);
 
   rechits_ = std::make_unique<HGCRecHitCollection>();
   convert_soa_data_to_collection_(*rechits_, h_newhits_, nhits);
-}
-
-void HeterogeneousHGCalHEBRecHitProducer::set_conditions(HeterogeneousConditionsESProduct& c, const unsigned int& nelems, const HGChebUncalibratedRecHitCollection& hits) {
 }
 
 void HeterogeneousHGCalHEBRecHitProducer::produce(edm::Event& event, const edm::EventSetup& setup)

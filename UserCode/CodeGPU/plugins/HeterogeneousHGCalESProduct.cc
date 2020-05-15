@@ -1,23 +1,18 @@
 #include "UserCode/CodeGPU/plugins/HeterogeneousHGCalESProduct.h"
 
-HeterogeneousConditionsESProductWrapper::HeterogeneousConditionsESProductWrapper(unsigned int const& nelements, unsigned int const& stride, HeterogeneousConditionsESProduct const& cpuConditions):
-  stride_(stride)
+HeterogeneousConditionsESProductWrapper::HeterogeneousConditionsESProductWrapper(unsigned int const& dddSize, const HGCalDDDConstants *cpuConditions)
 {
-  chunk_ = 2*sizeof(int)*stride_;
-  cudaCheck(cudaMallocHost(&this->layer_, chunk_));
-  this->wafer_ = this->layer_ + sizeof(int)*stride_;
-  for(unsigned int i=0; i<nelements; ++i)
-    {
-      this->layer_[i] = cpuConditions.layer[i];
-      this->wafer_[i] = cpuConditions.wafer[i];
-    }
+  chunk1_ = dddSize;
+  gpuErrchk(cudaMallocHost(&this->ddd_.waferTypeL, chunk1_));
+  for(unsigned int i=0; i<dddSize; ++i)
+    this->ddd_.waferTypeL[i] = cpuConditions->getParameter()->waferTypeL_[i];
 }
 
 HeterogeneousConditionsESProductWrapper::~HeterogeneousConditionsESProductWrapper() {
-  cudaCheck(cudaFreeHost(this->layer_));
+  gpuErrchk(cudaFreeHost(this->ddd_.waferTypeL));
 }
 
-HeterogeneousConditionsESProduct const *HeterogeneousConditionsESProductWrapper::getHeterogeneousConditionsESProductAsync(cudaStream_t stream) const {
+HeterogeneousHEFConditionsESProduct const *HeterogeneousConditionsESProductWrapper::getHeterogeneousConditionsESProductAsync(cudaStream_t stream) const {
   // cms::cuda::ESProduct<T> essentially holds an array of GPUData objects,
   // one per device. If the data have already been transferred to the
   // current device (or the transfer has been queued), the helper just
@@ -28,19 +23,16 @@ HeterogeneousConditionsESProduct const *HeterogeneousConditionsESProductWrapper:
 	  [this](GPUData& data, cudaStream_t stream)
 	  {    
 	    // Allocate the payload object on pinned host memory.
-	    cudaCheck(cudaMallocHost(&data.host, sizeof(HeterogeneousConditionsESProduct)));
-
+	    gpuErrchk(cudaMallocHost(&data.host, sizeof(HeterogeneousHEFConditionsESProduct)));
 	    // Allocate the payload array(s) on device memory.
-	    cudaCheck(cudaMalloc(&data.host->layer, chunk_));
-	    data.host->wafer = data.host->layer + sizeof(int)*stride_;
+	    gpuErrchk(cudaMalloc(&(data.host->ddd.waferTypeL), chunk1_));
 
 	    // Allocate the payload object on the device memory.
-	    cudaCheck(cudaMalloc(&data.device, sizeof(HeterogeneousConditionsESProduct)));
-	    	    
+	    gpuErrchk(cudaMalloc(&data.device, sizeof(HeterogeneousHEFConditionsESProduct)));
 	    // Transfer the payload, first the array(s) ...
-	    cudaCheck(cudaMemcpyAsync(data.host->layer, this->layer_, chunk_, cudaMemcpyHostToDevice, stream));
+	    gpuErrchk(cudaMemcpyAsync(data.host->ddd.waferTypeL, this->ddd_.waferTypeL, chunk1_, cudaMemcpyHostToDevice, stream));
 	    // ... and then the payload object
-	    cudaCheck(cudaMemcpyAsync(data.device, data.host, sizeof(HeterogeneousConditionsESProduct), cudaMemcpyHostToDevice, stream));
+	    gpuErrchk(cudaMemcpyAsync(data.device, data.host, sizeof(HeterogeneousHEFConditionsESProduct), cudaMemcpyHostToDevice, stream));
 	  }); //gpuData_.dataForCurrentDeviceAsync
 
   // Returns the payload object on the memory of the current device
@@ -51,8 +43,8 @@ HeterogeneousConditionsESProduct const *HeterogeneousConditionsESProductWrapper:
 HeterogeneousConditionsESProductWrapper::GPUData::~GPUData() {
   if(host != nullptr) 
     {
-      cudaCheck(cudaFree(host->layer));
-      cudaCheck(cudaFreeHost(host));
+      gpuErrchk(cudaFree(host->ddd.waferTypeL));
+      gpuErrchk(cudaFreeHost(host));
     }
-  cudaCheck(cudaFree(device));
+  gpuErrchk(cudaFree(device));
 }
