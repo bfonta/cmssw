@@ -38,13 +38,10 @@ HeterogeneousHGCalHEFRecHitProducer::~HeterogeneousHGCalHEFRecHitProducer()
   delete d_newhits_;
   delete d_newhits_final_;
   delete h_newhits_;
-
-  delete[] h_conds_.layer;
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {
   const cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w), ctxState_};
-  set_geometry_(setup);
 
   event.getByToken(token_, handle_hef_);
   const auto &hits_hef = *handle_hef_;
@@ -53,36 +50,32 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
   stride_ = ( (nhits-1)/32 + 1 ) * 32; //align to warp boundary
   allocate_memory_();
 
-  std::cout << "check conditions" << std::endl;
+  unsigned int conditions_size = set_conditions_(setup, hits_hef);
+  HeterogeneousConditionsESProductWrapper esproduct(conditions_size, ddd_);
+  d_conds = esproduct.getHeterogeneousConditionsESProductAsync(ctx.stream());
 
-  set_conditions(h_conds_, nhits, stride_, hits_hef);
-  HeterogeneousConditionsESProductWrapper esproduct(nhits, stride_, h_conds_);
-  const HeterogeneousConditionsESProduct* d_conds = esproduct.getHeterogeneousConditionsESProductAsync(ctx.stream());
-
-  std::cout << "conver constant data" << std::endl;
   convert_constant_data_(h_kcdata_);
 
   convert_collection_data_to_soa_(hits_hef, old_soa_, nhits);
 
-  std::cout << "kernel manager" << std::endl;
   kmdata_ = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(nhits, stride_, old_soa_, d_oldhits_, d_newhits_, d_newhits_final_, h_newhits_);
-  KernelManagerHGCalRecHit kernel_manager(kmdata_, d_conds);
-  kernel_manager.run_kernels(h_kcdata_, d_kcdata_);
+  KernelManagerHGCalRecHit kernel_manager(kmdata_);
+  kernel_manager.run_kernels(h_kcdata_, d_kcdata_, d_conds);
 
-  std::cout << "last" << std::endl;
   rechits_ = std::make_unique<HGCRecHitCollection>();
   convert_soa_data_to_collection_(*rechits_, h_newhits_, nhits);
 }
 
-void HeterogeneousHGCalHEFRecHitProducer::set_conditions(HeterogeneousConditionsESProduct& c, const unsigned int& nelems, const unsigned int& stride, const HGChefUncalibratedRecHitCollection& hits) {
-  c.layer = new int[2*stride];
-  c.wafer = c.layer + stride;
-  for(unsigned int i=0; i<nelems; ++i)
-    {
-      HGCalDetId obj( hits[i].id().rawId() );
-      c.layer[i] = obj.layer();
-      c.wafer[i] = obj.wafer();
-    }
+unsigned int HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup& setup, const HGChefUncalibratedRecHitCollection& hits) {
+  tools_->getEventSetup(setup);
+  std::string handle_str;
+  handle_str = "HGCalHESiliconSensitive";
+  edm::ESHandle<HGCalGeometry> handle;
+  setup.get<IdealGeometryRecord>().get(handle_str, handle);
+  ddd_ = &( handle->topology().dddConstants() );
+  //cdata_.fhOffset_ = ddd_->layers(true); see RecoLocalCalo/HGCalRecAlgos/src/RecHitTools.cc
+  unsigned int size = ddd_->getParameter()->waferTypeL_.size();
+  return size;
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::produce(edm::Event& event, const edm::EventSetup& setup)
@@ -113,17 +106,6 @@ void HeterogeneousHGCalHEFRecHitProducer::allocate_memory_()
   memory::allocation::host(stride_, h_newhits_, h_mem_out_);
 }
 
-void HeterogeneousHGCalHEFRecHitProducer::set_geometry_(const edm::EventSetup& setup)
-{
-  tools_->getEventSetup(setup);
-  std::string handle_str;
-  handle_str = "HGCalHESiliconSensitive";
-  edm::ESHandle<HGCalGeometry> handle;
-  setup.get<IdealGeometryRecord>().get(handle_str, handle);
-  //ddd_ = &(handle->topology().dddConstants());
-  //cdata_.fhOffset_ = ddd_->layers(true); see RecoLocalCalo/HGCalRecAlgos/src/RecHitTools.cc
-}
-
 void HeterogeneousHGCalHEFRecHitProducer::convert_constant_data_(KernelConstantData<HGChefUncalibratedRecHitConstantData> *kcdata)
 {
   for(int i=0; i<kcdata->data_.s_hgcHEF_fCPerMIP_; ++i)
@@ -140,7 +122,7 @@ void HeterogeneousHGCalHEFRecHitProducer::convert_constant_data_(KernelConstantD
     kcdata->data_.waferTypeL_[i] = kcdata->vdata_.waferTypeL_[i];
 }
 
-void HeterogeneousHGCalHEFRecHitProducer::convert_collection_data_to_soa_(const edm::SortedCollection<HGCUncalibratedRecHit>& hits, HGCUncalibratedRecHitSoA* d, const unsigned int& nhits)
+void HeterogeneousHGCalHEFRecHitProducer::convert_collection_data_to_soa_(const HGChefUncalibratedRecHitCollection& hits, HGCUncalibratedRecHitSoA* d, const unsigned int& nhits)
 {
   for(unsigned int i=0; i<nhits; ++i)
     {

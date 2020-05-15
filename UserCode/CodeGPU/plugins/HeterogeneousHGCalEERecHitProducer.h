@@ -62,7 +62,7 @@ class HeterogeneousHGCalEERecHitProducer: public edm::stream::EDProducer<edm::Ex
   cms::cuda::host::unique_ptr<std::byte[]> h_mem_out_;
 
   //conditions
-  void set_conditions(HeterogeneousConditionsESProduct&, const unsigned int&, const edm::SortedCollection<HGCUncalibratedRecHit>&);
+  void set_conditions(const unsigned int&, const edm::SortedCollection<HGCUncalibratedRecHit>&);
 
   //geometry
   void set_geometry_(const edm::EventSetup&);

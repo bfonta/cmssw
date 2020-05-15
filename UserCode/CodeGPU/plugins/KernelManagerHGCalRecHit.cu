@@ -4,8 +4,8 @@
 #include "KernelManagerHGCalRecHit.h"
 #include "HGCalRecHitKernelImpl.cuh"
 
-KernelManagerHGCalRecHit::KernelManagerHGCalRecHit(KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA> *data, const HeterogeneousConditionsESProduct* d_conds):
-  data_(data), d_conds_(d_conds)
+KernelManagerHGCalRecHit::KernelManagerHGCalRecHit(KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA> *data):
+  data_(data)
 {
   ::nblocks_ = (data_->nhits_ + ::nthreads_.x - 1) / ::nthreads_.x;
   nbytes_host_ = (data_->h_out_)->nbytes_ * data_->stride_;
@@ -79,7 +79,7 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGCeeUncalib
   transfer_soa_to_host_and_synchronize_();
 }
 
-void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChefUncalibratedRecHitConstantData> *h_kcdata, KernelConstantData<HGChefUncalibratedRecHitConstantData> *d_kcdata)
+void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChefUncalibratedRecHitConstantData> *h_kcdata, KernelConstantData<HGChefUncalibratedRecHitConstantData> *d_kcdata, const HeterogeneousHEFConditionsESProduct* d_conds)
 {
   transfer_constants_to_device_(h_kcdata, d_kcdata);
   transfer_soas_to_device_();
@@ -92,7 +92,7 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChefUncali
   reuse_device_pointers_();
   */
 
-  hef_to_rechit<<<::nblocks_,::nthreads_, nbytes_shared>>>( *(data_->d_out_), *(data_->d_1_), d_kcdata->data_, d_conds_, data_->nhits_ );
+  hef_to_rechit<<<::nblocks_,::nthreads_, nbytes_shared>>>( *(data_->d_out_), *(data_->d_1_), d_kcdata->data_, d_conds, data_->nhits_ );
   after_();
   transfer_soa_to_host_and_synchronize_();
 }

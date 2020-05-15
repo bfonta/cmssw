@@ -208,9 +208,11 @@ void ee_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const 
 }
 
 __global__
-void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const HGChefUncalibratedRecHitConstantData cdata, const HeterogeneousConditionsESProduct* conds, int length)
+void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const HGChefUncalibratedRecHitConstantData cdata, const HeterogeneousHEFConditionsESProduct* conds, int length)
 {
   unsigned int tid = blockDim.x * blockIdx.x + threadIdx.x;
+  HeterogeneousHGCalDetId detid(src_soa.id_[0]);
+  printf("%d, %d\n", conds->ddd.waferTypeL[0], detid.layer());
 
   int size1 = cdata.s_hgcHEF_fCPerMIP_ + 2;
   int size2 = cdata.s_hgcHEF_cce_      + size1;
@@ -229,8 +231,6 @@ void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
-      printf("layer: %d, %d\n", conds->layer[i], conds->wafer[i]);
-
       double weight = get_weight_from_layer(size4, src_soa.layer_[i], sd);
       double rcorr = get_thickness_correction(size3, sd, cdata);
       double noise = get_noise(size2, sd, cdata);
