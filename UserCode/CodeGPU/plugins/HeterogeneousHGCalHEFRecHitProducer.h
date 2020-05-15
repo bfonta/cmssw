@@ -62,17 +62,14 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
   cms::cuda::device::unique_ptr<std::byte[]> d_mem_;
   cms::cuda::host::unique_ptr<std::byte[]> h_mem_out_;
 
-  //conditions
-  HeterogeneousConditionsESProduct h_conds_;
-  void set_conditions(HeterogeneousConditionsESProduct&, const unsigned int&, const unsigned int&, const edm::SortedCollection<HGCUncalibratedRecHit>&);
-
-  //geometry
-  void set_geometry_(const edm::EventSetup&);
+  //conditions (geometry, topology, ...)
+  unsigned int set_conditions_(const edm::EventSetup&, const HGChefUncalibratedRecHitCollection&);
   std::unique_ptr<hgcal::RecHitTools> tools_;
+  const HeterogeneousHEFConditionsESProduct* d_conds = nullptr;
   const HGCalDDDConstants* ddd_ = nullptr;
 
   //data processing
-  void convert_collection_data_to_soa_(const edm::SortedCollection<HGCUncalibratedRecHit>&, HGCUncalibratedRecHitSoA*, const unsigned int&);
+  void convert_collection_data_to_soa_(const HGChefUncalibratedRecHitCollection&, HGCUncalibratedRecHitSoA*, const unsigned int&);
   void convert_soa_data_to_collection_(HGCRecHitCollection&, HGCRecHitSoA*, const unsigned int&);
   void convert_constant_data_(KernelConstantData<HGChefUncalibratedRecHitConstantData>*);
 
