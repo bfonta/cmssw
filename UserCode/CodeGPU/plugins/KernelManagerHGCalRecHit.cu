@@ -79,7 +79,7 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGCeeUncalib
   transfer_soa_to_host_and_synchronize_();
 }
 
-void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChefUncalibratedRecHitConstantData> *h_kcdata, KernelConstantData<HGChefUncalibratedRecHitConstantData> *d_kcdata, const HeterogeneousHEFConditionsESProduct* d_conds)
+void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChefUncalibratedRecHitConstantData> *h_kcdata, KernelConstantData<HGChefUncalibratedRecHitConstantData> *d_kcdata, const hgcal_conditions::HeterogeneousHEFConditionsESProduct* d_conds)
 {
   transfer_constants_to_device_(h_kcdata, d_kcdata);
   transfer_soas_to_device_();
