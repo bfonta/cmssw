@@ -66,7 +66,7 @@ class KernelManagerHGCalRecHit {
   KernelManagerHGCalRecHit(KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>*);
   ~KernelManagerHGCalRecHit();
   void run_kernels(const KernelConstantData<HGCeeUncalibratedRecHitConstantData>*, KernelConstantData<HGCeeUncalibratedRecHitConstantData>*);
-  void run_kernels(const KernelConstantData<HGChefUncalibratedRecHitConstantData>*, KernelConstantData<HGChefUncalibratedRecHitConstantData>*, const HeterogeneousHEFConditionsESProduct*);
+  void run_kernels(const KernelConstantData<HGChefUncalibratedRecHitConstantData>*, KernelConstantData<HGChefUncalibratedRecHitConstantData>*, const hgcal_conditions::HeterogeneousHEFConditionsESProduct*);
   void run_kernels(const KernelConstantData<HGChebUncalibratedRecHitConstantData>*, KernelConstantData<HGChebUncalibratedRecHitConstantData>*);
   HGCRecHitSoA* get_output();
 

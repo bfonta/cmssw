@@ -50,8 +50,8 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
   stride_ = ( (nhits-1)/32 + 1 ) * 32; //align to warp boundary
   allocate_memory_();
 
-  unsigned int conditions_size = set_conditions_(setup, hits_hef);
-  HeterogeneousConditionsESProductWrapper esproduct(conditions_size, ddd_);
+  set_conditions_(setup, hits_hef);
+  HeterogeneousConditionsESProductWrapper esproduct(params_);
   d_conds = esproduct.getHeterogeneousConditionsESProductAsync(ctx.stream());
 
   convert_constant_data_(h_kcdata_);
@@ -66,7 +66,7 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
   convert_soa_data_to_collection_(*rechits_, h_newhits_, nhits);
 }
 
-unsigned int HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup& setup, const HGChefUncalibratedRecHitCollection& hits) {
+void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup& setup, const HGChefUncalibratedRecHitCollection& hits) {
   tools_->getEventSetup(setup);
   std::string handle_str;
   handle_str = "HGCalHESiliconSensitive";
@@ -74,8 +74,7 @@ unsigned int HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::Eve
   setup.get<IdealGeometryRecord>().get(handle_str, handle);
   ddd_ = &( handle->topology().dddConstants() );
   //cdata_.fhOffset_ = ddd_->layers(true); see RecoLocalCalo/HGCalRecAlgos/src/RecHitTools.cc
-  unsigned int size = ddd_->getParameter()->waferTypeL_.size();
-  return size;
+  params_ = ddd_->getParameter();
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::produce(edm::Event& event, const edm::EventSetup& setup)
