@@ -208,11 +208,11 @@ void ee_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const 
 }
 
 __global__
-void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const HGChefUncalibratedRecHitConstantData cdata, const HeterogeneousHEFConditionsESProduct* conds, int length)
+void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const HGChefUncalibratedRecHitConstantData cdata, const hgcal_conditions::HeterogeneousHEFConditionsESProduct* conds, int length)
 {
   unsigned int tid = blockDim.x * blockIdx.x + threadIdx.x;
   HeterogeneousHGCalDetId detid(src_soa.id_[0]);
-  printf("%d, %d\n", conds->ddd.waferTypeL[0], detid.layer());
+  //printf("%d - %lf\n", conds->params.waferTypeL_[0], conds->params.cellCoarseY_[12]);
 
   int size1 = cdata.s_hgcHEF_fCPerMIP_ + 2;
   int size2 = cdata.s_hgcHEF_cce_      + size1;
