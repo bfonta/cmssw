@@ -9,11 +9,11 @@ namespace memory {
     constexpr unsigned int double_hgchefconstants_soa = 2; //number of doubles in the HEF constants SoA
     constexpr unsigned int float_hgchefconstants_soa = 4; //number of floats in the HEF constants SoA
     constexpr unsigned int int_hgchefconstants_soa = 0; //number of ints in the HEF constants SoA
-    constexpr unsigned int uint32_hgchefconstants_soa = 3; //number of 32-bit ints in the HEF constants SoA
+    constexpr unsigned int uint32_hgchefconstants_soa = 0; //number of 32-bit ints in the HEF constants SoA
     constexpr unsigned int double_hgchebconstants_soa = 3; //number of doubles in the HEB constants SoA
     constexpr unsigned int float_hgchebconstants_soa = 0; //number of floats in the HEB constants SoA
     constexpr unsigned int int_hgchebconstants_soa = 0; //number of ints in the HEB constants SoA
-    constexpr unsigned int uint32_hgchebconstants_soa = 3; //number of 32-bit ints in the HEB constants SoA
+    constexpr unsigned int uint32_hgchebconstants_soa = 0; //number of 32-bit ints in the HEB constants SoA
   }
   
   namespace npointers {
