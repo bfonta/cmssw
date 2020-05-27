@@ -20,8 +20,6 @@ HeterogeneousHGCalHEFRecHitProducer::HeterogeneousHGCalHEFRecHitProducer(const e
   cdata_.s_rcorr_           = vdata_.rcorr_.size();
   cdata_.s_weights_         = vdata_.weights_.size();
   cdata_.hgchefUncalib2GeV_ = 1e-6 / cdata_.hgcHEF_keV2DIGI_;
-  vdata_.waferTypeL_        = {0, 1, 2};//ddd_->retWaferTypeL(); if depends on geometry the allocation is tricky!
-  cdata_.s_waferTypeL_      = vdata_.waferTypeL_.size();
 
   tools_.reset(new hgcal::RecHitTools());
 
@@ -117,8 +115,6 @@ void HeterogeneousHGCalHEFRecHitProducer::convert_constant_data_(KernelConstantD
     kcdata->data_.rcorr_[i] = kcdata->vdata_.rcorr_[i];
   for(int i=0; i<kcdata->data_.s_weights_; ++i)
     kcdata->data_.weights_[i] = kcdata->vdata_.weights_[i];
-  for(int i=0; i<kcdata->data_.s_waferTypeL_; ++i)
-    kcdata->data_.waferTypeL_[i] = kcdata->vdata_.waferTypeL_[i];
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::convert_collection_data_to_soa_(const HGChefUncalibratedRecHitCollection& hits, HGCUncalibratedRecHitSoA* d, const unsigned int& nhits)
@@ -134,8 +130,6 @@ void HeterogeneousHGCalHEFRecHitProducer::convert_collection_data_to_soa_(const 
       d->flags_[i] = hits[i].flags();
       d->aux_[i] = 0;
       d->id_[i] = hits[i].id().rawId();
-      d->wafer_[i] = 1; //CHANGE!!! use the geometry
-      d->layer_[i] = 1; //CHANGE!!! use the geometry
     }
 }
 

@@ -9,17 +9,17 @@ namespace memory {
     constexpr unsigned int double_hgchefconstants_soa = 2; //number of doubles in the HEF constants SoA
     constexpr unsigned int float_hgchefconstants_soa = 4; //number of floats in the HEF constants SoA
     constexpr unsigned int int_hgchefconstants_soa = 0; //number of ints in the HEF constants SoA
-    constexpr unsigned int uint32_hgchefconstants_soa = 1; //number of 32-bit ints in the HEF constants SoA
+    constexpr unsigned int uint32_hgchefconstants_soa = 3; //number of 32-bit ints in the HEF constants SoA
     constexpr unsigned int double_hgchebconstants_soa = 3; //number of doubles in the HEB constants SoA
     constexpr unsigned int float_hgchebconstants_soa = 0; //number of floats in the HEB constants SoA
     constexpr unsigned int int_hgchebconstants_soa = 0; //number of ints in the HEB constants SoA
-    constexpr unsigned int uint32_hgchebconstants_soa = 1; //number of 32-bit ints in the HEB constants SoA
+    constexpr unsigned int uint32_hgchebconstants_soa = 3; //number of 32-bit ints in the HEB constants SoA
   }
   
   namespace npointers {
     //soas for the hits
     constexpr unsigned int float_hgcuncalibrechits_soa = 6; //number of float pointers in the uncalibrated rechits SoA
-    constexpr unsigned int uint32_hgcuncalibrechits_soa = 5; //number of uint32_t pointers in the uncalibrated rechits SoA
+    constexpr unsigned int uint32_hgcuncalibrechits_soa = 3; //number of uint32_t pointers in the uncalibrated rechits SoA
     constexpr unsigned int ntypes_hgcuncalibrechits_soa = 2; //number of different pointer types in the uncalibrated rechits SoA
     constexpr unsigned int float_hgcrechits_soa = 3; //number of float pointers in the rechits SoA
     constexpr unsigned int uint32_hgcrechits_soa = 2; //number of uint32_t pointers in the rechits SoA
@@ -28,10 +28,10 @@ namespace memory {
     //soas for the EE, HEF and HEB constants
     constexpr unsigned int double_hgceeconstants_soa = 5;
     constexpr unsigned int float_hgceeconstants_soa = 0;
-    constexpr unsigned int int_hgceeconstants_soa = 1;
+    constexpr unsigned int int_hgceeconstants_soa = 0;
     constexpr unsigned int double_hgchefconstants_soa = 5;
     constexpr unsigned int float_hgchefconstants_soa = 0;
-    constexpr unsigned int int_hgchefconstants_soa = 1;
+    constexpr unsigned int int_hgchefconstants_soa = 0;
     constexpr unsigned int double_hgchebconstants_soa = 1;
     constexpr unsigned int float_hgchebconstants_soa = 0;
     constexpr unsigned int int_hgchebconstants_soa = 0;
@@ -54,7 +54,7 @@ namespace memory {
 
     //EE: allocates memory for constants on the device
     void device(KernelConstantData<HGCeeUncalibratedRecHitConstantData> *kcdata, cms::cuda::device::unique_ptr<std::byte[]>& mem) {
-      const std::vector<int> nelements = {kcdata->data_.s_hgcEE_fCPerMIP_, kcdata->data_.s_hgcEE_cce_, kcdata->data_.s_hgcEE_noise_fC_, kcdata->data_.s_rcorr_, kcdata->data_.s_weights_, kcdata->data_.s_waferTypeL_};
+      const std::vector<int> nelements = {kcdata->data_.s_hgcEE_fCPerMIP_, kcdata->data_.s_hgcEE_cce_, kcdata->data_.s_hgcEE_noise_fC_, kcdata->data_.s_rcorr_, kcdata->data_.s_weights_};
       auto memsizes = get_memory_sizes_(nelements, npointers::double_hgceeconstants_soa, npointers::float_hgceeconstants_soa, npointers::int_hgceeconstants_soa);
       mem = cms::cuda::make_device_unique<std::byte[]>(std::get<0>(memsizes), 0);
 
@@ -63,7 +63,6 @@ namespace memory {
       kcdata->data_.hgcEE_noise_fC_ = kcdata->data_.hgcEE_cce_ + nelements[1];
       kcdata->data_.rcorr_          = kcdata->data_.hgcEE_noise_fC_ + nelements[2];
       kcdata->data_.weights_        = kcdata->data_.rcorr_ + nelements[3];
-      kcdata->data_.waferTypeL_     = reinterpret_cast<int*>(kcdata->data_.weights_ + nelements[4]);
       kcdata->data_.nbytes_         = std::get<0>(memsizes);
       kcdata->data_.ndelem_         = std::get<1>(memsizes) + 2;
       kcdata->data_.nfelem_         = std::get<2>(memsizes) + 4;
@@ -72,7 +71,7 @@ namespace memory {
 
     //HEF: allocates memory for constants on the device
     void device(KernelConstantData<HGChefUncalibratedRecHitConstantData> *kcdata, cms::cuda::device::unique_ptr<std::byte[]>& mem) {
-      const std::vector<int> nelements = {kcdata->data_.s_hgcHEF_fCPerMIP_, kcdata->data_.s_hgcHEF_cce_, kcdata->data_.s_hgcHEF_noise_fC_, kcdata->data_.s_rcorr_, kcdata->data_.s_weights_, kcdata->data_.s_waferTypeL_};
+      const std::vector<int> nelements = {kcdata->data_.s_hgcHEF_fCPerMIP_, kcdata->data_.s_hgcHEF_cce_, kcdata->data_.s_hgcHEF_noise_fC_, kcdata->data_.s_rcorr_, kcdata->data_.s_weights_};
       auto memsizes = get_memory_sizes_(nelements, npointers::double_hgchefconstants_soa, npointers::float_hgchefconstants_soa, npointers::int_hgchefconstants_soa);
       mem = cms::cuda::make_device_unique<std::byte[]>(std::get<0>(memsizes), 0);
 
@@ -81,7 +80,6 @@ namespace memory {
       kcdata->data_.hgcHEF_noise_fC_ = kcdata->data_.hgcHEF_cce_ + nelements[1];
       kcdata->data_.rcorr_           = kcdata->data_.hgcHEF_noise_fC_ + nelements[2];
       kcdata->data_.weights_         = kcdata->data_.rcorr_ + nelements[3];
-      kcdata->data_.waferTypeL_      = reinterpret_cast<int*>(kcdata->data_.weights_ + nelements[4]);
       kcdata->data_.nbytes_          = std::get<0>(memsizes);
       kcdata->data_.ndelem_          = std::get<1>(memsizes) + 2;
       kcdata->data_.nfelem_          = std::get<2>(memsizes) + 4;
@@ -125,8 +123,6 @@ namespace memory {
       soa1->flags_         = reinterpret_cast<uint32_t*>(soa1->OOTchi2_ + nhits);
       soa1->aux_           = soa1->flags_        + nhits;
       soa1->id_            = soa1->aux_          + nhits;
-      soa1->wafer_         = soa1->id_           + nhits;
-      soa1->layer_         = soa1->wafer_        + nhits;
 
       soa2->amplitude_     = reinterpret_cast<float*>(soa1->id_ + nhits);
       soa2->pedestal_      = soa2->amplitude_    + nhits;
@@ -137,8 +133,6 @@ namespace memory {
       soa2->flags_         = reinterpret_cast<uint32_t*>(soa2->OOTchi2_ + nhits);
       soa2->aux_           = soa2->flags_        + nhits;
       soa2->id_            = soa2->aux_          + nhits;
-      soa2->wafer_         = soa2->id_           + nhits;
-      soa2->layer_         = soa2->wafer_        + nhits;
   
       soa3->energy_        = reinterpret_cast<float*>(soa2->id_ + nhits);
       soa3->time_          = soa3->energy_       + nhits;
@@ -157,7 +151,7 @@ namespace memory {
     //EE: allocates memory for constants on the host
     void host(KernelConstantData<HGCeeUncalibratedRecHitConstantData>* kcdata, cms::cuda::host::noncached::unique_ptr<std::byte[]>& mem)
     {
-      const std::vector<int> nelements = {kcdata->data_.s_hgcEE_fCPerMIP_, kcdata->data_.s_hgcEE_cce_, kcdata->data_.s_hgcEE_noise_fC_, kcdata->data_.s_rcorr_, kcdata->data_.s_weights_, kcdata->data_.s_waferTypeL_};
+      const std::vector<int> nelements = {kcdata->data_.s_hgcEE_fCPerMIP_, kcdata->data_.s_hgcEE_cce_, kcdata->data_.s_hgcEE_noise_fC_, kcdata->data_.s_rcorr_, kcdata->data_.s_weights_};
       auto memsizes = get_memory_sizes_(nelements, npointers::double_hgceeconstants_soa, npointers::float_hgceeconstants_soa, npointers::int_hgceeconstants_soa);
       mem = cms::cuda::make_host_noncached_unique<std::byte[]>(std::get<0>(memsizes), 0);
 
@@ -166,7 +160,6 @@ namespace memory {
       kcdata->data_.hgcEE_noise_fC_ = kcdata->data_.hgcEE_cce_ + nelements[1];
       kcdata->data_.rcorr_          = kcdata->data_.hgcEE_noise_fC_ + nelements[2];
       kcdata->data_.weights_        = kcdata->data_.rcorr_ + nelements[3];
-      kcdata->data_.waferTypeL_     = reinterpret_cast<int*>(kcdata->data_.weights_ + nelements[4]);
       kcdata->data_.nbytes_         = std::get<0>(memsizes);
       kcdata->data_.ndelem_         = std::get<1>(memsizes) + nvars::double_hgceeconstants_soa;
       kcdata->data_.nfelem_         = std::get<2>(memsizes) + nvars::float_hgceeconstants_soa;
@@ -176,7 +169,7 @@ namespace memory {
     //HEF: allocates memory for constants on the host
     void host(KernelConstantData<HGChefUncalibratedRecHitConstantData>* kcdata, cms::cuda::host::noncached::unique_ptr<std::byte[]>& mem)
     {
-      const std::vector<int> nelements = {kcdata->data_.s_hgcHEF_fCPerMIP_, kcdata->data_.s_hgcHEF_cce_, kcdata->data_.s_hgcHEF_noise_fC_, kcdata->data_.s_rcorr_, kcdata->data_.s_weights_, kcdata->data_.s_waferTypeL_};
+      const std::vector<int> nelements = {kcdata->data_.s_hgcHEF_fCPerMIP_, kcdata->data_.s_hgcHEF_cce_, kcdata->data_.s_hgcHEF_noise_fC_, kcdata->data_.s_rcorr_, kcdata->data_.s_weights_};
       auto memsizes = get_memory_sizes_(nelements, npointers::double_hgchefconstants_soa, npointers::float_hgceeconstants_soa, npointers::int_hgceeconstants_soa);
       mem = cms::cuda::make_host_noncached_unique<std::byte[]>(std::get<0>(memsizes), 0);
 
@@ -185,7 +178,6 @@ namespace memory {
       kcdata->data_.hgcHEF_noise_fC_ = kcdata->data_.hgcHEF_cce_ + nelements[1];
       kcdata->data_.rcorr_           = kcdata->data_.hgcHEF_noise_fC_ + nelements[2];
       kcdata->data_.weights_         = kcdata->data_.rcorr_ + nelements[3];
-      kcdata->data_.waferTypeL_      = reinterpret_cast<int*>(kcdata->data_.weights_ + nelements[4]);
       kcdata->data_.nbytes_          = std::get<0>(memsizes);
       kcdata->data_.ndelem_          = std::get<1>(memsizes) + nvars::double_hgchefconstants_soa;
       kcdata->data_.nfelem_          = std::get<2>(memsizes) + nvars::float_hgchefconstants_soa;
@@ -227,8 +219,6 @@ namespace memory {
       soa->id_            = soa->aux_          + nhits;
       soa->aux_           = soa->flags_        + nhits;
       soa->id_            = soa->aux_          + nhits;
-      soa->wafer_         = soa->id_           + nhits;
-      soa->layer_         = soa->wafer_        + nhits;
       soa->nbytes_        = size_tot;
     }
 

@@ -40,59 +40,31 @@ void make_rechit(unsigned int tid, HGCRecHitSoA& dst_soa, HGCUncalibratedRecHitS
 }
 
 __device__ 
-double get_thickness_correction(const int& padding, double *& sd, const HGCeeUncalibratedRecHitConstantData& cdata)
+double get_thickness_correction(const int& padding, const int& type, double *& sd)
 {
-  int waferTypeL = cdata.waferTypeL_[1]; //this should be obtained fro the DetId and the wafer() __device__ function.
-  return sd[padding + waferTypeL];
-}
-__device__ 
-double get_thickness_correction(const int& padding, double *& sd, const HGChefUncalibratedRecHitConstantData& cdata)
-{
-  int waferTypeL = cdata.waferTypeL_[1]; //this should be obtained fro the DetId and the wafer() __device__ function.
-  return sd[padding + waferTypeL];
+  return sd[padding + type];
 }
 
 __device__
-double get_noise(const int& padding, double *& sd, const HGCeeUncalibratedRecHitConstantData& cdata)
+double get_noise(const int& padding, const int& type, double *& sd)
 {
-  int waferTypeL = cdata.waferTypeL_[1]; //this should be obtained fro the DetId and the wafer() __device__ function.
-  return sd[padding + waferTypeL - 1];
-}
-__device__
-double get_noise(const int& padding, double *& sd, const HGChefUncalibratedRecHitConstantData& cdata)
-{
-  int waferTypeL = cdata.waferTypeL_[1]; //this should be obtained fro the DetId and the wafer() __device__ function.
-  return sd[padding + waferTypeL - 1];
+  return sd[padding + type - 1];
 }
 
 __device__
-double get_cce_correction(const int& padding, double *& sd, const HGCeeUncalibratedRecHitConstantData& cdata)
+double get_cce_correction(const int& padding, const int& type, double *& sd)
 {
-  int waferTypeL = cdata.waferTypeL_[1]; //this should be obtained fro the DetId and the wafer() __device__ function.
-  return sd[padding + waferTypeL - 1];
-}
-__device__
-double get_cce_correction(const int& padding, double *& sd, const HGChefUncalibratedRecHitConstantData& cdata)
-{
-  int waferTypeL = cdata.waferTypeL_[1]; //this should be obtained fro the DetId and the wafer() __device__ function.
-  return sd[padding + waferTypeL - 1];
+  return sd[padding + type - 1];
 }
 
 __device__ 
-double get_fCPerMIP(const int& padding, double *& sd, const HGCeeUncalibratedRecHitConstantData& cdata)
+double get_fCPerMIP(const int& padding, const int& type, double *& sd)
 {
-  int waferTypeL = cdata.waferTypeL_[1]; //this should be obtained from the DetId and the wafer() __device__ function.
-  return sd[padding + waferTypeL - 1];
-}
-__device__ 
-double get_fCPerMIP(const int& padding, double *& sd, const HGChefUncalibratedRecHitConstantData& cdata)
-{
-  int waferTypeL = cdata.waferTypeL_[1]; //this should be obtained from the DetId and the wafer() __device__ function.
-  return sd[padding + waferTypeL - 1];
+  return sd[padding + type - 1];
 }
 
 __device__ 
-void set_shared_memory(const int& tid, double*& sd, float*& sf, int*& si, const HGCeeUncalibratedRecHitConstantData& cdata, const int& size1, const int& size2, const int& size3, const int& size4, const int& size5, const int& size6)
+void set_shared_memory(const int& tid, double*& sd, float*& sf, int*& si, const HGCeeUncalibratedRecHitConstantData& cdata, const int& size1, const int& size2, const int& size3, const int& size4, const int& size5)
 {
   const int initial_pad = 2;
   if(tid == 0)
@@ -109,8 +81,6 @@ void set_shared_memory(const int& tid, double*& sd, float*& sf, int*& si, const 
 	sd[i] = cdata.rcorr_[i-size3];
       for(unsigned int i=size4; i<size5; ++i)
 	sd[i] = cdata.weights_[i-size4];
-      for(unsigned int i=size5; i<size6; ++i)
-	si[i-size5] = cdata.waferTypeL_[i-size5];
       sf[0] = (cdata.xmin_ > 0) ? cdata.xmin_ : 0.1;
       sf[1] = cdata.xmax_;
       sf[2] = cdata.aterm_;
@@ -119,7 +89,7 @@ void set_shared_memory(const int& tid, double*& sd, float*& sf, int*& si, const 
 }
 
 __device__ 
-void set_shared_memory(const int& tid, double*& sd, float*& sf, uint32_t*& su, int*& si, const HGChefUncalibratedRecHitConstantData& cdata, const int& size1, const int& size2, const int& size3, const int& size4, const int& size5, const int& size6)
+void set_shared_memory(const int& tid, double*& sd, float*& sf, uint32_t*& su, int*& si, const HGChefUncalibratedRecHitConstantData& cdata, const int& size1, const int& size2, const int& size3, const int& size4, const int& size5)
 {
   const int initial_pad = 2;
   if(tid == 0)
@@ -136,8 +106,6 @@ void set_shared_memory(const int& tid, double*& sd, float*& sf, uint32_t*& su, i
 	sd[i] = cdata.rcorr_[i-size3];
       for(unsigned int i=size4; i<size5; ++i)
 	sd[i] = cdata.weights_[i-size4];
-      for(unsigned int i=size5; i<size6; ++i)
-	si[i-size5] = cdata.waferTypeL_[i-size5];
       sf[0] = (cdata.xmin_ > 0) ? cdata.xmin_ : 0.1;
       sf[1] = cdata.xmax_;
       sf[2] = cdata.aterm_;
@@ -180,28 +148,27 @@ __global__
 void ee_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const HGCeeUncalibratedRecHitConstantData cdata, int length)
 {
   unsigned int tid = blockDim.x * blockIdx.x + threadIdx.x;
-
+  HeterogeneousHGCSiliconDetId detid(src_soa.id_[tid]);
   int size1 = cdata.s_hgcEE_fCPerMIP_ + 2;
   int size2 = cdata.s_hgcEE_cce_      + size1;
   int size3 = cdata.s_hgcEE_noise_fC_ + size2;
   int size4 = cdata.s_rcorr_          + size3; 
   int size5 = cdata.s_weights_        + size4; 
-  int size6 = cdata.s_waferTypeL_     + size5; 
 
   extern __shared__ double s[];
   double   *sd = s;
   float    *sf = (float*)   (sd + cdata.ndelem_);
   int      *si = (int*)     (sf + cdata.nfelem_);
-  set_shared_memory(threadIdx.x, sd, sf, si, cdata, size1, size2, size3, size4, size5, size6);
+  set_shared_memory(threadIdx.x, sd, sf, si, cdata, size1, size2, size3, size4, size5);
   __syncthreads();
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
-      double weight = get_weight_from_layer(size4, src_soa.layer_[i], sd);
-      double rcorr = get_thickness_correction(size3, sd, cdata);
-      double noise = get_noise(size2, sd, cdata);
-      double cce_correction = get_cce_correction(size1, sd, cdata);
-      double fCPerMIP = get_fCPerMIP(2, sd, cdata);
+      double weight = get_weight_from_layer(size4, detid.layer(), sd);
+      double rcorr = get_thickness_correction(size3, detid.layer(), sd);
+      double noise = get_noise(size2, detid.type(), sd);
+      double cce_correction = get_cce_correction(size1, detid.type(), sd);
+      double fCPerMIP = get_fCPerMIP(2, detid.type(), sd);
       double sigmaNoiseGeV = 1e-3 * weight * rcorr * __fdividef( noise, fCPerMIP );
       make_rechit(i, dst_soa, src_soa, false, weight, rcorr, cce_correction, sigmaNoiseGeV, sf);
     }
@@ -211,31 +178,30 @@ __global__
 void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const HGChefUncalibratedRecHitConstantData cdata, const hgcal_conditions::HeterogeneousHEFConditionsESProduct* conds, int length)
 {
   unsigned int tid = blockDim.x * blockIdx.x + threadIdx.x;
-  HeterogeneousHGCalDetId detid(src_soa.id_[0]);
-  //printf("%d - %lf\n", conds->params.waferTypeL_[0], conds->params.cellCoarseY_[12]);
+  HeterogeneousHGCSiliconDetId detid(src_soa.id_[tid]);
+  printf("waferTypeL: %d - cellCoarseY: %lf - cellX: %d\n", conds->params.waferTypeL_[0], conds->params.cellCoarseY_[12], detid.cellX());
 
   int size1 = cdata.s_hgcHEF_fCPerMIP_ + 2;
   int size2 = cdata.s_hgcHEF_cce_      + size1;
   int size3 = cdata.s_hgcHEF_noise_fC_ + size2;
   int size4 = cdata.s_rcorr_           + size3; 
   int size5 = cdata.s_weights_         + size4; 
-  int size6 = cdata.s_waferTypeL_      + size5;
 
   extern __shared__ double s[];
   double   *sd = s;
   float    *sf = (float*)   (sd + cdata.ndelem_);
   uint32_t *su = (uint32_t*)(sf + cdata.nfelem_);
   int      *si = (int*)     (su + cdata.nuelem_);
-  set_shared_memory(threadIdx.x, sd, sf, su, si, cdata, size1, size2, size3, size4, size5, size6);
+  set_shared_memory(threadIdx.x, sd, sf, su, si, cdata, size1, size2, size3, size4, size5);
   __syncthreads();
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
-      double weight = get_weight_from_layer(size4, src_soa.layer_[i], sd);
-      double rcorr = get_thickness_correction(size3, sd, cdata);
-      double noise = get_noise(size2, sd, cdata);
-      double cce_correction = get_cce_correction(size1, sd, cdata);
-      double fCPerMIP = get_fCPerMIP(2, sd, cdata);
+      double weight = get_weight_from_layer(size4, detid.layer(), sd);
+      double rcorr = get_thickness_correction(size3, detid.type(), sd);
+      double noise = get_noise(size2, detid.type(), sd);
+      double cce_correction = get_cce_correction(size1, detid.type(), sd);
+      double fCPerMIP = get_fCPerMIP(2, detid.type(), sd);
       double sigmaNoiseGeV = 1e-3 * weight * rcorr * __fdividef( noise,  fCPerMIP );
       make_rechit(i, dst_soa, src_soa, false, weight, rcorr, cce_correction, sigmaNoiseGeV, sf);
     }
@@ -245,7 +211,7 @@ __global__
 void heb_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const HGChebUncalibratedRecHitConstantData cdata, int length)
 {
   unsigned int tid = blockDim.x * blockIdx.x + threadIdx.x;
-
+  HeterogeneousHGCScintillatorDetId detid(src_soa.id_[tid]);
   int size1 = cdata.s_weights_ + 3; 
 
   extern __shared__ double s[];
@@ -257,7 +223,7 @@ void heb_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
-      double weight = get_weight_from_layer(3, src_soa.layer_[i], sd);
+      double weight = get_weight_from_layer(3, detid.layer(), sd);
       double noise = sd[2];
       double sigmaNoiseGeV = 1e-3 * noise * weight;
       make_rechit(i, dst_soa, src_soa, true, weight, 0., 0., sigmaNoiseGeV, sf);
