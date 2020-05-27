@@ -10,7 +10,6 @@ class HGCConstantVectorData {
   std::vector<double> noise_fC;
   std::vector<double> rcorr;
   std::vector<double> weights;
-  std::vector<int> waferTypeL;
 };
 
 class HGCeeUncalibratedRecHitConstantData {
@@ -53,7 +52,6 @@ class HGChefUncalibratedRecHitConstantData {
   double *hgcHEF_noise_fC_;
   double *rcorr_;
   double *weights_;
-  int *waferTypeL_;
   float xmin_;
   float xmax_;
   float aterm_;
@@ -73,7 +71,6 @@ class HGChefUncalibratedRecHitConstantData {
   int s_hgcHEF_noise_fC_;
   int s_rcorr_;
   int s_weights_;
-  int s_waferTypeL_;
 };
 
 class HGChebUncalibratedRecHitConstantData {
