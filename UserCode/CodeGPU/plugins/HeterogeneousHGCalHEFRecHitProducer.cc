@@ -13,7 +13,6 @@ HeterogeneousHGCalHEFRecHitProducer::HeterogeneousHGCalHEFRecHitProducer(const e
   vdata_.noise_fC_          = ps.getParameter<edm::ParameterSet>("HGCHEF_noise_fC").getParameter<std::vector<double> >("values");
   vdata_.rcorr_             = ps.getParameter< std::vector<double> >("rcorr");
   vdata_.weights_           = ps.getParameter< std::vector<double> >("weights");
-  cdata_.fhOffset_          = ps.getParameter<uint32_t>("offset"); //ddd_->layers(true);
   cdata_.s_hgcHEF_fCPerMIP_ = vdata_.fCPerMIP_.size();
   cdata_.s_hgcHEF_cce_      = vdata_.cce_.size();
   cdata_.s_hgcHEF_noise_fC_ = vdata_.noise_fC_.size();
@@ -71,7 +70,6 @@ void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup&
   edm::ESHandle<HGCalGeometry> handle;
   setup.get<IdealGeometryRecord>().get(handle_str, handle);
   ddd_ = &( handle->topology().dddConstants() );
-  //cdata_.fhOffset_ = ddd_->layers(true); see RecoLocalCalo/HGCalRecAlgos/src/RecHitTools.cc
   params_ = ddd_->getParameter();
 }
 

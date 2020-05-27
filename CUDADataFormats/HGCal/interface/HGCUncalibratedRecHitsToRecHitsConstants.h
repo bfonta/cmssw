@@ -49,7 +49,6 @@ class HGChefUncalibratedRecHitConstantData {
   float xmax_; //used for computing the time resolution error
   float aterm_; //used for computing the time resolution error
   float cterm_; //used for computing the time resolution error
-  uint32_t fhOffset_; //layer offset
   int nbytes_; //number of bytes allocated by this class
   int ndelem_; //number of doubles allocated by this class
   int nfelem_; //number of floats allocated by this class
@@ -68,7 +67,6 @@ class HGChebUncalibratedRecHitConstantData {
   double hgchebUncalib2GeV_; //sets the ADC; obtained by dividing 1e-6 by hgcHEB_keV2DIGI_
   double hgcHEB_noise_MIP_; //noise
   double *weights_; //energy weights to recover rechit energy deposited in the absorber
-  uint32_t bhOffset_; //layer offset
   int nbytes_; //number of bytes allocated by this class
   int ndelem_; //number of doubles allocated by this class
   int nfelem_; //number of floats allocated by this class
