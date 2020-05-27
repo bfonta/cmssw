@@ -89,7 +89,7 @@ void set_shared_memory(const int& tid, double*& sd, float*& sf, int*& si, const 
 }
 
 __device__ 
-void set_shared_memory(const int& tid, double*& sd, float*& sf, uint32_t*& su, int*& si, const HGChefUncalibratedRecHitConstantData& cdata, const int& size1, const int& size2, const int& size3, const int& size4, const int& size5)
+void set_shared_memory(const int& tid, double*& sd, float*& sf, int*& si, const HGChefUncalibratedRecHitConstantData& cdata, const int& size1, const int& size2, const int& size3, const int& size4, const int& size5)
 {
   const int initial_pad = 2;
   if(tid == 0)
@@ -110,12 +110,11 @@ void set_shared_memory(const int& tid, double*& sd, float*& sf, uint32_t*& su, i
       sf[1] = cdata.xmax_;
       sf[2] = cdata.aterm_;
       sf[3] = cdata.cterm_;
-      su[0] = cdata.fhOffset_;
     }
 }
 
 __device__ 
-void set_shared_memory(const int& tid, double*& sd, float*& sf, uint32_t*& su, const HGChebUncalibratedRecHitConstantData& cdata, const int& size1)
+void set_shared_memory(const int& tid, double*& sd, float*& sf, const HGChebUncalibratedRecHitConstantData& cdata, const int& size1)
 {
   const int initial_pad = 3;
   if(tid == 0)
@@ -125,7 +124,6 @@ void set_shared_memory(const int& tid, double*& sd, float*& sf, uint32_t*& su, c
       sd[2] = cdata.hgcHEB_noise_MIP_;
       for(unsigned int i=initial_pad; i<size1; ++i)
 	sd[i] = cdata.weights_[i-initial_pad];
-      su[0] = cdata.bhOffset_;
     }
 }
 
@@ -190,9 +188,8 @@ void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
   extern __shared__ double s[];
   double   *sd = s;
   float    *sf = (float*)   (sd + cdata.ndelem_);
-  uint32_t *su = (uint32_t*)(sf + cdata.nfelem_);
-  int      *si = (int*)     (su + cdata.nuelem_);
-  set_shared_memory(threadIdx.x, sd, sf, su, si, cdata, size1, size2, size3, size4, size5);
+  int      *si = (int*)     (sf + cdata.nuelem_);
+  set_shared_memory(threadIdx.x, sd, sf, si, cdata, size1, size2, size3, size4, size5);
   __syncthreads();
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
@@ -217,8 +214,7 @@ void heb_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
   extern __shared__ double s[];
   double   *sd = s;
   float    *sf = (float*)   (sd + cdata.ndelem_);
-  uint32_t *su = (uint32_t*)(sf + cdata.nfelem_);
-  set_shared_memory(threadIdx.x, sd, sf, su, cdata, size1);
+  set_shared_memory(threadIdx.x, sd, sf, cdata, size1);
   __syncthreads();
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
