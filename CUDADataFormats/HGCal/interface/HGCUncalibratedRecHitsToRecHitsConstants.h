@@ -10,7 +10,6 @@ class HGCConstantVectorData {
   std::vector<double> noise_fC_;
   std::vector<double> rcorr_;
   std::vector<double> weights_;
-  std::vector<int> waferTypeL_;
 };
 
 class HGCeeUncalibratedRecHitConstantData {
@@ -22,7 +21,6 @@ class HGCeeUncalibratedRecHitConstantData {
   double *hgcEE_noise_fC_; //noise, one value per sensor thickness
   double *rcorr_; //thickness correction
   double *weights_; //energy weights to recover rechit energy deposited in the absorber
-  int *waferTypeL_; //wafer longitudinal thickness classification (1 = 100um, 2 = 200um, 3=300um)
   float xmin_; //used for computing the time resolution error
   float xmax_; //used for computing the time resolution error
   float aterm_; //used for computing the time resolution error
@@ -36,7 +34,6 @@ class HGCeeUncalibratedRecHitConstantData {
   int s_hgcEE_noise_fC_; //number of elements pointed by hgcEE_noise_fC_
   int s_rcorr_; //number of elements pointed by rcorr_
   int s_weights_; //number of elements pointed by weights_
-  int s_waferTypeL_; //number of elements pointed by waferTypeL_
 };
 
 class HGChefUncalibratedRecHitConstantData {
@@ -48,7 +45,6 @@ class HGChefUncalibratedRecHitConstantData {
   double *hgcHEF_noise_fC_; //noise, one value per sensor thickness
   double *rcorr_;  //thickness correction
   double *weights_; //energy weights to recover rechit energy deposited in the absorber
-  int *waferTypeL_; //wafer longitudinal thickness classification (1 = 100um, 2 = 200um, 3=300um)
   float xmin_; //used for computing the time resolution error
   float xmax_; //used for computing the time resolution error
   float aterm_; //used for computing the time resolution error
@@ -64,7 +60,6 @@ class HGChefUncalibratedRecHitConstantData {
   int s_hgcHEF_noise_fC_; //number of elements pointed by hgcEE_noise_fC_
   int s_rcorr_; //number of elements pointed by rcorr_
   int s_weights_; //number of elements pointed by weights_
-  int s_waferTypeL_; //number of elements pointed by waferTypeL_
 };
 
 class HGChebUncalibratedRecHitConstantData {
