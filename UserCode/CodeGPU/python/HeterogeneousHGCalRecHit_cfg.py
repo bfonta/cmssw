@@ -61,8 +61,7 @@ process.HeterogeneousHGCalHEFRecHitProducer = cms.EDProducer('HeterogeneousHGCal
                                                              rangeMatch      = HGCalRecHit.__dict__['rangeMatch'],
                                                              rangeMask       = HGCalRecHit.__dict__['rangeMask'],
                                                              rcorr           = HGCalRecHit.__dict__['thicknessCorrection'],
-                                                             weights         = HGCalRecHit.__dict__['layerWeights'],
-                                                             offset          = cms.uint32(22)
+                                                             weights         = HGCalRecHit.__dict__['layerWeights']
                                                          )
 process.HeterogeneousHGCalHEBRecHitProducer = cms.EDProducer('HeterogeneousHGCalHEBRecHitProducer',
                                                              HGCHEBUncalibRecHitsTok = cms.InputTag('HGCalUncalibRecHit', 'HGCHEBUncalibRecHits'),
@@ -75,8 +74,7 @@ process.HeterogeneousHGCalHEBRecHitProducer = cms.EDProducer('HeterogeneousHGCal
                                                              HGCHEB_isSiFE    = HGCalRecHit.__dict__['HGCHEB_isSiFE'],
                                                              rangeMatch       = HGCalRecHit.__dict__['rangeMatch'],
                                                              rangeMask        = HGCalRecHit.__dict__['rangeMask'],
-                                                             weights          = HGCalRecHit.__dict__['layerWeights'],
-                                                             offset           = cms.uint32(22)
+                                                             weights          = HGCalRecHit.__dict__['layerWeights']
                                                          )
 
 fNameOut = 'out'
