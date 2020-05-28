@@ -56,11 +56,11 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
 
   //memory
   void allocate_memory_();
-  cms::cuda::host::noncached::unique_ptr<std::byte[]> h_mem_const_;
+  cms::cuda::host::noncached::unique_ptr<std::byte[]> mem_const_;
   cms::cuda::device::unique_ptr<std::byte[]> d_mem_const_;
-  cms::cuda::host::noncached::unique_ptr<std::byte[]> h_mem_in_;
+  cms::cuda::host::noncached::unique_ptr<std::byte[]> mem_in_;
   cms::cuda::device::unique_ptr<std::byte[]> d_mem_;
-  cms::cuda::host::unique_ptr<std::byte[]> h_mem_out_;
+  cms::cuda::host::unique_ptr<std::byte[]> mem_out_;
 
   //conditions (geometry, topology, ...)
   void set_conditions_(const edm::EventSetup&, const HGChefUncalibratedRecHitCollection&);
@@ -74,10 +74,10 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
   void convert_soa_data_to_collection_(HGCRecHitCollection&, HGCRecHitSoA*, const unsigned int&);
   void convert_constant_data_(KernelConstantData<HGChefUncalibratedRecHitConstantData>*);
 
-  HGCUncalibratedRecHitSoA *old_soa_ = nullptr, *d_oldhits_ = nullptr, *d_newhits_ = nullptr;
-  HGCRecHitSoA *d_newhits_final_ = nullptr, *h_newhits_ = nullptr;
+  HGCUncalibratedRecHitSoA *uncalibSoA_ = nullptr, *d_uncalibSoA_ = nullptr, *d_intermediateSoA_ = nullptr;
+  HGCRecHitSoA *d_calibSoA_ = nullptr, *calibSoA_ = nullptr;
   KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA> *kmdata_;
-  KernelConstantData<HGChefUncalibratedRecHitConstantData> *h_kcdata_;
+  KernelConstantData<HGChefUncalibratedRecHitConstantData> *kcdata_;
   KernelConstantData<HGChefUncalibratedRecHitConstantData> *d_kcdata_;
 };
 

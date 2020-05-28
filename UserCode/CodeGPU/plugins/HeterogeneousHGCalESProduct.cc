@@ -5,7 +5,6 @@ HeterogeneousConditionsESProductWrapper::HeterogeneousConditionsESProductWrapper
   calculate_memory_bytes(cpuHGCalParameters);
 
   chunk_ = std::accumulate(this->sizes_.begin(), this->sizes_.end(), 0); //total memory required in bytes
-  std::cout << "CHUNK: " << chunk_ << std::endl;
   gpuErrchk(cudaMallocHost(&this->params_.cellFineX_, chunk_));
 
   //store cumulative sum in bytes and convert it to sizes in units of C++ types, i.e., number if items to be transferred to GPU
@@ -13,13 +12,13 @@ HeterogeneousConditionsESProductWrapper::HeterogeneousConditionsESProductWrapper
   std::partial_sum(this->sizes_.begin(), this->sizes_.end(), cumsum_sizes.begin()+1);
   for(unsigned int i=1; i<cumsum_sizes.size(); ++i) //start at second element (the first is zero)
     {
-      unsigned int typesize;
+      unsigned int typesize = 0;
       if( cp::types[i-1] == cp::HeterogeneousHGCalParametersType::Double )
 	typesize = sizeof(double);
       else if( cp::types[i-1] == cp::HeterogeneousHGCalParametersType::Int32_t )
 	typesize = sizeof(int32_t);
       else
-	throw std::runtime_error("HeterogeneousConditionsESProductWrapper::HeterogeneousConditionsESProductWrapper(): wrong type.");
+	edm::LogError("HeterogeneousConditionsESProductWrapper") << "Wrong HeterogeneousHGCalParameters type";
       cumsum_sizes[i] /= typesize;
     }
 
@@ -47,7 +46,7 @@ HeterogeneousConditionsESProductWrapper::HeterogeneousConditionsESProductWrapper
 	else if( cp::types[j] == cp::HeterogeneousHGCalParametersType::Int32_t )
 	  select_pointer_i(&this->params_, j)[index] = select_pointer_i(cpuHGCalParameters, j)[index];
 	else
-	  throw std::runtime_error("HeterogeneousConditionsESProductWrapper::HeterogeneousConditionsESProductWrapper(): wrong type.");
+	  edm::LogError("HeterogeneousConditionsESProductWrapper") << "Wrong HeterogeneousHGCalParameters type";
       }
   }
 }
@@ -70,11 +69,6 @@ void HeterogeneousConditionsESProductWrapper::calculate_memory_bytes(const HGCal
 	sizes_units[i] = sizeof(double);
       else if(cp::types[i] == cp::HeterogeneousHGCalParametersType::Int32_t)
 	sizes_units[i] = sizeof(int32_t);
-    }
-
-  for(unsigned int i=0; i<npointers; ++i) 
-    {
-      std::cout << sizes[i] << ", " << sizes_units[i] << std::endl;
     }
 
   //element by element multiplication
@@ -101,7 +95,8 @@ double*& HeterogeneousConditionsESProductWrapper::select_pointer_d(cp::Heterogen
     case 3:
       return cpuObject->cellCoarseY_;
     default:
-      throw std::runtime_error("HeterogeneousConditionsESProductWrapper::select_pointer_d(heterogeneous): no item.");
+      edm::LogError("HeterogeneousConditionsESProductWrapper") << "select_pointer_d(heterogeneous): no item.";
+      return cpuObject->cellCoarseY_;
     }
 }
 
@@ -118,7 +113,8 @@ std::vector<double> HeterogeneousConditionsESProductWrapper::select_pointer_d(co
     case 3:
       return cpuObject->cellCoarseY_;
     default:
-      throw std::runtime_error("HeterogeneousConditionsESProductWrapper::select_pointer_d(non-heterogeneous): no item.");
+      edm::LogError("HeterogeneousConditionsESProductWrapper") << "select_pointer_d(non-heterogeneous): no item.";
+      return cpuObject->cellCoarseY_;
     }
 }
 
@@ -129,7 +125,8 @@ int32_t*& HeterogeneousConditionsESProductWrapper::select_pointer_i(cp::Heteroge
     case 4:
       return cpuObject->waferTypeL_;
     default:
-      throw std::runtime_error("HeterogeneousConditionsESProductWrapper::select_pointer_i(heterogeneous): no item.");
+      edm::LogError("HeterogeneousConditionsESProductWrapper") << "select_pointer_i(heterogeneous): no item.";
+      return cpuObject->waferTypeL_;
     }
 }
 
@@ -140,7 +137,8 @@ std::vector<int32_t> HeterogeneousConditionsESProductWrapper::select_pointer_i(c
     case 4:
       return cpuObject->waferTypeL_;
     default:
-      throw std::runtime_error("HeterogeneousConditionsESProductWrapper::select_pointer_i(non-heterogeneous): no item.");
+      edm::LogError("HeterogeneousConditionsESProductWrapper") << "select_pointer_i(non-heterogeneous): no item.";
+      return cpuObject->waferTypeL_;
     }
 }
 
@@ -173,7 +171,7 @@ hgcal_conditions::HeterogeneousHEFConditionsESProduct const *HeterogeneousCondit
 			 cp::types[j+1] == cp::HeterogeneousHGCalParametersType::Int32_t )
 		  select_pointer_i(&(data.host->params), j+1) = reinterpret_cast<int32_t*>( select_pointer_d(&(data.host->params), j) + this->sizes_[j] );
 		else
-		  throw std::runtime_error("HeterogeneousConditionsESProductWrapper::getHeterogeneousConditionsESProductAsync(): compare this functions' logic with hgcal_conditions::parameters::types.");
+		  edm::LogError("HeterogeneousConditionsESProductWrapper") << "compare this functions' logic with hgcal_conditions::parameters::types";
 	      }
 
 	    // ... and then the payload object

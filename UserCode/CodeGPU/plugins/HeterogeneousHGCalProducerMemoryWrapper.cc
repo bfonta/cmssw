@@ -1,8 +1,9 @@
 #include "HeterogeneousHGCalProducerMemoryWrapper.h"
 
 namespace memory {
+  //variables in the soas for the EE, HEF and HEB configuration data ("constants")
+  //these numbers excluse SoA members used for size book-keeping purposes
   namespace nvars {
-    //these numbers excluse SoA members used for size bookkeeping purposes
     constexpr unsigned int double_hgceeconstants_soa = 2; //number of doubles in the EE constants SoA
     constexpr unsigned int float_hgceeconstants_soa = 4; //number of floats in the EE constants SoA
     constexpr unsigned int int_hgceeconstants_soa = 0; //number of ints in the EE constants SoA
@@ -17,7 +18,7 @@ namespace memory {
   }
   
   namespace npointers {
-    //soas for the hits
+    //pointers in the soas for the uncalibrated and calibrated hits
     constexpr unsigned int float_hgcuncalibrechits_soa = 6; //number of float pointers in the uncalibrated rechits SoA
     constexpr unsigned int uint32_hgcuncalibrechits_soa = 3; //number of uint32_t pointers in the uncalibrated rechits SoA
     constexpr unsigned int ntypes_hgcuncalibrechits_soa = 2; //number of different pointer types in the uncalibrated rechits SoA
@@ -25,7 +26,7 @@ namespace memory {
     constexpr unsigned int uint32_hgcrechits_soa = 2; //number of uint32_t pointers in the rechits SoA
     constexpr unsigned int uint8_hgcrechits_soa = 1; //number of uint8_t pointers in the rechits SoA
     constexpr unsigned int ntypes_hgcrechits_soa = 3; //number of different pointer types in the rechits SoA
-    //soas for the EE, HEF and HEB constants
+    //pointers in the soas for the EE, HEF and HEB configuration data ("constants")
     constexpr unsigned int double_hgceeconstants_soa = 5;
     constexpr unsigned int float_hgceeconstants_soa = 0;
     constexpr unsigned int int_hgceeconstants_soa = 0;
@@ -148,7 +149,7 @@ namespace memory {
       assert(sizes.begin()+2*npointers::ntypes_hgcuncalibrechits_soa+npointers::ntypes_hgcrechits_soa == sizes.end());
     }
 
-    //EE: allocates memory for constants on the host
+    //EE: allocates page-locked (pinned) and non cached (write-combining) memory for constants on the host
     void host(KernelConstantData<HGCeeUncalibratedRecHitConstantData>* kcdata, cms::cuda::host::noncached::unique_ptr<std::byte[]>& mem)
     {
       const std::vector<int> nelements = {kcdata->data_.s_hgcEE_fCPerMIP_, kcdata->data_.s_hgcEE_cce_, kcdata->data_.s_hgcEE_noise_fC_, kcdata->data_.s_rcorr_, kcdata->data_.s_weights_};
@@ -166,7 +167,7 @@ namespace memory {
       kcdata->data_.nielem_         = std::get<3>(memsizes) + nvars::int_hgceeconstants_soa;
     }
 
-    //HEF: allocates memory for constants on the host
+    //HEF: allocates page-locked (pinned) and non cached (write-combining) memory for constants on the host
     void host(KernelConstantData<HGChefUncalibratedRecHitConstantData>* kcdata, cms::cuda::host::noncached::unique_ptr<std::byte[]>& mem)
     {
       const std::vector<int> nelements = {kcdata->data_.s_hgcHEF_fCPerMIP_, kcdata->data_.s_hgcHEF_cce_, kcdata->data_.s_hgcHEF_noise_fC_, kcdata->data_.s_rcorr_, kcdata->data_.s_weights_};
@@ -185,7 +186,7 @@ namespace memory {
       kcdata->data_.nuelem_          = nvars::uint32_hgchefconstants_soa;
     }
 
-    //HEB: allocates memory for constants on the host
+    //HEB: allocates page-locked (pinned) and non cached (write-combining) memory for constants on the host
     void host(KernelConstantData<HGChebUncalibratedRecHitConstantData>* kcdata, cms::cuda::host::noncached::unique_ptr<std::byte[]>& mem)
     {
       const std::vector<int> nelements = {kcdata->data_.s_weights_};
@@ -200,7 +201,7 @@ namespace memory {
       kcdata->data_.nuelem_  = nvars::uint32_hgchebconstants_soa;
     }
 
-    //allocates pinned (non cached) memory for UncalibratedRecHits SoAs on the host
+    //allocates page-locked (pinned) and non cached (write-combining) memory for UncalibratedRecHits SoAs on the host
     void host(const int& nhits, HGCUncalibratedRecHitSoA* soa, cms::cuda::host::noncached::unique_ptr<std::byte[]>& mem)
     {
       std::vector<int> sizes = { npointers::float_hgcuncalibrechits_soa  * sizeof(float),
@@ -222,7 +223,7 @@ namespace memory {
       soa->nbytes_        = size_tot;
     }
 
-    //allocates memory for RecHits SoAs on the host
+    //allocates page-locked (pinned) memory for RecHits SoAs on the host
     void host(const int& nhits, HGCRecHitSoA* soa, cms::cuda::host::unique_ptr<std::byte[]>& mem)
     {
       std::vector<int> sizes = { npointers::float_hgcrechits_soa  * sizeof(float),
