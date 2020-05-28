@@ -28,13 +28,13 @@ HeterogeneousHGCalHEFRecHitProducer::HeterogeneousHGCalHEFRecHitProducer(const e
 HeterogeneousHGCalHEFRecHitProducer::~HeterogeneousHGCalHEFRecHitProducer()
 {
   delete kmdata_;
-  delete h_kcdata_;
+  delete kcdata_;
   delete d_kcdata_;
-  delete old_soa_;
-  delete d_oldhits_;
-  delete d_newhits_;
-  delete d_newhits_final_;
-  delete h_newhits_;
+  delete uncalibSoA_;
+  delete d_uncalibSoA_;
+  delete d_intermediateSoA_;
+  delete d_calibSoA_;
+  delete calibSoA_;
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {
@@ -51,16 +51,17 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
   HeterogeneousConditionsESProductWrapper esproduct(params_);
   d_conds = esproduct.getHeterogeneousConditionsESProductAsync(ctx.stream());
 
-  convert_constant_data_(h_kcdata_);
-
-  convert_collection_data_to_soa_(hits_hef, old_soa_, nhits);
-
-  kmdata_ = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(nhits, stride_, old_soa_, d_oldhits_, d_newhits_, d_newhits_final_, h_newhits_);
+  std::cout << "check3" << std::endl;
+  convert_constant_data_(kcdata_);
+  std::cout << "check4" << std::endl;
+  convert_collection_data_to_soa_(hits_hef, uncalibSoA_, nhits);
+  std::cout << "check5" << std::endl;
+  kmdata_ = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(nhits, stride_, uncalibSoA_, d_uncalibSoA_, d_intermediateSoA_, d_calibSoA_, calibSoA_);
   KernelManagerHGCalRecHit kernel_manager(kmdata_);
-  kernel_manager.run_kernels(h_kcdata_, d_kcdata_, d_conds);
+  kernel_manager.run_kernels(kcdata_, kcdata_, d_conds);
 
   rechits_ = std::make_unique<HGCRecHitCollection>();
-  convert_soa_data_to_collection_(*rechits_, h_newhits_, nhits);
+  convert_soa_data_to_collection_(*rechits_, calibSoA_, nhits);
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup& setup, const HGChefUncalibratedRecHitCollection& hits) {
@@ -81,24 +82,24 @@ void HeterogeneousHGCalHEFRecHitProducer::produce(edm::Event& event, const edm::
 
 void HeterogeneousHGCalHEFRecHitProducer::allocate_memory_()
 {
-  old_soa_ = new HGCUncalibratedRecHitSoA();
-  d_oldhits_ = new HGCUncalibratedRecHitSoA();
-  d_newhits_ = new HGCUncalibratedRecHitSoA();
-  d_newhits_final_ = new HGCRecHitSoA();
-  h_newhits_ = new HGCRecHitSoA();
-  h_kcdata_ = new KernelConstantData<HGChefUncalibratedRecHitConstantData>(cdata_, vdata_);
-  d_kcdata_ = new KernelConstantData<HGChefUncalibratedRecHitConstantData>(cdata_, vdata_);
+  uncalibSoA_        = new HGCUncalibratedRecHitSoA();
+  d_uncalibSoA_      = new HGCUncalibratedRecHitSoA();
+  d_intermediateSoA_ = new HGCUncalibratedRecHitSoA();
+  d_calibSoA_        = new HGCRecHitSoA();
+  calibSoA_          = new HGCRecHitSoA();
+  kcdata_            = new KernelConstantData<HGChefUncalibratedRecHitConstantData>(cdata_, vdata_);
+  d_kcdata_          = new KernelConstantData<HGChefUncalibratedRecHitConstantData>(cdata_, vdata_);
 
   //_allocate pinned memory for constants on the host
-  memory::allocation::host(h_kcdata_, h_mem_const_);
+  memory::allocation::host(kcdata_, mem_const_);
   //_allocate pinned memory for constants on the device
   memory::allocation::device(d_kcdata_, d_mem_const_);
   //_allocate memory for hits on the host
-  memory::allocation::host(stride_, old_soa_, h_mem_in_);
+  memory::allocation::host(stride_, uncalibSoA_, mem_in_);
   //_allocate memory for hits on the device
-  memory::allocation::device(stride_, d_oldhits_, d_newhits_, d_newhits_final_, d_mem_);
+  memory::allocation::device(stride_, d_uncalibSoA_, d_intermediateSoA_, d_calibSoA_, d_mem_);
   //_allocate memory for hits on the host
-  memory::allocation::host(stride_, h_newhits_, h_mem_out_);
+  memory::allocation::host(stride_, calibSoA_, mem_out_);
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::convert_constant_data_(KernelConstantData<HGChefUncalibratedRecHitConstantData> *kcdata)

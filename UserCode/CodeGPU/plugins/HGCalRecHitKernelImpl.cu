@@ -4,7 +4,6 @@
 #include "DataFormats/HGCRecHit/interface/HGCRecHit.h"
 #include "DataFormats/ForwardDetId/interface/HGCalDetId.h"
 #include "HGCalRecHitKernelImpl.cuh"
-#include "HGCalDetIdTools.h"
 
 __device__ 
 double get_weight_from_layer(const int& padding, const int& layer, double*& sd)

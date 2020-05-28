@@ -2,6 +2,7 @@
 #define RecoLocalCalo_HGCalRecProducers_KernelManager_HGCalRecHit_h
 
 #include "FWCore/Utilities/interface/Exception.h"
+#include "HeterogeneousCore/CUDAUtilities/interface/MessageLogger.h"
 #include "DataFormats/DetId/interface/DetId.h"
 #include "HeterogeneousCore/CUDAUtilities/interface/cudaCompat.h"
 #include "HeterogeneousCore/CUDAUtilities/interface/cudaCheck.h"
@@ -39,9 +40,7 @@ class KernelConstantData {
  public:
  KernelConstantData(T& data, HGCConstantVectorData& vdata): data_(data), vdata_(vdata) {
     if( ! (std::is_same<T, HGCeeUncalibratedRecHitConstantData>::value or std::is_same<T, HGChefUncalibratedRecHitConstantData>::value or std::is_same<T, HGChebUncalibratedRecHitConstantData>::value ))
-      {
-	throw cms::Exception("WrongTemplateType") << "The KernelConstantData class does not support this type.";
-      }
+      cms::cuda::LogError("WrongTemplateType") << "The KernelConstantData class does not support this type.";
   }
   T data_;
   HGCConstantVectorData vdata_;
