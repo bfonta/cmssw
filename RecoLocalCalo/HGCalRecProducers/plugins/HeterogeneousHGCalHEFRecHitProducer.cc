@@ -33,6 +33,16 @@ HeterogeneousHGCalHEFRecHitProducer::~HeterogeneousHGCalHEFRecHitProducer()
   delete calibSoA_;
 }
 
+void HeterogeneousHGCalHEFRecHitProducer::beginRun(edm::Run const & run, edm::EventSetup const& setup)
+{
+  set_conditions_(setup);
+  HeterogeneousHGCalHEFConditionsWrapper esproduct(params_);
+  /*
+    d_conds = esproduct.getHeterogeneousConditionsESProductAsync(ctx.stream());
+  */
+  d_conds = nullptr;
+}
+
 std::string HeterogeneousHGCalHEFRecHitProducer::assert_error_message_(std::string var, const size_t& s)
 {
   std::string str1 = "The '";
@@ -64,14 +74,6 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
   unsigned int nhits = hits_hef.size();
   stride_ = ( (nhits-1)/32 + 1 ) * 32; //align to warp boundary
   allocate_memory_();
-
-  set_conditions_(setup);
-  HeterogeneousHGCalHEFConditionsWrapper esproduct(params_);
-  /*
-  d_conds = esproduct.getHeterogeneousConditionsESProductAsync(ctx.stream());
-  */
-  d_conds = nullptr;
-
 
   kcdata_ = new KernelConstantData<HGChefUncalibratedRecHitConstantData>(cdata_, vdata_);
   convert_constant_data_(kcdata_);

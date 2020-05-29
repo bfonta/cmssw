@@ -1,10 +1,9 @@
-#ifndef HeterogeneousHGCalHEBRecHitProducer_h
-#define HeterogeneousHGCalHEBRecHitProducer_h
+#ifndef HeterogeneousHGCalEERecHitProducer_h
+#define HeterogeneousHGCalEERecHitProducer_h
 
 #include <iostream>
 #include <string>
 #include <memory>
-#include <chrono>
 #include <cuda_runtime.h>
 
 #include "FWCore/Framework/interface/stream/EDProducer.h"
@@ -29,29 +28,30 @@
 
 #include "HeterogeneousHGCalProducerMemoryWrapper.h"
 #include "KernelManagerHGCalRecHit.h"
-#include "HeterogeneousHGCalHEBConditions.h"
+#include "HeterogeneousHGCalEEConditions.h"
 
-class HeterogeneousHGCalHEBRecHitProducer: public edm::stream::EDProducer<edm::ExternalWork> 
+class HeterogeneousHGCalEERecHitProducer: public edm::stream::EDProducer<edm::ExternalWork> 
 {
  public:
-  explicit HeterogeneousHGCalHEBRecHitProducer(const edm::ParameterSet& ps);
-  ~HeterogeneousHGCalHEBRecHitProducer() override;
+  explicit HeterogeneousHGCalEERecHitProducer(const edm::ParameterSet& ps);
+  ~HeterogeneousHGCalEERecHitProducer() override;
 
+  virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
   virtual void acquire(edm::Event const&, edm::EventSetup const&, edm::WaitingTaskWithArenaHolder) override;
   virtual void produce(edm::Event&, const edm::EventSetup&) override;
 
  private:
   unsigned int nhitsmax_ = 0;
   unsigned int stride_ = 0;
-  edm::EDGetTokenT<HGChebUncalibratedRecHitCollection> token_;
-  const std::string collection_name_ = "HeterogeneousHGChebUncalibratedRecHits";
-  edm::Handle<HGChebUncalibratedRecHitCollection> handle_heb_; 
+  edm::EDGetTokenT<HGCeeUncalibratedRecHitCollection> token_;
+  const std::string collection_name_ = "HeterogeneousHGCeeUncalibratedRecHits";
+  edm::Handle<HGCeeUncalibratedRecHitCollection> handle_ee_; 
   size_t handle_size_;
-  std::unique_ptr< HGChebRecHitCollection > rechits_;
+  std::unique_ptr< HGCeeRecHitCollection > rechits_;
   cms::cuda::ContextState ctxState_;
 
   //constants
-  HGChebUncalibratedRecHitConstantData cdata_;
+  HGCeeUncalibratedRecHitConstantData cdata_;
   HGCConstantVectorData vdata_;
 
   //memory
@@ -65,21 +65,21 @@ class HeterogeneousHGCalHEBRecHitProducer: public edm::stream::EDProducer<edm::E
   //conditions (geometry, topology, ...)
   void set_conditions_(const edm::EventSetup&);
   std::unique_ptr<hgcal::RecHitTools> tools_;
-  const hgcal_conditions::HeterogeneousHEBConditionsESProduct* d_conds = nullptr;
+  const hgcal_conditions::HeterogeneousEEConditionsESProduct* d_conds = nullptr;
   const HGCalDDDConstants* ddd_ = nullptr;
   const HGCalParameters* params_ = nullptr;
 
   //data processing
-  void convert_collection_data_to_soa_(const HGChebUncalibratedRecHitCollection&, HGCUncalibratedRecHitSoA*, const unsigned int&);
+  void convert_collection_data_to_soa_(const HGCeeUncalibratedRecHitCollection&, HGCUncalibratedRecHitSoA*, const unsigned int&);
   void convert_soa_data_to_collection_(HGCRecHitCollection&, HGCRecHitSoA*, const unsigned int&);
-  void convert_constant_data_(KernelConstantData<HGChebUncalibratedRecHitConstantData>*);
+  void convert_constant_data_(KernelConstantData<HGCeeUncalibratedRecHitConstantData>*);
 
   HGCUncalibratedRecHitSoA *uncalibSoA_ = nullptr, *d_uncalibSoA_ = nullptr, *d_intermediateSoA_ = nullptr;
   HGCRecHitSoA *d_calibSoA_ = nullptr, *calibSoA_ = nullptr;
   KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA> *kmdata_;
-  KernelConstantData<HGChebUncalibratedRecHitConstantData> *kcdata_;
-  KernelConstantData<HGChebUncalibratedRecHitConstantData> *d_kcdata_;
+  KernelConstantData<HGCeeUncalibratedRecHitConstantData> *kcdata_;
+  KernelConstantData<HGCeeUncalibratedRecHitConstantData> *d_kcdata_;
   edm::SortedCollection<HGCRecHit> out_data_;
 };
 
-#endif //HeterogeneousHGCalHEBRecHitProducer_h
+#endif //HeterogeneousHGCalEERecHitProducer_h

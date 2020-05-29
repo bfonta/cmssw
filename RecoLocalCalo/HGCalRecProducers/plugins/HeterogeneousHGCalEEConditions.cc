@@ -1,11 +1,13 @@
-#include "UserCode/CodeGPU/plugins/HeterogeneousHGCalEEConditions.h"
+#include "RecoLocalCalo/HGCalRecProducers/plugins/HeterogeneousHGCalEEConditions.h"
 
 HeterogeneousHGCalEEConditionsWrapper::HeterogeneousHGCalEEConditionsWrapper(const HGCalParameters* cpuHGCalParameters)
 {
   calculate_memory_bytes(cpuHGCalParameters);
 
   chunk_ = std::accumulate(this->sizes_.begin(), this->sizes_.end(), 0); //total memory required in bytes
+  std::cout << "ee: check before" << std::endl;
   gpuErrchk(cudaMallocHost(&this->params_.cellFineX_, chunk_));
+  std::cout << "ee: check after" << std::endl;
 
   //store cumulative sum in bytes and convert it to sizes in units of C++ typesEE, i.e., number if items to be transferred to GPU
   std::vector<size_t> cumsum_sizes( this->sizes_.size()+1, 0 ); //starting with zero
@@ -36,9 +38,7 @@ HeterogeneousHGCalEEConditionsWrapper::HeterogeneousHGCalEEConditionsWrapper(con
 	  select_pointer_i(&this->params_, j) = reinterpret_cast<int32_t*>( select_pointer_d(&this->params_, jm1) + this->sizes_[jm1] );
       }
 
-
     //copying the pointers' content
-    /*
     for(unsigned int i=cumsum_sizes[j]; i<cumsum_sizes[j+1]; ++i) 
       {
 	unsigned int index = i - cumsum_sizes[j];
@@ -50,7 +50,6 @@ HeterogeneousHGCalEEConditionsWrapper::HeterogeneousHGCalEEConditionsWrapper(con
 	else
 	  edm::LogError("HeterogeneousHGCalEEConditionsWrapper") << "Wrong HeterogeneousHGCalParameters type";
       }
-    */
   }
 }
 

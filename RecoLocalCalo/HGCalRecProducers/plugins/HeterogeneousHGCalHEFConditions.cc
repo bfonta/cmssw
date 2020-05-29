@@ -1,11 +1,13 @@
-#include "UserCode/CodeGPU/plugins/HeterogeneousHGCalHEFConditions.h"
+#include "RecoLocalCalo/HGCalRecProducers/plugins/HeterogeneousHGCalHEFConditions.h"
 
 HeterogeneousHGCalHEFConditionsWrapper::HeterogeneousHGCalHEFConditionsWrapper(const HGCalParameters* cpuHGCalParameters)
 {
   calculate_memory_bytes(cpuHGCalParameters);
 
   chunk_ = std::accumulate(this->sizes_.begin(), this->sizes_.end(), 0); //total memory required in bytes
+  std::cout << "hef: check before" << std::endl;
   gpuErrchk(cudaMallocHost(&this->params_.cellFineX_, chunk_));
+  std::cout << "hef: check after" << std::endl;
 
   //store cumulative sum in bytes and convert it to sizes in units of C++ typesHEF, i.e., number if items to be transferred to GPU
   std::vector<size_t> cumsum_sizes( this->sizes_.size()+1, 0 ); //starting with zero
@@ -37,6 +39,7 @@ HeterogeneousHGCalHEFConditionsWrapper::HeterogeneousHGCalHEFConditionsWrapper(c
       }
 
     //copying the pointers' content
+    std::cout << "hef: check pointers before" << std::endl;
     for(unsigned int i=cumsum_sizes[j]; i<cumsum_sizes[j+1]; ++i) 
       {
 	unsigned int index = i - cumsum_sizes[j];
@@ -45,13 +48,12 @@ HeterogeneousHGCalHEFConditionsWrapper::HeterogeneousHGCalHEFConditionsWrapper(c
 	}	  
 	else if( cp::typesHEF[j] == cp::HeterogeneousHGCalHEFParametersType::Int32_t )
 	  {
-	    std::cout << "index: " << index << std::endl;
-	    std::cout << select_pointer_i(cpuHGCalParameters, j)[index] << std::endl;
 	    select_pointer_i(&this->params_, j)[index] = select_pointer_i(cpuHGCalParameters, j)[index];
 	  }
 	else
 	  edm::LogError("HeterogeneousHGCalHEFConditionsWrapper") << "Wrong HeterogeneousHGCalParameters type";
       }
+    std::cout << "hef: check pointers after" << std::endl;
   }
 }
 
