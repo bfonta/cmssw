@@ -65,9 +65,13 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
   stride_ = ( (nhits-1)/32 + 1 ) * 32; //align to warp boundary
   allocate_memory_();
 
-  set_conditions_(setup, hits_hef);
-  HeterogeneousConditionsESProductWrapper esproduct(params_);
+  set_conditions_(setup);
+  HeterogeneousHGCalHEFConditionsWrapper esproduct(params_);
+  /*
   d_conds = esproduct.getHeterogeneousConditionsESProductAsync(ctx.stream());
+  */
+  d_conds = nullptr;
+
 
   kcdata_ = new KernelConstantData<HGChefUncalibratedRecHitConstantData>(cdata_, vdata_);
   convert_constant_data_(kcdata_);
@@ -80,7 +84,7 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
   convert_soa_data_to_collection_(*rechits_, calibSoA_, nhits);
 }
 
-void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup& setup, const HGChefUncalibratedRecHitCollection& hits) {
+void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup& setup) {
   tools_->getEventSetup(setup);
   std::string handle_str;
   handle_str = "HGCalHESiliconSensitive";

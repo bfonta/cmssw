@@ -22,6 +22,17 @@ HeterogeneousHGCalEERecHitProducer::HeterogeneousHGCalEERecHitProducer(const edm
   produces<HGCeeRecHitCollection>(collection_name_);
 }
 
+void HeterogeneousHGCalEERecHitProducer::set_conditions_(const edm::EventSetup& setup)
+{
+  tools_->getEventSetup(setup);
+  std::string handle_str;
+  handle_str = "HGCalEESensitive";
+  edm::ESHandle<HGCalGeometry> handle;
+  setup.get<IdealGeometryRecord>().get(handle_str, handle);
+  ddd_ = &( handle->topology().dddConstants() );
+  params_ = ddd_->getParameter();
+}
+
 HeterogeneousHGCalEERecHitProducer::~HeterogeneousHGCalEERecHitProducer()
 {
   delete kmdata_;
@@ -57,22 +68,28 @@ void HeterogeneousHGCalEERecHitProducer::assert_sizes_constants_(const HGCConsta
 
 void HeterogeneousHGCalEERecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {
   const cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w), ctxState_};
-  set_geometry_(setup);
 
   event.getByToken(token_, handle_ee_);
   const auto &hits_ee = *handle_ee_;
+
   unsigned int nhits = hits_ee.size();
   stride_ = ( (nhits-1)/32 + 1 ) * 32; //align to warp boundary
-
   allocate_memory_();
 
+  set_conditions_(setup);
+  HeterogeneousHGCalEEConditionsWrapper esproduct(params_);
+  /*
+  d_conds = esproduct.getHeterogeneousConditionsESProductAsync(ctx.stream());
+  */
+  d_conds = nullptr;
+
+  kcdata_ = new KernelConstantData<HGCeeUncalibratedRecHitConstantData>(cdata_, vdata_);
   convert_constant_data_(kcdata_);
-
   convert_collection_data_to_soa_(hits_ee, uncalibSoA_, nhits);
-
   kmdata_ = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(nhits, stride_, uncalibSoA_, d_uncalibSoA_, d_intermediateSoA_, d_calibSoA_, calibSoA_);
   KernelManagerHGCalRecHit kernel_manager(kmdata_);
   kernel_manager.run_kernels(kcdata_);
+
   rechits_ = std::make_unique<HGCRecHitCollection>();
   convert_soa_data_to_collection_(*rechits_, calibSoA_, nhits);
 }
@@ -98,16 +115,6 @@ void HeterogeneousHGCalEERecHitProducer::allocate_memory_()
   memory::allocation::device(stride_, d_uncalibSoA_, d_intermediateSoA_, d_calibSoA_, d_mem_);
   //_allocate memory for hits on the host
   memory::allocation::host(stride_, calibSoA_, mem_out_);
-}
-
-void HeterogeneousHGCalEERecHitProducer::set_geometry_(const edm::EventSetup& setup)
-{
-  tools_->getEventSetup(setup);
-  std::string handle_str;
-  handle_str = "HGCalEESensitive";
-  edm::ESHandle<HGCalGeometry> handle;
-  setup.get<IdealGeometryRecord>().get(handle_str, handle);
-  ddd_ = &(handle->topology().dddConstants());
 }
 
 void HeterogeneousHGCalEERecHitProducer::convert_constant_data_(KernelConstantData<HGCeeUncalibratedRecHitConstantData> *kcdata)

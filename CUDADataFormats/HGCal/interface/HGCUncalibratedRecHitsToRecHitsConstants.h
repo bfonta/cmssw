@@ -38,8 +38,8 @@ class HGCeeUncalibratedRecHitConstantData {
   double rcorr_[maxsizes_constants::ee_rcorr];              //thickness correction
   double weights_[maxsizes_constants::ee_weights];          //energy weights to recover rechit energy deposited in the absorber
 
-  double hgcEE_keV2DIGI_;  //energy to femto coloumb conversion: 1000 eV/3.62 (eV per e) / 6.24150934e3 (e per fC)
-  double hgceeUncalib2GeV_; //sets the ADC; obtained by dividing 1e-6 by hgcEE_keV2DIGI_
+  double keV2DIGI_;  //energy to femto coloumb conversion: 1000 eV/3.62 (eV per e) / 6.24150934e3 (e per fC)
+  double uncalib2GeV_; //sets the ADC; obtained by dividing 1e-6 by hgcEE_keV2DIGI_
   float xmin_;              //used for computing the time resolution error
   float xmax_; //used for computing the time resolution error
   float aterm_; //used for computing the time resolution error
