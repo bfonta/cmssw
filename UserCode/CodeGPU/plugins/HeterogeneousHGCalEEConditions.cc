@@ -1,25 +1,25 @@
-#include "UserCode/CodeGPU/plugins/HeterogeneousHGCalESProduct.h"
+#include "UserCode/CodeGPU/plugins/HeterogeneousHGCalEEConditions.h"
 
-HeterogeneousConditionsESProductWrapper::HeterogeneousConditionsESProductWrapper(const HGCalParameters* cpuHGCalParameters)
+HeterogeneousHGCalEEConditionsWrapper::HeterogeneousHGCalEEConditionsWrapper(const HGCalParameters* cpuHGCalParameters)
 {
   calculate_memory_bytes(cpuHGCalParameters);
 
   chunk_ = std::accumulate(this->sizes_.begin(), this->sizes_.end(), 0); //total memory required in bytes
   gpuErrchk(cudaMallocHost(&this->params_.cellFineX_, chunk_));
 
-  //store cumulative sum in bytes and convert it to sizes in units of C++ types, i.e., number if items to be transferred to GPU
+  //store cumulative sum in bytes and convert it to sizes in units of C++ typesEE, i.e., number if items to be transferred to GPU
   std::vector<size_t> cumsum_sizes( this->sizes_.size()+1, 0 ); //starting with zero
   std::partial_sum(this->sizes_.begin(), this->sizes_.end(), cumsum_sizes.begin()+1);
   for(unsigned int i=1; i<cumsum_sizes.size(); ++i) //start at second element (the first is zero)
     {
-      unsigned int typesize = 0;
-      if( cp::types[i-1] == cp::HeterogeneousHGCalParametersType::Double )
-	typesize = sizeof(double);
-      else if( cp::types[i-1] == cp::HeterogeneousHGCalParametersType::Int32_t )
-	typesize = sizeof(int32_t);
+      unsigned int typesEEsize = 0;
+      if( cp::typesEE[i-1] == cp::HeterogeneousHGCalEEParametersType::Double )
+	typesEEsize = sizeof(double);
+      else if( cp::typesEE[i-1] == cp::HeterogeneousHGCalEEParametersType::Int32_t )
+	typesEEsize = sizeof(int32_t);
       else
-	edm::LogError("HeterogeneousConditionsESProductWrapper") << "Wrong HeterogeneousHGCalParameters type";
-      cumsum_sizes[i] /= typesize;
+	edm::LogError("HeterogeneousHGCalEEConditionsWrapper") << "Wrong HeterogeneousHGCalParameters type";
+      cumsum_sizes[i] /= typesEEsize;
     }
 
   for(unsigned int j=0; j<this->sizes_.size(); ++j) { 
@@ -28,35 +28,38 @@ HeterogeneousConditionsESProductWrapper::HeterogeneousConditionsESProductWrapper
     if(j != 0)
       {
 	const unsigned int jm1 = j-1;
-	if( cp::types[jm1] == cp::HeterogeneousHGCalParametersType::Double and 
-	    cp::types[j] == cp::HeterogeneousHGCalParametersType::Double )
+	if( cp::typesEE[jm1] == cp::HeterogeneousHGCalEEParametersType::Double and 
+	    cp::typesEE[j] == cp::HeterogeneousHGCalEEParametersType::Double )
 	  select_pointer_d(&this->params_, j) = select_pointer_d(&this->params_, jm1) + this->sizes_[jm1];
-	else if( cp::types[jm1] == cp::HeterogeneousHGCalParametersType::Double and 
-		 cp::types[j] == cp::HeterogeneousHGCalParametersType::Int32_t )
+	else if( cp::typesEE[jm1] == cp::HeterogeneousHGCalEEParametersType::Double and 
+		 cp::typesEE[j] == cp::HeterogeneousHGCalEEParametersType::Int32_t )
 	  select_pointer_i(&this->params_, j) = reinterpret_cast<int32_t*>( select_pointer_d(&this->params_, jm1) + this->sizes_[jm1] );
       }
 
+
     //copying the pointers' content
+    /*
     for(unsigned int i=cumsum_sizes[j]; i<cumsum_sizes[j+1]; ++i) 
       {
 	unsigned int index = i - cumsum_sizes[j];
-	if( cp::types[j] == cp::HeterogeneousHGCalParametersType::Double ) {
+	if( cp::typesEE[j] == cp::HeterogeneousHGCalEEParametersType::Double ) {
 	  select_pointer_d(&this->params_, j)[index] = select_pointer_d(cpuHGCalParameters, j)[index];
 	}	  
-	else if( cp::types[j] == cp::HeterogeneousHGCalParametersType::Int32_t )
+	else if( cp::typesEE[j] == cp::HeterogeneousHGCalEEParametersType::Int32_t )
 	  select_pointer_i(&this->params_, j)[index] = select_pointer_i(cpuHGCalParameters, j)[index];
 	else
-	  edm::LogError("HeterogeneousConditionsESProductWrapper") << "Wrong HeterogeneousHGCalParameters type";
+	  edm::LogError("HeterogeneousHGCalEEConditionsWrapper") << "Wrong HeterogeneousHGCalParameters type";
       }
+    */
   }
 }
 
-void HeterogeneousConditionsESProductWrapper::calculate_memory_bytes(const HGCalParameters* cpuHGCalParameters) {
-  size_t npointers = hgcal_conditions::parameters::types.size();
+void HeterogeneousHGCalEEConditionsWrapper::calculate_memory_bytes(const HGCalParameters* cpuHGCalParameters) {
+  size_t npointers = hgcal_conditions::parameters::typesEE.size();
   std::vector<size_t> sizes(npointers);
   for(unsigned int i=0; i<npointers; ++i)
     {
-      if(cp::types[i] == cp::HeterogeneousHGCalParametersType::Double)
+      if(cp::typesEE[i] == cp::HeterogeneousHGCalEEParametersType::Double)
 	sizes[i] = select_pointer_d(cpuHGCalParameters, i).size();
       else
 	sizes[i] = select_pointer_i(cpuHGCalParameters, i).size();
@@ -65,9 +68,9 @@ void HeterogeneousConditionsESProductWrapper::calculate_memory_bytes(const HGCal
   std::vector<size_t> sizes_units(npointers);
   for(unsigned int i=0; i<npointers; ++i)
     {
-      if(cp::types[i] == cp::HeterogeneousHGCalParametersType::Double)
+      if(cp::typesEE[i] == cp::HeterogeneousHGCalEEParametersType::Double)
 	sizes_units[i] = sizeof(double);
-      else if(cp::types[i] == cp::HeterogeneousHGCalParametersType::Int32_t)
+      else if(cp::typesEE[i] == cp::HeterogeneousHGCalEEParametersType::Int32_t)
 	sizes_units[i] = sizeof(int32_t);
     }
 
@@ -76,13 +79,13 @@ void HeterogeneousConditionsESProductWrapper::calculate_memory_bytes(const HGCal
   std::transform( sizes.begin(), sizes.end(), sizes_units.begin(), this->sizes_.begin(), std::multiplies<size_t>() );
 }
 
-HeterogeneousConditionsESProductWrapper::~HeterogeneousConditionsESProductWrapper() {
+HeterogeneousHGCalEEConditionsWrapper::~HeterogeneousHGCalEEConditionsWrapper() {
   gpuErrchk(cudaFreeHost(this->params_.cellFineX_));
 }
 
 //I could use template specializations
 //try to use std::variant in the future to avoid similar functions with different return values
-double*& HeterogeneousConditionsESProductWrapper::select_pointer_d(cp::HeterogeneousHGCalParameters* cpuObject, 
+double*& HeterogeneousHGCalEEConditionsWrapper::select_pointer_d(cp::HeterogeneousHGCalEEParameters* cpuObject, 
 								   const unsigned int& item) const {
   switch(item) 
     {
@@ -95,13 +98,13 @@ double*& HeterogeneousConditionsESProductWrapper::select_pointer_d(cp::Heterogen
     case 3:
       return cpuObject->cellCoarseY_;
     default:
-      edm::LogError("HeterogeneousConditionsESProductWrapper") << "select_pointer_d(heterogeneous): no item.";
+      edm::LogError("HeterogeneousHGCalEEConditionsWrapper") << "select_pointer_d(heterogeneous): no item.";
       return cpuObject->cellCoarseY_;
     }
 }
 
-std::vector<double> HeterogeneousConditionsESProductWrapper::select_pointer_d(const HGCalParameters* cpuObject, 
-									const unsigned int& item) const {
+std::vector<double> HeterogeneousHGCalEEConditionsWrapper::select_pointer_d(const HGCalParameters* cpuObject, 
+									      const unsigned int& item) const {
   switch(item) 
     {
     case 0:
@@ -113,36 +116,36 @@ std::vector<double> HeterogeneousConditionsESProductWrapper::select_pointer_d(co
     case 3:
       return cpuObject->cellCoarseY_;
     default:
-      edm::LogError("HeterogeneousConditionsESProductWrapper") << "select_pointer_d(non-heterogeneous): no item.";
+      edm::LogError("HeterogeneousHGCalEEConditionsWrapper") << "select_pointer_d(non-heterogeneous): no item.";
       return cpuObject->cellCoarseY_;
     }
 }
 
-int32_t*& HeterogeneousConditionsESProductWrapper::select_pointer_i(cp::HeterogeneousHGCalParameters* cpuObject, 
+int32_t*& HeterogeneousHGCalEEConditionsWrapper::select_pointer_i(cp::HeterogeneousHGCalEEParameters* cpuObject, 
 								    const unsigned int& item) const {
   switch(item) 
     {
     case 4:
       return cpuObject->waferTypeL_;
     default:
-      edm::LogError("HeterogeneousConditionsESProductWrapper") << "select_pointer_i(heterogeneous): no item.";
+      edm::LogError("HeterogeneousHGCalEEConditionsWrapper") << "select_pointer_i(heterogeneous): no item.";
       return cpuObject->waferTypeL_;
     }
 }
 
-std::vector<int32_t> HeterogeneousConditionsESProductWrapper::select_pointer_i(const HGCalParameters* cpuObject, 
+std::vector<int32_t> HeterogeneousHGCalEEConditionsWrapper::select_pointer_i(const HGCalParameters* cpuObject, 
 									  const unsigned int& item) const {
   switch(item) 
     {
     case 4:
       return cpuObject->waferTypeL_;
     default:
-      edm::LogError("HeterogeneousConditionsESProductWrapper") << "select_pointer_i(non-heterogeneous): no item.";
+      edm::LogError("HeterogeneousHGCalEEConditionsWrapper") << "select_pointer_i(non-heterogeneous): no item.";
       return cpuObject->waferTypeL_;
     }
 }
 
-hgcal_conditions::HeterogeneousHEFConditionsESProduct const *HeterogeneousConditionsESProductWrapper::getHeterogeneousConditionsESProductAsync(cudaStream_t stream) const {
+hgcal_conditions::HeterogeneousEEConditionsESProduct const *HeterogeneousHGCalEEConditionsWrapper::getHeterogeneousConditionsESProductAsync(cudaStream_t stream) const {
   // cms::cuda::ESProduct<T> essentially holds an array of GPUData objects,
   // one per device. If the data have already been transferred to the
   // current device (or the transfer has been queued), the helper just
@@ -153,29 +156,29 @@ hgcal_conditions::HeterogeneousHEFConditionsESProduct const *HeterogeneousCondit
 	  [this](GPUData& data, cudaStream_t stream)
 	  {    
 	    // Allocate the payload object on pinned host memory.
-	    gpuErrchk(cudaMallocHost(&data.host, sizeof(hgcal_conditions::HeterogeneousHEFConditionsESProduct)));
+	    gpuErrchk(cudaMallocHost(&data.host, sizeof(hgcal_conditions::HeterogeneousEEConditionsESProduct)));
 	    // Allocate the payload array(s) on device memory.
 	    gpuErrchk(cudaMalloc(&(data.host->params.cellFineX_), chunk_));
 
 	    // Allocate the payload object on the device memory.
-	    gpuErrchk(cudaMalloc(&data.device, sizeof(hgcal_conditions::HeterogeneousHEFConditionsESProduct)));
+	    gpuErrchk(cudaMalloc(&data.device, sizeof(hgcal_conditions::HeterogeneousEEConditionsESProduct)));
 	    // Transfer the payload, first the array(s) ...
 	    gpuErrchk(cudaMemcpyAsync(data.host->params.cellFineX_, this->params_.cellFineX_, chunk_, cudaMemcpyHostToDevice, stream));
 	    
 	    for(unsigned int j=0; j<this->sizes_.size()-1; ++j)
 	      {
-		if( cp::types[j] == cp::HeterogeneousHGCalParametersType::Double and 
-		    cp::types[j+1] == cp::HeterogeneousHGCalParametersType::Double )
+		if( cp::typesEE[j] == cp::HeterogeneousHGCalEEParametersType::Double and 
+		    cp::typesEE[j+1] == cp::HeterogeneousHGCalEEParametersType::Double )
 		  select_pointer_d(&(data.host->params), j+1) = select_pointer_d(&(data.host->params), j) + this->sizes_[j];
-		else if( cp::types[j] == cp::HeterogeneousHGCalParametersType::Double and 
-			 cp::types[j+1] == cp::HeterogeneousHGCalParametersType::Int32_t )
+		else if( cp::typesEE[j] == cp::HeterogeneousHGCalEEParametersType::Double and 
+			 cp::typesEE[j+1] == cp::HeterogeneousHGCalEEParametersType::Int32_t )
 		  select_pointer_i(&(data.host->params), j+1) = reinterpret_cast<int32_t*>( select_pointer_d(&(data.host->params), j) + this->sizes_[j] );
 		else
-		  edm::LogError("HeterogeneousConditionsESProductWrapper") << "compare this functions' logic with hgcal_conditions::parameters::types";
+		  edm::LogError("HeterogeneousHGCalEEConditionsWrapper") << "compare this functions' logic with hgcal_conditions::parameters::typesEE";
 	      }
 
 	    // ... and then the payload object
-	    gpuErrchk(cudaMemcpyAsync(data.device, data.host, sizeof(hgcal_conditions::HeterogeneousHEFConditionsESProduct), cudaMemcpyHostToDevice, stream));
+	    gpuErrchk(cudaMemcpyAsync(data.device, data.host, sizeof(hgcal_conditions::HeterogeneousEEConditionsESProduct), cudaMemcpyHostToDevice, stream));
 	  }); //gpuData_.dataForCurrentDeviceAsync
 
   // Returns the payload object on the memory of the current device
@@ -183,7 +186,7 @@ hgcal_conditions::HeterogeneousHEFConditionsESProduct const *HeterogeneousCondit
 }
 
 // Destructor frees all member pointers
-HeterogeneousConditionsESProductWrapper::GPUData::~GPUData() {
+HeterogeneousHGCalEEConditionsWrapper::GPUData::~GPUData() {
   if(host != nullptr) 
     {
       gpuErrchk(cudaFree(host->params.cellFineX_));
@@ -191,5 +194,3 @@ HeterogeneousConditionsESProductWrapper::GPUData::~GPUData() {
     }
   gpuErrchk(cudaFree(device));
 }
-
-//template double*& HeterogeneousConditionsESProductWrapper::select_pointer_d<cp::HeterogeneousHGCalParameters*>(cp::HeterogeneousHGCalParameters*, const unsigned int&) const;
