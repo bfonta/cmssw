@@ -22,6 +22,16 @@ HeterogeneousHGCalEERecHitProducer::HeterogeneousHGCalEERecHitProducer(const edm
   produces<HGCeeRecHitCollection>(collection_name_);
 }
 
+void HeterogeneousHGCalEERecHitProducer::beginRun(edm::Run const & run, edm::EventSetup const& setup)
+{
+  set_conditions_(setup);
+  HeterogeneousHGCalEEConditionsWrapper esproduct(params_);
+  /*
+    d_conds = esproduct.getHeterogeneousConditionsESProductAsync(ctx.stream());
+  */
+  d_conds = nullptr;
+}
+
 void HeterogeneousHGCalEERecHitProducer::set_conditions_(const edm::EventSetup& setup)
 {
   tools_->getEventSetup(setup);
@@ -75,13 +85,6 @@ void HeterogeneousHGCalEERecHitProducer::acquire(edm::Event const& event, edm::E
   unsigned int nhits = hits_ee.size();
   stride_ = ( (nhits-1)/32 + 1 ) * 32; //align to warp boundary
   allocate_memory_();
-
-  set_conditions_(setup);
-  HeterogeneousHGCalEEConditionsWrapper esproduct(params_);
-  /*
-  d_conds = esproduct.getHeterogeneousConditionsESProductAsync(ctx.stream());
-  */
-  d_conds = nullptr;
 
   kcdata_ = new KernelConstantData<HGCeeUncalibratedRecHitConstantData>(cdata_, vdata_);
   convert_constant_data_(kcdata_);

@@ -1,5 +1,5 @@
-#ifndef HeterogeneousHGCalHEFConditions_h
-#define HeterogeneousHGCalHEFConditions_h
+#ifndef HeterogeneousHGCalHEBConditions_h
+#define HeterogeneousHGCalHEBConditions_h
 
 #include <numeric> //accumulate
 #include <typeinfo>
@@ -9,36 +9,36 @@
 #include "CUDADataFormats/HGCal/interface/HGCConditions.h"
 #include "Geometry/HGCalCommonData/interface/HGCalDDDConstants.h"
 #include "Geometry/HGCalCommonData/interface/HGCalParameters.h"
-#include "UserCode/CodeGPU/plugins/KernelManagerHGCalRecHit.h"
+#include "RecoLocalCalo/HGCalRecProducers/plugins/KernelManagerHGCalRecHit.h"
 
 namespace cp = hgcal_conditions::parameters;  
 
 // Declare the wrapper ESProduct. The corresponding ESProducer should
 // produce objects of this type.
-class HeterogeneousHGCalHEFConditionsWrapper {
+class HeterogeneousHGCalHEBConditionsWrapper {
  public:
   // Constructor takes the standard CPU ESProduct, and transforms the
   // necessary data to array(s) in pinned host memory
-  HeterogeneousHGCalHEFConditionsWrapper(const HGCalParameters*);
+  HeterogeneousHGCalHEBConditionsWrapper(const HGCalParameters*);
   
   // Deallocates all pinned host memory
-  ~HeterogeneousHGCalHEFConditionsWrapper();
+  ~HeterogeneousHGCalHEBConditionsWrapper();
   
   // Function to return the actual payload on the memory of the current device
-  hgcal_conditions::HeterogeneousHEFConditionsESProduct const *getHeterogeneousConditionsESProductAsync(cudaStream_t stream) const;
+  hgcal_conditions::HeterogeneousHEBConditionsESProduct const *getHeterogeneousConditionsESProductAsync(cudaStream_t stream) const;
 
  private:
   // Holds the data in pinned CPU memory
   // Contrary to its non-heterogeneous counterpart (constructor argument) it is *not* a pointer (so to avoid an extra allocation)
-  cp::HeterogeneousHGCalHEFParameters params_;
+  cp::HeterogeneousHGCalHEBParameters params_;
 
   std::vector<size_t> sizes_;
   size_t chunk_;
 
   void calculate_memory_bytes(const HGCalParameters*);
-  double*& select_pointer_d(cp::HeterogeneousHGCalHEFParameters*, const unsigned int&) const;
+  double*& select_pointer_d(cp::HeterogeneousHGCalHEBParameters*, const unsigned int&) const;
   std::vector<double> select_pointer_d(const HGCalParameters*, const unsigned int&) const;
-  int32_t*& select_pointer_i(cp::HeterogeneousHGCalHEFParameters*, const unsigned int&) const;
+  int32_t*& select_pointer_i(cp::HeterogeneousHGCalHEBParameters*, const unsigned int&) const;
   std::vector<int32_t> select_pointer_i(const HGCalParameters*, const unsigned int&) const;
 
   // Helper struct to hold all information that has to be allocated and
@@ -47,9 +47,9 @@ class HeterogeneousHGCalHEFConditionsWrapper {
     // Destructor should free all member pointers
     ~GPUData();
     // internal pointers are on device, struct itself is on CPU
-    hgcal_conditions::HeterogeneousHEFConditionsESProduct *host = nullptr;
+    hgcal_conditions::HeterogeneousHEBConditionsESProduct *host = nullptr;
     // internal pounters and struct are on device
-    hgcal_conditions::HeterogeneousHEFConditionsESProduct *device = nullptr;
+    hgcal_conditions::HeterogeneousHEBConditionsESProduct *device = nullptr;
   };
 
   // Helper that takes care of complexity of transferring the data to
@@ -57,5 +57,5 @@ class HeterogeneousHGCalHEFConditionsWrapper {
   cms::cuda::ESProduct<GPUData> gpuData_;
 };
 
-#endif //HeterogeneousHGCalHEFConditions_h
+#endif //HeterogeneousHGCalHEBConditions_h
 
