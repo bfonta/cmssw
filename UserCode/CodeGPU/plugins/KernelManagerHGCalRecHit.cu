@@ -22,24 +22,6 @@ void KernelManagerHGCalRecHit::transfer_soas_to_device_()
   after_();
 }
 
-void KernelManagerHGCalRecHit::transfer_constants_to_device_(const KernelConstantData<HGCeeUncalibratedRecHitConstantData> *h_kcdata, KernelConstantData<HGCeeUncalibratedRecHitConstantData> *d_kcdata)
-{
-  cudaCheck( cudaMemcpyAsync( d_kcdata->data_.hgcEE_fCPerMIP_, h_kcdata->data_.hgcEE_fCPerMIP_, h_kcdata->data_.nbytes_, cudaMemcpyHostToDevice) );
-  after_();
-}
-
-void KernelManagerHGCalRecHit::transfer_constants_to_device_(const KernelConstantData<HGChefUncalibratedRecHitConstantData> *h_kcdata, KernelConstantData<HGChefUncalibratedRecHitConstantData> *d_kcdata)
-{
-  cudaCheck( cudaMemcpyAsync( d_kcdata->data_.hgcHEF_fCPerMIP_, h_kcdata->data_.hgcHEF_fCPerMIP_, h_kcdata->data_.nbytes_, cudaMemcpyHostToDevice) );
-  after_();
-}
-
-void KernelManagerHGCalRecHit::transfer_constants_to_device_(const KernelConstantData<HGChebUncalibratedRecHitConstantData> *h_kcdata, KernelConstantData<HGChebUncalibratedRecHitConstantData> *d_kcdata)
-{
-  cudaCheck( cudaMemcpyAsync( d_kcdata->data_.weights_, h_kcdata->data_.weights_, h_kcdata->data_.nbytes_, cudaMemcpyHostToDevice) );
-  after_();
-}
-
 void KernelManagerHGCalRecHit::transfer_soa_to_host_and_synchronize_()
 {
   cudaCheck( cudaMemcpyAsync((data_->h_out_)->energy_, (data_->d_out_)->energy_, nbytes_host_, cudaMemcpyDeviceToHost) );
@@ -52,39 +34,24 @@ void KernelManagerHGCalRecHit::reuse_device_pointers_()
   after_();
 }
 
-int KernelManagerHGCalRecHit::get_shared_memory_size_(const int& nd, const int& nf, const int& nu, const int& ni) {
-  int dmem = nd*sizeof(double);
-  int fmem = nf*sizeof(float);
-  int umem = nu*sizeof(uint32_t);
-  int imem = ni*sizeof(int);
-  return dmem + fmem + umem + imem;
-}
-
-void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGCeeUncalibratedRecHitConstantData> *h_kcdata, KernelConstantData<HGCeeUncalibratedRecHitConstantData> *d_kcdata)
+void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGCeeUncalibratedRecHitConstantData> *kcdata)
 {
-  transfer_constants_to_device_(h_kcdata, d_kcdata);
   transfer_soas_to_device_();
 
-  int nbytes_shared = get_shared_memory_size_(h_kcdata->data_.ndelem_, h_kcdata->data_.nfelem_, 0, h_kcdata->data_.nielem_);
-
   /*
-  ee_step1<<<::nblocks_, ::nthreads_>>>( *(data_->d_2_), *(data_->d_1_), d_kcdata->data_, data_->nhits_ );
+  ee_step1<<<::nblocks_, ::nthreads_>>>( *(data_->d_2_), *(data_->d_1_), kcdata->data_, data_->nhits_ );
   after_();
   reuse_device_pointers_();
   */
 
-  ee_to_rechit<<<::nblocks_, ::nthreads_, nbytes_shared>>>( *(data_->d_out_), *(data_->d_1_), d_kcdata->data_, data_->nhits_ );
+  ee_to_rechit<<<::nblocks_, ::nthreads_>>>( *(data_->d_out_), *(data_->d_1_), kcdata->data_, data_->nhits_ );
   after_();
-
   transfer_soa_to_host_and_synchronize_();
 }
 
-void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChefUncalibratedRecHitConstantData> *h_kcdata, KernelConstantData<HGChefUncalibratedRecHitConstantData> *d_kcdata, const hgcal_conditions::HeterogeneousHEFConditionsESProduct* d_conds)
+void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChefUncalibratedRecHitConstantData> *kcdata, const hgcal_conditions::HeterogeneousHEFConditionsESProduct* d_conds)
 {
-  transfer_constants_to_device_(h_kcdata, d_kcdata);
   transfer_soas_to_device_();
-
-  int nbytes_shared = get_shared_memory_size_(h_kcdata->data_.ndelem_, h_kcdata->data_.nfelem_, h_kcdata->data_.nuelem_, h_kcdata->data_.nielem_);
 
   /*
   hef_step1<<<::nblocks_,::nthreads_>>>( *(data_->d_2), *(data_->d_1_), d_kcdata->data, data_->nhits_);
@@ -92,17 +59,14 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChefUncali
   reuse_device_pointers_();
   */
 
-  hef_to_rechit<<<::nblocks_,::nthreads_, nbytes_shared>>>( *(data_->d_out_), *(data_->d_1_), d_kcdata->data_, d_conds, data_->nhits_ );
+  hef_to_rechit<<<::nblocks_,::nthreads_>>>( *(data_->d_out_), *(data_->d_1_), kcdata->data_, d_conds, data_->nhits_ );
   after_();
   transfer_soa_to_host_and_synchronize_();
 }
 
-void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChebUncalibratedRecHitConstantData> *h_kcdata, KernelConstantData<HGChebUncalibratedRecHitConstantData> *d_kcdata)
+void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChebUncalibratedRecHitConstantData> *kcdata)
 {
-  transfer_constants_to_device_(h_kcdata, d_kcdata);
   transfer_soas_to_device_();
-
-  int nbytes_shared = get_shared_memory_size_(h_kcdata->data_.ndelem_, h_kcdata->data_.nfelem_, h_kcdata->data_.nuelem_, h_kcdata->data_.nielem_);
 
   /*
   heb_step1<<<::nblocks_, ::nthreads_>>>( *(data_->d_2_), *(data_->d_1_), d_kcdata->data_, data_->nhits_);
@@ -110,9 +74,8 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChebUncali
   reuse_device_pointers_();
   */
 
-  heb_to_rechit<<<::nblocks_, ::nthreads_, nbytes_shared>>>( *(data_->d_out_), *(data_->d_1_), d_kcdata->data_, data_->nhits_ );
+  heb_to_rechit<<<::nblocks_, ::nthreads_>>>( *(data_->d_out_), *(data_->d_1_), kcdata->data_, data_->nhits_ );
   after_();
-
   transfer_soa_to_host_and_synchronize_();
 }
 

@@ -3,6 +3,24 @@
 
 #include <vector>
 
+//maximum sizes for SoA's arrays holding configuration data ("constants")
+namespace maxsizes_constants {
+  //EE
+  constexpr size_t ee_fCPerMIP = 6; //number of elements pointed by hgcEE_fCPerMIP_
+  constexpr size_t ee_cce = 6; //number of elements posize_ted by hgcEE_cce_
+  constexpr size_t ee_noise_fC = 6; //number of elements posize_ted by hgcEE_noise_fC_
+  constexpr size_t ee_rcorr = 6; //number of elements posize_ted by rcorr_
+  constexpr size_t ee_weights = 53; //number of elements posize_ted by weights_
+  //HEF
+  constexpr size_t hef_fCPerMIP = 6; //number of elements pointed by hgcEE_fCPerMIP_
+  constexpr size_t hef_cce = 6; //number of elements posize_ted by hgcEE_cce_
+  constexpr size_t hef_noise_fC = 6; //number of elements posize_ted by hgcEE_noise_fC_
+  constexpr size_t hef_rcorr = 6; //number of elements posize_ted by rcorr_
+  constexpr size_t hef_weights = 53; //number of elements posize_ted by weights_
+  //HEB
+  constexpr size_t heb_weights = 53; //number of elements posize_ted by weights_
+}
+
 class HGCConstantVectorData {
  public:
   std::vector<double> fCPerMIP_;
@@ -14,65 +32,43 @@ class HGCConstantVectorData {
 
 class HGCeeUncalibratedRecHitConstantData {
  public:
-  double hgcEE_keV2DIGI_; //energy to femto coloumb conversion: 1000 eV/3.62 (eV per e) / 6.24150934e3 (e per fC)
+  double fCPerMIP_[maxsizes_constants::ee_fCPerMIP]; //femto coloumb to MIP conversion; one value per sensor thickness
+  double cce_[maxsizes_constants::ee_cce];           //charge collection efficiency, one value per sensor thickness
+  double noise_fC_[maxsizes_constants::ee_noise_fC]; //noise, one value per sensor thickness
+  double rcorr_[maxsizes_constants::ee_rcorr];              //thickness correction
+  double weights_[maxsizes_constants::ee_weights];          //energy weights to recover rechit energy deposited in the absorber
+
+  double hgcEE_keV2DIGI_;  //energy to femto coloumb conversion: 1000 eV/3.62 (eV per e) / 6.24150934e3 (e per fC)
   double hgceeUncalib2GeV_; //sets the ADC; obtained by dividing 1e-6 by hgcEE_keV2DIGI_
-  double *hgcEE_fCPerMIP_; //femto coloumb to MIP conversion; one value per sensor thickness
-  double *hgcEE_cce_; //charge collection efficiency, one value per sensor thickness
-  double *hgcEE_noise_fC_; //noise, one value per sensor thickness
-  double *rcorr_; //thickness correction
-  double *weights_; //energy weights to recover rechit energy deposited in the absorber
-  float xmin_; //used for computing the time resolution error
+  float xmin_;              //used for computing the time resolution error
   float xmax_; //used for computing the time resolution error
   float aterm_; //used for computing the time resolution error
   float cterm_; //used for computing the time resolution error
-  int nbytes_; //number of bytes allocated by this class
-  int ndelem_; //number of doubles pointed by this class
-  int nfelem_; //number of floats pointed by this class
-  int nielem_; //number of ints pointed by this class
-  int s_hgcEE_fCPerMIP_; //number of elements pointed by hgcEE_fCPerMIP_
-  int s_hgcEE_cce_; //number of elements pointed by hgcEE_cce_
-  int s_hgcEE_noise_fC_; //number of elements pointed by hgcEE_noise_fC_
-  int s_rcorr_; //number of elements pointed by rcorr_
-  int s_weights_; //number of elements pointed by weights_
 };
 
 class HGChefUncalibratedRecHitConstantData {
  public:
-  double hgcHEF_keV2DIGI_; //energy to femto coloumb conversion: 1000 eV/3.62 (eV per e) / 6.24150934e3 (e per fC)
-  double hgchefUncalib2GeV_; //sets the ADC; obtained by dividing 1e-6 by hgcHEF_keV2DIGI_
-  double *hgcHEF_fCPerMIP_; //femto coloumb to MIP conversion; one value per sensor thickness
-  double *hgcHEF_cce_; //charge collection efficiency, one value per sensor thickness
-  double *hgcHEF_noise_fC_; //noise, one value per sensor thickness
-  double *rcorr_;  //thickness correction
-  double *weights_; //energy weights to recover rechit energy deposited in the absorber
-  float xmin_; //used for computing the time resolution error
-  float xmax_; //used for computing the time resolution error
-  float aterm_; //used for computing the time resolution error
-  float cterm_; //used for computing the time resolution error
-  int nbytes_; //number of bytes allocated by this class
-  int ndelem_; //number of doubles allocated by this class
-  int nfelem_; //number of floats allocated by this class
-  int nuelem_; //number of unsigned ints allocated by this class
-  int nielem_; //number of ints allocated by this class
-  int s_hgcHEF_fCPerMIP_; //number of elements pointed by hgcEE_fCPerMIP_
-  int s_hgcHEF_cce_; //number of elements pointed by hgcEE_cce_
-  int s_hgcHEF_noise_fC_; //number of elements pointed by hgcEE_noise_fC_
-  int s_rcorr_; //number of elements pointed by rcorr_
-  int s_weights_; //number of elements pointed by weights_
+  double fCPerMIP_[maxsizes_constants::hef_fCPerMIP]; //femto coloumb to MIP conversion; one value per sensor thickness
+  double cce_[maxsizes_constants::hef_cce];           //charge collection efficiency, one value per sensor thickness
+  double noise_fC_[maxsizes_constants::hef_noise_fC]; //noise, one value per sensor thickness
+  double rcorr_[maxsizes_constants::hef_rcorr];              //thickness correction
+  double weights_[maxsizes_constants::hef_weights];          //energy weights to recover rechit energy deposited in the absorber
+
+  double keV2DIGI_;    //energy to femto coloumb conversion: 1000 eV/3.62 (eV per e) / 6.24150934e3 (e per fC)
+  double uncalib2GeV_; //sets the ADC; obtained by dividing 1e-6 by hgcHEF_keV2DIGI_
+  float xmin_;         //used for computing the time resolution error
+  float xmax_;         //used for computing the time resolution error
+  float aterm_;        //used for computing the time resolution error
+  float cterm_;        //used for computing the time resolution error
 };
 
 class HGChebUncalibratedRecHitConstantData {
  public:
-  double hgcHEB_keV2DIGI_; //energy to femto coloumb conversion: 1000 eV/3.62 (eV per e) / 6.24150934e3 (e per fC)
-  double hgchebUncalib2GeV_; //sets the ADC; obtained by dividing 1e-6 by hgcHEB_keV2DIGI_
-  double hgcHEB_noise_MIP_; //noise
-  double *weights_; //energy weights to recover rechit energy deposited in the absorber
-  int nbytes_; //number of bytes allocated by this class
-  int ndelem_; //number of doubles allocated by this class
-  int nfelem_; //number of floats allocated by this class
-  int nuelem_; //number of unsigned ints allocated by this class
-  int nielem_; //number of ints allocated by this class
-  int s_weights_; //number of elements pointed by weights_
+  double weights_[maxsizes_constants::heb_weights]; //energy weights to recover rechit energy deposited in the absorber
+
+  double keV2DIGI_;   //energy to femto coloumb conversion: 1000 eV/3.62 (eV per e) / 6.24150934e3 (e per fC)
+  double uncalib2GeV_; //sets the ADC; obtained by dividing 1e-6 by hgcHEB_keV2DIGI_
+  double noise_MIP_;  //noise
 };
 
 #endif

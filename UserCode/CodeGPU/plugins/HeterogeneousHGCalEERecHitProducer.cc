@@ -3,7 +3,7 @@
 HeterogeneousHGCalEERecHitProducer::HeterogeneousHGCalEERecHitProducer(const edm::ParameterSet& ps):
   token_(consumes<HGCUncalibratedRecHitCollection>(ps.getParameter<edm::InputTag>("HGCEEUncalibRecHitsTok")))
 {
-  cdata_.hgcEE_keV2DIGI_   = ps.getParameter<double>("HGCEE_keV2DIGI");
+  cdata_.keV2DIGI_   = ps.getParameter<double>("HGCEE_keV2DIGI");
   cdata_.xmin_             = ps.getParameter<double>("minValSiPar"); //float
   cdata_.xmax_             = ps.getParameter<double>("maxValSiPar"); //float
   cdata_.aterm_            = ps.getParameter<double>("constSiPar"); //float
@@ -13,12 +13,9 @@ HeterogeneousHGCalEERecHitProducer::HeterogeneousHGCalEERecHitProducer(const edm
   vdata_.noise_fC_         = ps.getParameter<edm::ParameterSet>("HGCEE_noise_fC").getParameter<std::vector<double> >("values");
   vdata_.rcorr_            = ps.getParameter< std::vector<double> >("rcorr");
   vdata_.weights_          = ps.getParameter< std::vector<double> >("weights");
-  cdata_.s_hgcEE_fCPerMIP_ = vdata_.fCPerMIP_.size();
-  cdata_.s_hgcEE_cce_      = vdata_.cce_.size();
-  cdata_.s_hgcEE_noise_fC_ = vdata_.noise_fC_.size();
-  cdata_.s_rcorr_          = vdata_.rcorr_.size();
-  cdata_.s_weights_        = vdata_.weights_.size();
-  cdata_.hgceeUncalib2GeV_ = 1e-6 / cdata_.hgcEE_keV2DIGI_;
+  cdata_.uncalib2GeV_ = 1e-6 / cdata_.keV2DIGI_;
+
+  assert_sizes_constants_(vdata_);
 
   tools_.reset(new hgcal::RecHitTools());
 
@@ -29,12 +26,33 @@ HeterogeneousHGCalEERecHitProducer::~HeterogeneousHGCalEERecHitProducer()
 {
   delete kmdata_;
   delete kcdata_;
-  delete d_kcdata_;
   delete uncalibSoA_;
   delete d_uncalibSoA_;
   delete d_intermediateSoA_;
   delete d_calibSoA_;
   delete calibSoA_;
+}
+
+std::string HeterogeneousHGCalEERecHitProducer::assert_error_message_(std::string var, const size_t& s)
+{
+  std::string str1 = "The '";
+  std::string str2 = "' array must be at least of size ";
+  std::string str3 = " to hold the configuration data.";
+  return str1 + var + str2 + std::to_string(s) + str3;
+}
+
+void HeterogeneousHGCalEERecHitProducer::assert_sizes_constants_(const HGCConstantVectorData& vd)
+{
+  if( vdata_.fCPerMIP_.size() > maxsizes_constants::hef_fCPerMIP )
+    cms::cuda::LogError("MaxSizeExceeded") << this->assert_error_message_("fCPerMIP", vdata_.fCPerMIP_.size());
+  else if( vdata_.cce_.size() > maxsizes_constants::hef_cce )
+    cms::cuda::LogError("MaxSizeExceeded") << this->assert_error_message_("cce", vdata_.cce_.size());
+  else if( vdata_.noise_fC_.size() > maxsizes_constants::hef_noise_fC )
+    cms::cuda::LogError("MaxSizeExceeded") << this->assert_error_message_("noise_fC", vdata_.noise_fC_.size());
+  else if( vdata_.rcorr_.size() > maxsizes_constants::hef_rcorr ) 
+    cms::cuda::LogError("MaxSizeExceeded") << this->assert_error_message_("rcorr", vdata_.rcorr_.size());
+  else if( vdata_.weights_.size() > maxsizes_constants::hef_weights ) 
+    cms::cuda::LogError("MaxSizeExceeded") << this->assert_error_message_("weights", vdata_.weights_.size());
 }
 
 void HeterogeneousHGCalEERecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {
@@ -54,7 +72,7 @@ void HeterogeneousHGCalEERecHitProducer::acquire(edm::Event const& event, edm::E
 
   kmdata_ = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(nhits, stride_, uncalibSoA_, d_uncalibSoA_, d_intermediateSoA_, d_calibSoA_, calibSoA_);
   KernelManagerHGCalRecHit kernel_manager(kmdata_);
-  kernel_manager.run_kernels(kcdata_, d_kcdata_);
+  kernel_manager.run_kernels(kcdata_);
   rechits_ = std::make_unique<HGCRecHitCollection>();
   convert_soa_data_to_collection_(*rechits_, calibSoA_, nhits);
 }
@@ -73,12 +91,7 @@ void HeterogeneousHGCalEERecHitProducer::allocate_memory_()
   d_calibSoA_ = new HGCRecHitSoA();
   calibSoA_ = new HGCRecHitSoA();
   kcdata_ = new KernelConstantData<HGCeeUncalibratedRecHitConstantData>(cdata_, vdata_);
-  d_kcdata_ = new KernelConstantData<HGCeeUncalibratedRecHitConstantData>(cdata_, vdata_);
 
-  //_allocate pinned memory for constants on the host
-  memory::allocation::host(kcdata_, mem_const_);
-  //_allocate pinned memory for constants on the device
-  memory::allocation::device(d_kcdata_, d_mem_const_);
   //_allocate memory for hits on the host
   memory::allocation::host(stride_, uncalibSoA_, mem_in_);
   //_allocate memory for hits on the device
@@ -99,15 +112,15 @@ void HeterogeneousHGCalEERecHitProducer::set_geometry_(const edm::EventSetup& se
 
 void HeterogeneousHGCalEERecHitProducer::convert_constant_data_(KernelConstantData<HGCeeUncalibratedRecHitConstantData> *kcdata)
 {
-  for(int i=0; i<kcdata->data_.s_hgcEE_fCPerMIP_; ++i)
-    kcdata->data_.hgcEE_fCPerMIP_[i] = kcdata->vdata_.fCPerMIP_[i];
-  for(int i=0; i<kcdata->data_.s_hgcEE_cce_; ++i)
-    kcdata->data_.hgcEE_cce_[i] = kcdata->vdata_.cce_[i];
-  for(int i=0; i<kcdata->data_.s_hgcEE_noise_fC_; ++i)
-    kcdata->data_.hgcEE_noise_fC_[i] = kcdata->vdata_.noise_fC_[i];
-  for(int i=0; i<kcdata->data_.s_rcorr_; ++i)
+  for(size_t i=0; i<kcdata->vdata_.fCPerMIP_.size(); ++i)
+    kcdata->data_.fCPerMIP_[i] = kcdata->vdata_.fCPerMIP_[i];
+  for(size_t i=0; i<kcdata->vdata_.cce_.size(); ++i)
+    kcdata->data_.cce_[i] = kcdata->vdata_.cce_[i];
+  for(size_t i=0; i<kcdata->vdata_.noise_fC_.size(); ++i)
+    kcdata->data_.noise_fC_[i] = kcdata->vdata_.noise_fC_[i];
+  for(size_t i=0; i<kcdata->vdata_.rcorr_.size(); ++i)
     kcdata->data_.rcorr_[i] = kcdata->vdata_.rcorr_[i];
-  for(int i=0; i<kcdata->data_.s_weights_; ++i)
+  for(size_t i=0; i<kcdata->vdata_.weights_.size(); ++i)
     kcdata->data_.weights_[i] = kcdata->vdata_.weights_[i];
 }
 
