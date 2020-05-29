@@ -28,7 +28,7 @@
 
 #include "HeterogeneousHGCalProducerMemoryWrapper.h"
 #include "KernelManagerHGCalRecHit.h"
-#include "HeterogeneousHGCalESProduct.h"
+#include "HeterogeneousHGCalEEConditions.h"
 
 class HeterogeneousHGCalEERecHitProducer: public edm::stream::EDProducer<edm::ExternalWork> 
 {
@@ -54,23 +54,22 @@ class HeterogeneousHGCalEERecHitProducer: public edm::stream::EDProducer<edm::Ex
   HGCConstantVectorData vdata_;
 
   //memory
+  std::string assert_error_message_(std::string var, const size_t& s);
+  void assert_sizes_constants_(const HGCConstantVectorData& vd);
   void allocate_memory_();
-  cms::cuda::host::noncached::unique_ptr<std::byte[]> mem_const_;
-  cms::cuda::device::unique_ptr<std::byte[]> d_mem_const_;
   cms::cuda::host::noncached::unique_ptr<std::byte[]> mem_in_;
   cms::cuda::device::unique_ptr<std::byte[]> d_mem_;
   cms::cuda::host::unique_ptr<std::byte[]> mem_out_;
 
-  //conditions
-  void set_conditions(const unsigned int&, const edm::SortedCollection<HGCUncalibratedRecHit>&);
-
-  //geometry
-  void set_geometry_(const edm::EventSetup&);
+  //conditions (geometry, topology, ...)
+  void set_conditions_(const edm::EventSetup&);
   std::unique_ptr<hgcal::RecHitTools> tools_;
+  const hgcal_conditions::HeterogeneousEEConditionsESProduct* d_conds = nullptr;
   const HGCalDDDConstants* ddd_ = nullptr;
+  const HGCalParameters* params_ = nullptr;
 
   //data processing
-  void convert_collection_data_to_soa_(const edm::SortedCollection<HGCUncalibratedRecHit>&, HGCUncalibratedRecHitSoA*, const unsigned int&);
+  void convert_collection_data_to_soa_(const HGCeeUncalibratedRecHitCollection&, HGCUncalibratedRecHitSoA*, const unsigned int&);
   void convert_soa_data_to_collection_(HGCRecHitCollection&, HGCRecHitSoA*, const unsigned int&);
   void convert_constant_data_(KernelConstantData<HGCeeUncalibratedRecHitConstantData>*);
 
