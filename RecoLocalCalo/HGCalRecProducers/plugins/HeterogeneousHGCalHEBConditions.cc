@@ -1,4 +1,4 @@
-#include "UserCode/CodeGPU/plugins/HeterogeneousHGCalHEBConditions.h"
+#include "RecoLocalCalo/HGCalRecProducers/plugins/HeterogeneousHGCalHEBConditions.h"
 
 HeterogeneousHGCalHEBConditionsWrapper::HeterogeneousHGCalHEBConditionsWrapper(const HGCalParameters* cpuHGCalParameters)
 {

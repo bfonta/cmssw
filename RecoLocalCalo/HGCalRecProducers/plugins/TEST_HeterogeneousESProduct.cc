@@ -1,4 +1,4 @@
-#include "UserCode/CodeGPU/plugins/TEST_HeterogeneousESProduct.h"
+#include "RecoLocalCalo/HGCalRecProducers/plugins/TEST_HeterogeneousESProduct.h"
 
 HeterogeneousGeometryESProductWrapper::HeterogeneousGeometryESProductWrapper(HeterogeneousGeometryESProduct const& cpuGeometry) {
   cudaCheck(cudaMallocHost(&payload_array_, sizeof(float)*nelements_));
