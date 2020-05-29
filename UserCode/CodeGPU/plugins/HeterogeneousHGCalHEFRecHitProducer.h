@@ -55,6 +55,8 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
   HGCConstantVectorData vdata_;
 
   //memory
+  std::string assert_error_message_(std::string var, const size_t& s);
+  void assert_sizes_constants_(const HGCConstantVectorData& vd);
   void allocate_memory_();
   cms::cuda::host::noncached::unique_ptr<std::byte[]> mem_const_;
   cms::cuda::device::unique_ptr<std::byte[]> d_mem_const_;
@@ -78,7 +80,6 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
   HGCRecHitSoA *d_calibSoA_ = nullptr, *calibSoA_ = nullptr;
   KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA> *kmdata_;
   KernelConstantData<HGChefUncalibratedRecHitConstantData> *kcdata_;
-  KernelConstantData<HGChefUncalibratedRecHitConstantData> *d_kcdata_;
 };
 
 #endif //HeterogeneousHGCalHEFRecHitProducer_h
