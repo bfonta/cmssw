@@ -3,11 +3,12 @@
 HeterogeneousHGCalHEBRecHitProducer::HeterogeneousHGCalHEBRecHitProducer(const edm::ParameterSet& ps):
   token_(consumes<HGCUncalibratedRecHitCollection>(ps.getParameter<edm::InputTag>("HGCHEBUncalibRecHitsTok")))
 {
-  cdata_.hgcHEB_keV2DIGI_   = ps.getParameter<double>("HGCHEB_keV2DIGI");
-  cdata_.hgcHEB_noise_MIP_  = ps.getParameter<edm::ParameterSet>("HGCHEB_noise_MIP").getParameter<double>("noise_MIP");
+  cdata_.keV2DIGI_   = ps.getParameter<double>("HGCHEB_keV2DIGI");
+  cdata_.noise_MIP_  = ps.getParameter<edm::ParameterSet>("HGCHEB_noise_MIP").getParameter<double>("noise_MIP");
   vdata_.weights_           = ps.getParameter< std::vector<double> >("weights");
-  cdata_.s_weights_         = vdata_.weights_.size();
-  cdata_.hgchebUncalib2GeV_ = 1e-6 / cdata_.hgcHEB_keV2DIGI_;
+  cdata_.uncalib2GeV_ = 1e-6 / cdata_.keV2DIGI_;
+
+  assert_sizes_constants_(vdata_);
 
   tools_.reset(new hgcal::RecHitTools());
 
@@ -18,12 +19,25 @@ HeterogeneousHGCalHEBRecHitProducer::~HeterogeneousHGCalHEBRecHitProducer()
 {
   delete kmdata_;
   delete kcdata_;
-  delete d_kcdata_;
   delete uncalibSoA_;
   delete d_uncalibSoA_;
   delete d_intermediateSoA_;
   delete d_calibSoA_;
   delete calibSoA_;
+}
+
+std::string HeterogeneousHGCalHEFRecHitProducer::assert_error_message_(std::string var, const size_t& s)
+{
+  std::string str1 = "The '";
+  std::string str2 = "' array must be at least of size ";
+  std::string str3 = " to hold the configuration data.";
+  return str1 + var + str2 + std::to_string(s) + str3;
+}
+
+void HeterogeneousHGCalHEFRecHitProducer::assert_sizes_constants_(const HGCConstantVectorData& vd)
+{
+  if( vdata_.weights_.size() > maxsizes_constants::heb_weights )
+    cms::cuda::LogError("MaxSizeExceeded") << this->assert_error_message_("weights", vdata_.fCPerMIP_.size());
 }
 
 void HeterogeneousHGCalHEBRecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {
@@ -43,7 +57,7 @@ void HeterogeneousHGCalHEBRecHitProducer::acquire(edm::Event const& event, edm::
 
   kmdata_ = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(nhits, stride_, uncalibSoA_, d_uncalibSoA_, d_intermediateSoA_, d_calibSoA_, calibSoA_);
   KernelManagerHGCalRecHit kernel_manager(kmdata_);
-  kernel_manager.run_kernels(kcdata_, d_kcdata_);
+  kernel_manager.run_kernels(kcdata_);
 
   rechits_ = std::make_unique<HGCRecHitCollection>();
   convert_soa_data_to_collection_(*rechits_, calibSoA_, nhits);
@@ -63,12 +77,7 @@ void HeterogeneousHGCalHEBRecHitProducer::allocate_memory_()
   d_calibSoA_ = new HGCRecHitSoA();
   calibSoA_ = new HGCRecHitSoA();
   kcdata_ = new KernelConstantData<HGChebUncalibratedRecHitConstantData>(cdata_, vdata_);
-  d_kcdata_ = new KernelConstantData<HGChebUncalibratedRecHitConstantData>(cdata_, vdata_);
 
-  //_allocate pinned memory for constants on the host
-  memory::allocation::host(kcdata_, mem_const_);
-  //_allocate pinned memory for constants on the device
-  memory::allocation::device(d_kcdata_, d_mem_const_);
   //_allocate memory for hits on the host
   memory::allocation::host(stride_, uncalibSoA_, mem_in_);
   //_allocate memory for hits on the device

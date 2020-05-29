@@ -64,18 +64,14 @@ class KernelManagerHGCalRecHit {
  public:
   KernelManagerHGCalRecHit(KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>*);
   ~KernelManagerHGCalRecHit();
-  void run_kernels(const KernelConstantData<HGCeeUncalibratedRecHitConstantData>*, KernelConstantData<HGCeeUncalibratedRecHitConstantData>*);
-  void run_kernels(const KernelConstantData<HGChefUncalibratedRecHitConstantData>*, KernelConstantData<HGChefUncalibratedRecHitConstantData>*, const hgcal_conditions::HeterogeneousHEFConditionsESProduct*);
-  void run_kernels(const KernelConstantData<HGChebUncalibratedRecHitConstantData>*, KernelConstantData<HGChebUncalibratedRecHitConstantData>*);
+  void run_kernels(const KernelConstantData<HGCeeUncalibratedRecHitConstantData>*);
+  void run_kernels(const KernelConstantData<HGChefUncalibratedRecHitConstantData>*, const hgcal_conditions::HeterogeneousHEFConditionsESProduct*);
+  void run_kernels(const KernelConstantData<HGChebUncalibratedRecHitConstantData>*);
   HGCRecHitSoA* get_output();
 
  private:
   void after_();
-  int get_shared_memory_size_(const int&, const int&, const int&, const int&);
   void transfer_soas_to_device_();
-  void transfer_constants_to_device_(const KernelConstantData<HGCeeUncalibratedRecHitConstantData>*, KernelConstantData<HGCeeUncalibratedRecHitConstantData>*);
-  void transfer_constants_to_device_(const KernelConstantData<HGChefUncalibratedRecHitConstantData>*, KernelConstantData<HGChefUncalibratedRecHitConstantData>*);
-  void transfer_constants_to_device_(const KernelConstantData<HGChebUncalibratedRecHitConstantData>*, KernelConstantData<HGChebUncalibratedRecHitConstantData>*);
   void transfer_soa_to_host_and_synchronize_();
   void reuse_device_pointers_();
 
