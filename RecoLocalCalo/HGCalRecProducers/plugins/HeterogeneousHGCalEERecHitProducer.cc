@@ -22,16 +22,6 @@ HeterogeneousHGCalEERecHitProducer::HeterogeneousHGCalEERecHitProducer(const edm
   produces<HGCeeRecHitCollection>(collection_name_);
 }
 
-void HeterogeneousHGCalEERecHitProducer::beginRun(edm::Run const & run, edm::EventSetup const& setup)
-{
-  set_conditions_(setup);
-  HeterogeneousHGCalEEConditionsWrapper esproduct(params_);
-  /*
-    d_conds = esproduct.getHeterogeneousConditionsESProductAsync(ctx.stream());
-  */
-  d_conds = nullptr;
-}
-
 void HeterogeneousHGCalEERecHitProducer::set_conditions_(const edm::EventSetup& setup)
 {
   tools_->getEventSetup(setup);
@@ -79,6 +69,10 @@ void HeterogeneousHGCalEERecHitProducer::assert_sizes_constants_(const HGCConsta
 void HeterogeneousHGCalEERecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {
   const cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w), ctxState_};
 
+  set_conditions_(setup);
+  HeterogeneousHGCalEEConditionsWrapper esproduct(params_);
+  d_conds = esproduct.getHeterogeneousConditionsESProductAsync(ctx.stream());
+  
   event.getByToken(token_, handle_ee_);
   const auto &hits_ee = *handle_ee_;
 

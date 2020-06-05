@@ -36,7 +36,6 @@ class HeterogeneousHGCalEERecHitProducer: public edm::stream::EDProducer<edm::Ex
   explicit HeterogeneousHGCalEERecHitProducer(const edm::ParameterSet& ps);
   ~HeterogeneousHGCalEERecHitProducer() override;
 
-  virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
   virtual void acquire(edm::Event const&, edm::EventSetup const&, edm::WaitingTaskWithArenaHolder) override;
   virtual void produce(edm::Event&, const edm::EventSetup&) override;
 
