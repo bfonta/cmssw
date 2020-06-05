@@ -33,16 +33,6 @@ HeterogeneousHGCalHEFRecHitProducer::~HeterogeneousHGCalHEFRecHitProducer()
   delete calibSoA_;
 }
 
-void HeterogeneousHGCalHEFRecHitProducer::beginRun(edm::Run const & run, edm::EventSetup const& setup)
-{
-  set_conditions_(setup);
-  HeterogeneousHGCalHEFConditionsWrapper esproduct(params_);
-  /*
-    d_conds = esproduct.getHeterogeneousConditionsESProductAsync(ctx.stream());
-  */
-  d_conds = nullptr;
-}
-
 std::string HeterogeneousHGCalHEFRecHitProducer::assert_error_message_(std::string var, const size_t& s)
 {
   std::string str1 = "The '";
@@ -67,6 +57,10 @@ void HeterogeneousHGCalHEFRecHitProducer::assert_sizes_constants_(const HGCConst
 
 void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {
   const cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w), ctxState_};
+
+  set_conditions_(setup);
+  HeterogeneousHGCalHEFConditionsWrapper esproduct(params_);
+  d_conds = esproduct.getHeterogeneousConditionsESProductAsync(ctx.stream());
 
   event.getByToken(token_, handle_hef_);
   const auto &hits_hef = *handle_hef_;
