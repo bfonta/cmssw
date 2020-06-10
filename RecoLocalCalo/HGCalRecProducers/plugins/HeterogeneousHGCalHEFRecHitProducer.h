@@ -68,6 +68,7 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
   const hgcal_conditions::HeterogeneousHEFConditionsESProduct* d_conds = nullptr;
   const HGCalDDDConstants* ddd_ = nullptr;
   const HGCalParameters* params_ = nullptr;
+  hgcal_conditions::positions::HGCalPositions* xyz_;
 
   //data processing
   void convert_collection_data_to_soa_(const HGChefUncalibratedRecHitCollection&, HGCUncalibratedRecHitSoA*, const unsigned int&);
