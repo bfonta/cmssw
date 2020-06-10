@@ -16,9 +16,8 @@ HeterogeneousHGCalHEFRecHitProducer::HeterogeneousHGCalHEFRecHitProducer(const e
   cdata_.uncalib2GeV_ = 1e-6 / cdata_.keV2DIGI_;
 
   assert_sizes_constants_(vdata_);
-
+  xyz_ = new hgcal_conditions::positions::HGCalPositions();
   tools_.reset(new hgcal::RecHitTools());
-
   produces<HGChefRecHitCollection>(collection_name_);
 }
 
@@ -31,6 +30,7 @@ HeterogeneousHGCalHEFRecHitProducer::~HeterogeneousHGCalHEFRecHitProducer()
   delete d_intermediateSoA_;
   delete d_calibSoA_;
   delete calibSoA_;
+  delete xyz_;
 }
 
 std::string HeterogeneousHGCalHEFRecHitProducer::assert_error_message_(std::string var, const size_t& s)
@@ -59,9 +59,9 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
   const cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w), ctxState_};
 
   set_conditions_(setup);
-  HeterogeneousHGCalHEFConditionsWrapper esproduct(params_);
+  HeterogeneousHGCalHEFConditionsWrapper esproduct(params_, xyz_);
   d_conds = esproduct.getHeterogeneousConditionsESProductAsync(ctx.stream());
-
+  
   event.getByToken(token_, handle_hef_);
   const auto &hits_hef = *handle_hef_;
 
@@ -88,6 +88,15 @@ void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup&
   setup.get<IdealGeometryRecord>().get(handle_str, handle);
   ddd_ = &( handle->topology().dddConstants() );
   params_ = ddd_->getParameter();
+
+  //fill the CPU position structure from the geometry
+  size_t test_size = 10;
+  for(unsigned int i=0; i<test_size; ++i)
+    {
+      xyz_->x.push_back(1.1);
+      xyz_->y.push_back(1.2);
+      xyz_->z.push_back(1.3);
+    }
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::produce(edm::Event& event, const edm::EventSetup& setup)
