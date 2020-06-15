@@ -18,6 +18,11 @@ process.load('HeterogeneousCore.CUDAServices.CUDAService_cfi')
 process.load('RecoLocalCalo.HGCalRecProducers.HGCalRecHit_cfi')
 process.load('SimCalorimetry.HGCalSimProducers.hgcalDigitizer_cfi')
 
+process.TFileService = cms.Service("TFileService", 
+                                   fileName = cms.string("histo.root"),
+                                   closeFileFast = cms.untracked.bool(True)
+                               )
+
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32( 10 ))
 

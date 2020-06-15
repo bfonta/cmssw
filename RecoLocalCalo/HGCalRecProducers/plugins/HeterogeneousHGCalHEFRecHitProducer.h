@@ -21,6 +21,7 @@
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
 #include "Geometry/HGCalGeometry/interface/HGCalGeometry.h"
 #include "Geometry/HGCalCommonData/interface/HGCalDDDConstants.h"
+#include "Geometry/HGCalCommonData/interface/HGCalWaferIndex.h"
 
 #include "HeterogeneousCore/CUDACore/interface/ScopedContext.h"
 #include "HeterogeneousCore/CUDACore/interface/ContextState.h"
@@ -30,6 +31,9 @@
 #include "HeterogeneousHGCalProducerMemoryWrapper.h"
 #include "KernelManagerHGCalRecHit.h"
 #include "HeterogeneousHGCalHEFConditions.h"
+
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
 
 class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::ExternalWork> 
 {
@@ -69,6 +73,10 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
   const HGCalDDDConstants* ddd_ = nullptr;
   const HGCalParameters* params_ = nullptr;
   hgcal_conditions::positions::HGCalPositions* xyz_;
+  hgcal_conditions::positions::HGCalPositionsMapping* posmap_;
+
+  edm::Service<TFileService> fs;
+  TH1F *x0, *x1, *x2, *y0, *y1, *y2;
 
   //data processing
   void convert_collection_data_to_soa_(const HGChefUncalibratedRecHitCollection&, HGCUncalibratedRecHitSoA*, const unsigned int&);

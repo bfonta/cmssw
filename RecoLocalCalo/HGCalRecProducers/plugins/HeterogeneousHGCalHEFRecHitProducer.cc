@@ -16,9 +16,17 @@ HeterogeneousHGCalHEFRecHitProducer::HeterogeneousHGCalHEFRecHitProducer(const e
   cdata_.uncalib2GeV_ = 1e-6 / cdata_.keV2DIGI_;
 
   assert_sizes_constants_(vdata_);
-  xyz_ = new hgcal_conditions::positions::HGCalPositions();
+  //xyz_ = new hgcal_conditions::positions::HGCalPositions();
+  posmap_ = new hgcal_conditions::positions::HGCalPositionsMapping();
   tools_.reset(new hgcal::RecHitTools());
   produces<HGChefRecHitCollection>(collection_name_);
+
+  x0 = fs->make<TH1F>( "x_type0"  , "x_type0", 300, -120., 120. );
+  y0 = fs->make<TH1F>( "y_type0"  , "y_type0", 300, -120., 120. );
+  x1 = fs->make<TH1F>( "x_type1"  , "x_type1", 300, -120., 120. );
+  y1 = fs->make<TH1F>( "y_type1"  , "y_type1", 300, -120., 120. );
+  x2 = fs->make<TH1F>( "x_type2"  , "x_type2", 300, -120., 120. );
+  y2 = fs->make<TH1F>( "y_type2"  , "y_type2", 300, -120., 120. );
 }
 
 HeterogeneousHGCalHEFRecHitProducer::~HeterogeneousHGCalHEFRecHitProducer()
@@ -30,7 +38,8 @@ HeterogeneousHGCalHEFRecHitProducer::~HeterogeneousHGCalHEFRecHitProducer()
   delete d_intermediateSoA_;
   delete d_calibSoA_;
   delete calibSoA_;
-  delete xyz_;
+  //delete xyz_;
+  delete posmap_;
 }
 
 std::string HeterogeneousHGCalHEFRecHitProducer::assert_error_message_(std::string var, const size_t& s)
@@ -59,7 +68,7 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
   const cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w), ctxState_};
 
   set_conditions_(setup);
-  HeterogeneousHGCalHEFConditionsWrapper esproduct(params_, xyz_);
+  HeterogeneousHGCalHEFConditionsWrapper esproduct(params_, posmap_);
   d_conds = esproduct.getHeterogeneousConditionsESProductAsync(ctx.stream());
   
   event.getByToken(token_, handle_hef_);
@@ -89,14 +98,103 @@ void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup&
   ddd_ = &( handle->topology().dddConstants() );
   params_ = ddd_->getParameter();
 
+  /* Geometry Inspection
+  int counter = 0;
+  while(counter < 1000) {
+    int lay=1, waferU=4, waferV=2, cellU=8, cellV=7;
+    if(ddd_->isValidHex8(lay, counter, waferV, cellU, cellV))
+      {
+	//float loc_first = (ddd_->locateCell(lay, counter, waferV, cellU, cellV, true, false, true)).first;
+	std::cout << ddd_->firstLayer() << ", " << ddd_->lastLayer(true) <<  std::endl;
+	std::cout << " *** " <<  std::endl;
+	std::cout << ddd_->layerIndex(1, true) << ", " << ddd_->layerIndex(5, true) <<  ", " << ddd_->layerIndex(10, true) << std::endl;
+	std::cout << " *** " <<  std::endl;
+	std::cout << ddd_->numberCells(1, true)[0] << ", " << ddd_->numberCells(1, true).size() << ", " << ddd_->numberCells(5, true).size() << ", " << ddd_->numberCells(10, true).size() << ", " << ddd_->numberCells(true) << std::endl;
+	std::cout << " *** " <<  std::endl;
+	std::cout << ddd_->numberCellsHexagon(1, waferU, waferV, false) << ", " <<ddd_->numberCellsHexagon(5, waferU, waferV, false) << ", " << ddd_->numberCellsHexagon(10, waferU, waferV, false) << std::endl;
+	std::cout << " *** " <<  std::endl;
+	std::cout << HGCalWaferIndex::waferIndex(lay, waferU, waferV) << ", " << ddd_->waferInLayer( HGCalWaferIndex::waferIndex(lay, waferU, waferV), 1, true) << std::endl;
+	std::cout << " *** " <<  std::endl;
+	std::cout << ddd_->waferCount(0) << ", " << ddd_->waferCount(1) << ", " << ddd_->waferCount(2) << ", " << ddd_->waferCount(3) << std::endl;
+	std::cout << " *** " <<  std::endl;
+	std::cout << ddd_->waferZ(1, true) << std::endl;
+	std::cout << " *** " <<  std::endl;
+	std::cout << ddd_->waferMax() << ", " <<  ddd_->waferMin() << std::endl;
+	std::cout << " *** " <<  std::endl;
+	std::cout << lay << ", " <<  counter << ", " << waferV << ", " << cellU << ", " << cellV << std::endl;
+	std::cout << " --------- " << std::endl;
+	std::cout << " --------- " << std::endl;
+      }
+    counter += 1;
+  }
+  std::exit(0);
+  */
+
   //fill the CPU position structure from the geometry
-  size_t test_size = 10;
-  for(unsigned int i=0; i<test_size; ++i)
-    {
-      xyz_->x.push_back(1.1);
-      xyz_->y.push_back(1.2);
-      xyz_->z.push_back(1.3);
+  posmap_->numberCellsHexagon.clear();
+  posmap_->detid.clear();
+
+  int upper_estimate_wafer_number  = 2 * ddd_->lastLayer(true) * (ddd_->waferMax() - ddd_->waferMin());
+  int upper_estimate_cell_number = upper_estimate_wafer_number * 24 * 24; 
+  posmap_->numberCellsHexagon.reserve(upper_estimate_wafer_number);
+  posmap_->detid.reserve(upper_estimate_cell_number);
+  //set postions-related variables
+  posmap_->firstLayer = ddd_->firstLayer();
+  assert( posmap_->firstLayer==1 ); //otherwise the loop over the layers has to be changed
+  posmap_->lastLayer  = ddd_->lastLayer(true);
+  posmap_->waferMin   = ddd_->waferMin();
+  posmap_->waferMax   = ddd_->waferMax();
+
+  //store detids following a geometry ordering
+  for(int iside=-1; iside<=1; iside = iside+2) {
+    for(int ilayer=1; ilayer<=posmap_->lastLayer; ++ilayer) {
+      //float z_ = iside<0 ? -1.f * static_cast<float>( ddd_->waferZ(ilayer, true) ) : static_cast<float>( ddd_->waferZ(ilayer, true) ); //originally a double
+    
+      for(int iwaferU=posmap_->waferMin; iwaferU<posmap_->waferMax; ++iwaferU) {
+	for(int iwaferV=posmap_->waferMin; iwaferV<posmap_->waferMax; ++iwaferV) {
+	  int type_ = ddd_->waferType(ilayer, iwaferU, iwaferV); //0: fine; 1: coarseThin; 2: coarseThick (as defined in DataFormats/ForwardDetId/interface/HGCSiliconDetId.h)
+
+	  int nCellsHex = ddd_->numberCellsHexagon(ilayer, iwaferU, iwaferV, false);
+	  posmap_->numberCellsHexagon.push_back( nCellsHex );
+	  
+	  for(int icellU=0; icellU<2*nCellsHex; ++icellU) {
+	    for(int icellV=0; icellV<2*nCellsHex; ++icellV)
+	      {
+		uint32_t detid_ = HGCSiliconDetId(DetId::HGCalHSi, iside, type_, ilayer, iwaferU, iwaferV, icellU, icellV);
+		posmap_->detid.push_back( detid_ );
+		
+		/*
+		GlobalPoint point = tools_->getPosition(detid_);
+		xyz_->x.push_back( point.x() );
+		xyz_->y.push_back( point.y() );
+		xyz_->z.push_back( z_ );
+		*/
+      
+		/*
+		if(type_==0 and point.x()!=0. and point.y()!=0.) {
+		  x0->Fill( point.x() );
+		  y0->Fill( point.y() );
+		}
+		else if(type_==1 and point.x()!=0. and point.y()!=0.) {
+		  x1->Fill( point.x() );
+		  y1->Fill( point.y() );
+		}
+		else if(type_==2 and point.x()!=0. and point.y()!=0.) {
+		  x2->Fill( point.x() );
+		  y2->Fill( point.y() );
+		}
+		*/
+		//std::cout << iside << ":" << type_ << ":" << ilayer << ":" << iwaferU << ":" << iwaferV << ":" << icellU << ":" << icellV << ":" << std::endl;
+		//std::cout << point.x() << ":" << point_opp.x() << ", " << point.y() << ":" << point_opp.y() << ", " << z_ << std::endl;
+		//std::cout << xy_.first << ":" << xy_.second << std::endl;
+	      }
+	  }
+
+	}
+      }
     }
+  }
+
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::produce(edm::Event& event, const edm::EventSetup& setup)
