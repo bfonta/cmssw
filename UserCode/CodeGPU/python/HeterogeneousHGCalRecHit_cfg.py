@@ -83,8 +83,8 @@ process.HeterogeneousHGCalHEBRecHitProducer = cms.EDProducer('HeterogeneousHGCal
                                                          )
 
 fNameOut = 'out'
-process.task = cms.Task( process.HeterogeneousHGCalEERecHitProducer, process.HeterogeneousHGCalHEFRecHitProducer )
-#process.task = cms.Task( process.HeterogeneousHGCalHEFRecHitProducer )
+#process.task = cms.Task( process.HeterogeneousHGCalEERecHitProducer, process.HeterogeneousHGCalHEFRecHitProducer )
+process.task = cms.Task( process.HeterogeneousHGCalHEFRecHitProducer )
 process.path = cms.Path( process.task )
 
 process.out = cms.OutputModule("PoolOutputModule",
