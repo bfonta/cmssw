@@ -70,7 +70,7 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
   set_conditions_(setup);
   HeterogeneousHGCalHEFConditionsWrapper esproduct(params_, posmap_);
   d_conds = esproduct.getHeterogeneousConditionsESProductAsync(ctx.stream());
-  
+
   event.getByToken(token_, handle_hef_);
   const auto &hits_hef = *handle_hef_;
 
@@ -83,6 +83,7 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
   convert_collection_data_to_soa_(hits_hef, uncalibSoA_, nhits);
   kmdata_ = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(nhits, stride_, uncalibSoA_, d_uncalibSoA_, d_intermediateSoA_, d_calibSoA_, calibSoA_);
   KernelManagerHGCalRecHit kernel_manager(kmdata_);
+  std::cout << "CHECK before run kernels "  << std::endl;
   kernel_manager.run_kernels(kcdata_, d_conds);
 
   rechits_ = std::make_unique<HGCRecHitCollection>();
