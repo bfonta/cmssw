@@ -51,10 +51,10 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGCeeUncalib
 void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChefUncalibratedRecHitConstantData> *kcdata, const hgcal_conditions::HeterogeneousHEFConditionsESProduct* d_conds)
 {
   transfer_soas_to_device_();
-  printf("before positions\n");
-  //fill_positions_from_detids<<<::nblocks_,::nthreads_>>>(d_conds);
-  //printf("after positions\n");
-  //after_();
+
+  fill_positions_from_detids<<<::nblocks_,::nthreads_>>>(d_conds);
+  after_();
+  
   print_positions_from_detids<<<::nblocks_,::nthreads_>>>(d_conds);
   /*
   hef_step1<<<::nblocks_,::nthreads_>>>( *(data_->d_2), *(data_->d_1_), d_kcdata->data, data_->nhits_);

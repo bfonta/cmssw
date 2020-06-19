@@ -138,11 +138,13 @@ void HeterogeneousHGCalHEFConditionsWrapper::transfer_data_to_heterogeneous_poin
 }
 
 void HeterogeneousHGCalHEFConditionsWrapper::transfer_data_to_heterogeneous_vars_pos_(const cpos::HGCalPositionsMapping* cpuPos) {
-  this->posmap_.firstLayer = cpuPos->firstLayer;
-  this->posmap_.lastLayer  = cpuPos->lastLayer;
-  this->posmap_.waferMin   = cpuPos->waferMin;
-  this->posmap_.waferMax   = cpuPos->waferMax;
-  this->nelems_posmap_     = cpuPos->detid.size();
+  this->posmap_.waferSize        = cpuPos->waferSize;
+  this->posmap_.sensorSeparation = cpuPos->sensorSeparation;
+  this->posmap_.firstLayer       = cpuPos->firstLayer;
+  this->posmap_.lastLayer        = cpuPos->lastLayer;
+  this->posmap_.waferMin         = cpuPos->waferMin;
+  this->posmap_.waferMax         = cpuPos->waferMax;
+  this->nelems_posmap_           = cpuPos->detid.size();
 }
 
 std::vector<size_t> HeterogeneousHGCalHEFConditionsWrapper::calculate_memory_bytes_params_(const HGCalParameters* cpuParams) {
@@ -347,11 +349,13 @@ hgcal_conditions::HeterogeneousHEFConditionsESProduct const *HeterogeneousHGCalH
 	    gpuErrchk(cudaMalloc(&(data.host->params.cellFineX_), chunk_params_));
 	    gpuErrchk(cudaMalloc(&(data.host->posmap.x), chunk_pos_));
 	    // Complete the host-side information on the payload
-	    data.host->posmap.firstLayer = this->posmap_.firstLayer;
-	    data.host->posmap.lastLayer  = this->posmap_.lastLayer;
-	    data.host->posmap.waferMax   = this->posmap_.waferMax;
-	    data.host->posmap.waferMin   = this->posmap_.waferMin;
-	    data.host->nelems_posmap     = this->nelems_posmap_;
+	    data.host->posmap.waferSize        = this->posmap_.waferSize;
+	    data.host->posmap.sensorSeparation = this->posmap_.sensorSeparation;
+	    data.host->posmap.firstLayer       = this->posmap_.firstLayer;
+	    data.host->posmap.lastLayer        = this->posmap_.lastLayer;
+	    data.host->posmap.waferMax         = this->posmap_.waferMax;
+	    data.host->posmap.waferMin         = this->posmap_.waferMin;
+	    data.host->nelems_posmap           = this->nelems_posmap_;
 
 	    //(set the pointers of the parameters)
 	    size_t sdouble = sizeof(double);

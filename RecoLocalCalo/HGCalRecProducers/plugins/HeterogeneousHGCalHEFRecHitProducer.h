@@ -72,7 +72,6 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
   const hgcal_conditions::HeterogeneousHEFConditionsESProduct* d_conds = nullptr;
   const HGCalDDDConstants* ddd_ = nullptr;
   const HGCalParameters* params_ = nullptr;
-  hgcal_conditions::positions::HGCalPositions* xyz_;
   hgcal_conditions::positions::HGCalPositionsMapping* posmap_;
 
   edm::Service<TFileService> fs;

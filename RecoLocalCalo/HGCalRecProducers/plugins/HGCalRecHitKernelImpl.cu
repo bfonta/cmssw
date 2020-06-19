@@ -152,8 +152,23 @@ void fill_positions_from_detids(const hgcal_conditions::HeterogeneousHEFConditio
       uint32_t cV = did.cellV();
       uint32_t wU = did.waferU();
       uint32_t wV = did.waferV();
-      conds->posmap.x[tid] = 1.1;
-      conds->posmap.y[tid] = 1.2;
+      uint32_t ncells = did.nCells();
+      
+      float r = 0.5f * (conds->posmap.waferSize + conds->posmap.sensorSeparation);
+      float sqrt3 = __fsqrt_rn(3.);
+      float rsqrt3 = __frsqrt_rn(3.);
+      float R = 2.f * r * rsqrt3; //rsqrt: 1 / sqrt
+      uint32_t n2 = ncells / 2;
+      float yoff = rsqrt3 * 2.f * r; //CHANGE according to Sunanda's reply
+      float xpos = (-2.f * wU + wV) * r;
+      float ypos = yoff + (1.5 * wV * R);
+      float R1 = __fdividef( conds->posmap.waferSize, 3.f * ncells );
+      float r1 = 0.5 * R1 * sqrt3;
+      xpos += (1.5 * (cV - ncells) + 1.0) * R1;
+      ypos += (cU - 0.5 * cV - n2) * 2 * r1;
+
+      conds->posmap.x[tid] = xpos * did.zside();
+      conds->posmap.y[tid] = ypos;
       conds->posmap.z[tid] = 1.3;
     }
   
@@ -166,7 +181,7 @@ void print_positions_from_detids(const hgcal_conditions::HeterogeneousHEFConditi
 
   for (unsigned int i = tid; i < conds->nelems_posmap; i += blockDim.x * gridDim.x)
     {
-      printf("PosX: %lf - PosY: %lf - Posz: %lf\n", conds->posmap.x[tid], conds->posmap.y[tid], conds->posmap.z[tid]);
+      printf("PosX: %lf - PosY: %lf - Posz: %lf - waferSize: %lf - sensorSeparation: %lf\n", conds->posmap.x[tid], conds->posmap.y[tid], conds->posmap.z[tid], conds->posmap.waferSize, conds->posmap.sensorSeparation);
     }
   
 }
