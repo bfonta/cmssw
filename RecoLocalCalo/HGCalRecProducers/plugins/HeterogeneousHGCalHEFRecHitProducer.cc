@@ -16,7 +16,6 @@ HeterogeneousHGCalHEFRecHitProducer::HeterogeneousHGCalHEFRecHitProducer(const e
   cdata_.uncalib2GeV_ = 1e-6 / cdata_.keV2DIGI_;
 
   assert_sizes_constants_(vdata_);
-  //xyz_ = new hgcal_conditions::positions::HGCalPositions();
   posmap_ = new hgcal_conditions::positions::HGCalPositionsMapping();
   tools_.reset(new hgcal::RecHitTools());
   produces<HGChefRecHitCollection>(collection_name_);
@@ -38,7 +37,6 @@ HeterogeneousHGCalHEFRecHitProducer::~HeterogeneousHGCalHEFRecHitProducer()
   delete d_intermediateSoA_;
   delete d_calibSoA_;
   delete calibSoA_;
-  //delete xyz_;
   delete posmap_;
 }
 
@@ -139,12 +137,14 @@ void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup&
   int upper_estimate_cell_number = upper_estimate_wafer_number * 24 * 24; 
   posmap_->numberCellsHexagon.reserve(upper_estimate_wafer_number);
   posmap_->detid.reserve(upper_estimate_cell_number);
-  //set postions-related variables
-  posmap_->firstLayer = ddd_->firstLayer();
+  //set positons-related variables
+  posmap_->waferSize        = static_cast<float>( params_->waferSize_ );
+  posmap_->sensorSeparation = static_cast<float>( params_->sensorSeparation_ );
+  posmap_->firstLayer       = ddd_->firstLayer();
   assert( posmap_->firstLayer==1 ); //otherwise the loop over the layers has to be changed
-  posmap_->lastLayer  = ddd_->lastLayer(true);
-  posmap_->waferMin   = ddd_->waferMin();
-  posmap_->waferMax   = ddd_->waferMax();
+  posmap_->lastLayer        = ddd_->lastLayer(true);
+  posmap_->waferMin         = ddd_->waferMin();
+  posmap_->waferMax         = ddd_->waferMax();
 
   //store detids following a geometry ordering
   for(int iside=-1; iside<=1; iside = iside+2) {
@@ -157,40 +157,25 @@ void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup&
 
 	  int nCellsHex = ddd_->numberCellsHexagon(ilayer, iwaferU, iwaferV, false);
 	  posmap_->numberCellsHexagon.push_back( nCellsHex );
-	  
-	  for(int icellU=0; icellU<2*nCellsHex; ++icellU) {
-	    for(int icellV=0; icellV<2*nCellsHex; ++icellV)
-	      {
-		uint32_t detid_ = HGCSiliconDetId(DetId::HGCalHSi, iside, type_, ilayer, iwaferU, iwaferV, icellU, icellV);
-		posmap_->detid.push_back( detid_ );
-		
-		/*
-		GlobalPoint point = tools_->getPosition(detid_);
-		xyz_->x.push_back( point.x() );
-		xyz_->y.push_back( point.y() );
-		xyz_->z.push_back( z_ );
-		*/
-      
-		/*
-		if(type_==0 and point.x()!=0. and point.y()!=0.) {
-		  x0->Fill( point.x() );
-		  y0->Fill( point.y() );
-		}
-		else if(type_==1 and point.x()!=0. and point.y()!=0.) {
-		  x1->Fill( point.x() );
-		  y1->Fill( point.y() );
-		}
-		else if(type_==2 and point.x()!=0. and point.y()!=0.) {
-		  x2->Fill( point.x() );
-		  y2->Fill( point.y() );
-		}
-		*/
-		//std::cout << iside << ":" << type_ << ":" << ilayer << ":" << iwaferU << ":" << iwaferV << ":" << icellU << ":" << icellV << ":" << std::endl;
-		//std::cout << point.x() << ":" << point_opp.x() << ", " << point.y() << ":" << point_opp.y() << ", " << z_ << std::endl;
-		//std::cout << xy_.first << ":" << xy_.second << std::endl;
-	      }
-	  }
 
+	  //left side of wafer
+	  for(int cellUmax=nCellsHex, icellV=0; cellUmax<2*nCellsHex && icellV<nCellsHex; ++cellUmax, ++icellV)
+	    {
+	      for(int icellU=0; icellU<=cellUmax; ++icellU)
+		{
+		  uint32_t detid_ = HGCSiliconDetId(DetId::HGCalHSi, iside, type_, ilayer, iwaferU, iwaferV, icellU, icellV);
+		  posmap_->detid.push_back( detid_ );
+		}
+	    }
+	  //right side of wafer
+	  for(int cellUmin=1, icellV=nCellsHex; cellUmin<=nCellsHex && icellV<2*nCellsHex; ++cellUmin, ++icellV)
+	    {
+	      for(int icellU=cellUmin; icellU<2*nCellsHex; ++icellU)
+		{
+		  uint32_t detid_ = HGCSiliconDetId(DetId::HGCalHSi, iside, type_, ilayer, iwaferU, iwaferV, icellU, icellV);
+		  posmap_->detid.push_back( detid_ );
+		}
+	    }
 	}
       }
     }
