@@ -81,7 +81,6 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
   convert_collection_data_to_soa_(hits_hef, uncalibSoA_, nhits);
   kmdata_ = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(nhits, stride_, uncalibSoA_, d_uncalibSoA_, d_intermediateSoA_, d_calibSoA_, calibSoA_);
   KernelManagerHGCalRecHit kernel_manager(kmdata_);
-  std::cout << "CHECK before run kernels "  << std::endl;
   kernel_manager.run_kernels(kcdata_, d_conds);
 
   rechits_ = std::make_unique<HGCRecHitCollection>();
@@ -147,36 +146,34 @@ void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup&
   posmap_->waferMax         = ddd_->waferMax();
 
   //store detids following a geometry ordering
-  for(int iside=-1; iside<=1; iside = iside+2) {
-    for(int ilayer=1; ilayer<=posmap_->lastLayer; ++ilayer) {
-      //float z_ = iside<0 ? -1.f * static_cast<float>( ddd_->waferZ(ilayer, true) ) : static_cast<float>( ddd_->waferZ(ilayer, true) ); //originally a double
+  for(int ilayer=1; ilayer<=posmap_->lastLayer; ++ilayer) {
+    //float z_ = iside<0 ? -1.f * static_cast<float>( ddd_->waferZ(ilayer, true) ) : static_cast<float>( ddd_->waferZ(ilayer, true) ); //originally a double
     
-      for(int iwaferU=posmap_->waferMin; iwaferU<posmap_->waferMax; ++iwaferU) {
-	for(int iwaferV=posmap_->waferMin; iwaferV<posmap_->waferMax; ++iwaferV) {
-	  int type_ = ddd_->waferType(ilayer, iwaferU, iwaferV); //0: fine; 1: coarseThin; 2: coarseThick (as defined in DataFormats/ForwardDetId/interface/HGCSiliconDetId.h)
+    for(int iwaferU=posmap_->waferMin; iwaferU<posmap_->waferMax; ++iwaferU) {
+      for(int iwaferV=posmap_->waferMin; iwaferV<posmap_->waferMax; ++iwaferV) {
+	int type_ = ddd_->waferType(ilayer, iwaferU, iwaferV); //0: fine; 1: coarseThin; 2: coarseThick (as defined in DataFormats/ForwardDetId/interface/HGCSiliconDetId.h)
 
-	  int nCellsHex = ddd_->numberCellsHexagon(ilayer, iwaferU, iwaferV, false);
-	  posmap_->numberCellsHexagon.push_back( nCellsHex );
+	int nCellsHex = ddd_->numberCellsHexagon(ilayer, iwaferU, iwaferV, false);
+	posmap_->numberCellsHexagon.push_back( nCellsHex );
 
-	  //left side of wafer
-	  for(int cellUmax=nCellsHex, icellV=0; cellUmax<2*nCellsHex && icellV<nCellsHex; ++cellUmax, ++icellV)
-	    {
-	      for(int icellU=0; icellU<=cellUmax; ++icellU)
-		{
-		  uint32_t detid_ = HGCSiliconDetId(DetId::HGCalHSi, iside, type_, ilayer, iwaferU, iwaferV, icellU, icellV);
-		  posmap_->detid.push_back( detid_ );
-		}
-	    }
-	  //right side of wafer
-	  for(int cellUmin=1, icellV=nCellsHex; cellUmin<=nCellsHex && icellV<2*nCellsHex; ++cellUmin, ++icellV)
-	    {
-	      for(int icellU=cellUmin; icellU<2*nCellsHex; ++icellU)
-		{
-		  uint32_t detid_ = HGCSiliconDetId(DetId::HGCalHSi, iside, type_, ilayer, iwaferU, iwaferV, icellU, icellV);
-		  posmap_->detid.push_back( detid_ );
-		}
-	    }
-	}
+	//left side of wafer
+	for(int cellUmax=nCellsHex, icellV=0; cellUmax<2*nCellsHex && icellV<nCellsHex; ++cellUmax, ++icellV)
+	  {
+	    for(int icellU=0; icellU<=cellUmax; ++icellU)
+	      {
+		HGCSiliconDetId detid_(DetId::HGCalHSi, 1, type_, ilayer, iwaferU, iwaferV, icellU, icellV);
+		posmap_->detid.push_back( detid_.rawId() );
+	      }
+	  }
+	//right side of wafer
+	for(int cellUmin=1, icellV=nCellsHex; cellUmin<=nCellsHex && icellV<2*nCellsHex; ++cellUmin, ++icellV)
+	  {
+	    for(int icellU=cellUmin; icellU<2*nCellsHex; ++icellU)
+	      {
+		HGCSiliconDetId detid_(DetId::HGCalHSi, 1, type_, ilayer, iwaferU, iwaferV, icellU, icellV);
+		posmap_->detid.push_back( detid_.rawId() );
+	      }
+	  }
       }
     }
   }

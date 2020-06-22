@@ -13,8 +13,8 @@ class HeterogeneousHGCSiliconDetId {
   constexpr int32_t waferV()    { return (((id_ >> kHGCalWaferVSignOffset) & kHGCalWaferVSignMask) ? -waferVAbs() : waferVAbs()); }
   constexpr int32_t waferX()    { return (-2 * waferU() + waferV()); }
   constexpr int32_t waferY()    { return (2 * waferV()); }
-  constexpr int32_t cellU()     { return (id_ >> kHGCalCellUOffset) & kHGCalCellUMask; }
-  constexpr int32_t cellV()     { return (id_ >> kHGCalCellVOffset) & kHGCalCellVMask; }
+  constexpr uint32_t cellU()    { return (id_ >> kHGCalCellUOffset) & kHGCalCellUMask; }
+  constexpr uint32_t cellV()    { return (id_ >> kHGCalCellVOffset) & kHGCalCellVMask; }
   constexpr uint32_t nCells()   { return (type() == HGCalFine) ? HGCalFineN : HGCalCoarseN; }
   constexpr int32_t cellX()     { const uint32_t N = nCells(); return (3 * (cellV() - N) + 2); }
   constexpr int32_t cellY()     { const uint32_t N = nCells(); return (2 * cellU() - (N + cellV())); }
