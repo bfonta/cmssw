@@ -123,7 +123,10 @@ void HeterogeneousHGCalHEFConditionsWrapper::transfer_data_to_heterogeneous_poin
 	for(unsigned int i=cumsum_sizes[j]; i<cumsum_sizes[j+1]; ++i) 
 	  {
 	    unsigned int index = i - cumsum_sizes[j];
-	    if( cpos::types[j] == cpos::HeterogeneousHGCalPositionsType::Int32_t ) {
+	    if( cpos::types[j] == cpos::HeterogeneousHGCalPositionsType::Float ) {
+	      select_pointer_f_(&this->posmap_, j)[index] = select_pointer_f_(cpuPos, j-this->number_position_arrays)[index];
+	    } 
+	    else if( cpos::types[j] == cpos::HeterogeneousHGCalPositionsType::Int32_t ) {
 	      select_pointer_i_(&this->posmap_, j)[index] = select_pointer_i_(cpuPos, j-this->number_position_arrays)[index];
 	    }	  
 	    else if( cpos::types[j] == cpos::HeterogeneousHGCalPositionsType::Uint32_t )
@@ -254,10 +257,22 @@ float*& HeterogeneousHGCalHEFConditionsWrapper::select_pointer_f_(cpos::Heteroge
     case 1:
       return cpuObject->y;
     case 2:
-      return cpuObject->z;
+      return cpuObject->z_per_layer;
     default:
       edm::LogError("HeterogeneousHGCalHEFConditionsWrapper") << "select_pointer_i(heterogeneous): no item.";
       return cpuObject->x;
+    }
+}
+
+std::vector<float>& HeterogeneousHGCalHEFConditionsWrapper::select_pointer_f_(cpos::HGCalPositionsMapping* cpuObject, 
+									      const unsigned int& item) {
+  switch(item) 
+    {
+    case 0:
+      return cpuObject->z_per_layer;
+    default:
+      edm::LogError("HeterogeneousHGCalHEFConditionsWrapper") << "select_pointer_i(non-heterogeneous): no item.";
+      return cpuObject->z_per_layer;
     }
 }
 
@@ -301,7 +316,7 @@ std::vector<int32_t>& HeterogeneousHGCalHEFConditionsWrapper::select_pointer_i_(
 										const unsigned int& item) {
   switch(item) 
     {
-    case 0:
+    case 1:
       return cpuObject->numberCellsHexagon;
     default:
       edm::LogError("HeterogeneousHGCalHEFConditionsWrapper") << "select_pointer_i(non-heterogeneous): no item.";
@@ -325,7 +340,7 @@ std::vector<uint32_t>& HeterogeneousHGCalHEFConditionsWrapper::select_pointer_u_
 										 const unsigned int& item) {
   switch(item) 
     {
-    case 1:
+    case 2:
       return cpuObject->detid;
     default:
       edm::LogError("HeterogeneousHGCalHEFConditionsWrapper") << "select_pointer_u(non-heterogeneous): no item.";
@@ -395,7 +410,7 @@ hgcal_conditions::HeterogeneousHEFConditionsESProduct const *HeterogeneousHGCalH
 	    //Important: The transfer does *not* start at posmap.x because the positions are not known in the CPU side!
 	    size_t position_memory_size_to_transfer = chunk_pos_ -  this->number_position_arrays*this->nelems_posmap_*sfloat; //size in bytes occupied by the non-position information
 	    std::cout <<  position_memory_size_to_transfer << ", " << chunk_pos_ << ", " << this->number_position_arrays*this->nelems_posmap_*sfloat << ", " << this->number_position_arrays*this->nelems_posmap_ << ", " << this->nelems_posmap_ << std::endl;
-	    gpuErrchk(cudaMemcpyAsync(data.host->posmap.numberCellsHexagon, this->posmap_.numberCellsHexagon, position_memory_size_to_transfer, cudaMemcpyHostToDevice, stream));
+	    gpuErrchk(cudaMemcpyAsync(data.host->posmap.z_per_layer, this->posmap_.z_per_layer, position_memory_size_to_transfer, cudaMemcpyHostToDevice, stream));
 	    
 	    // ... and then the payload object
 	    gpuErrchk(cudaMemcpyAsync(data.device, data.host, sizeof(hgcal_conditions::HeterogeneousHEFConditionsESProduct), cudaMemcpyHostToDevice, stream));

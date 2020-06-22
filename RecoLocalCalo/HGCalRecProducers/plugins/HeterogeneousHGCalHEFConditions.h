@@ -39,7 +39,7 @@ class HeterogeneousHGCalHEFConditionsWrapper {
   std::vector<size_t> sizes_pos_;
   size_t chunk_params_;
   size_t chunk_pos_;
-  const size_t number_position_arrays = 3; //x, y and z; required due to the assymetry between cpos::HeterogeneousHGCalPositionsMapping and cpos::HGCalPositionsMapping
+  const size_t number_position_arrays = 2; //x and y; required due to the assymetry between cpos::HeterogeneousHGCalPositionsMapping and cpos::HGCalPositionsMapping
   
   std::vector<size_t> calculate_memory_bytes_params_(const HGCalParameters*);
   std::vector<size_t> calculate_memory_bytes_pos_(cpos::HGCalPositionsMapping*);
@@ -55,6 +55,7 @@ class HeterogeneousHGCalHEFConditionsWrapper {
   std::vector<double> select_pointer_d_(const HGCalParameters*, const unsigned int&) const;
   //float
   float*& select_pointer_f_(cpos::HeterogeneousHGCalPositionsMapping*, const unsigned int&) const;
+  std::vector<float>& select_pointer_f_(cpos::HGCalPositionsMapping*, const unsigned int&);
   //int32_t
   int32_t*& select_pointer_i_(cpar::HeterogeneousHGCalHEFParameters*, const unsigned int&) const;
   std::vector<int32_t> select_pointer_i_(const HGCalParameters*, const unsigned int&) const;

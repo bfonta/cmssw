@@ -127,6 +127,7 @@ namespace hgcal_conditions {
 								 HeterogeneousHGCalPositionsType::Uint32_t };
     
     struct HGCalPositionsMapping {
+      std::vector<float> z_per_layer;
       std::vector<int32_t> numberCellsHexagon;
       std::vector<uint32_t> detid;
       //variables required for calculating the positions (x,y) from the detid in the GPU
@@ -143,7 +144,7 @@ namespace hgcal_conditions {
       //the x, y and z positions will not be filled in the CPU
       float* x;
       float* y;
-      float* z;
+      float* z_per_layer;
       int32_t *numberCellsHexagon;
       uint32_t *detid;
       //variables required for calculating the positions (x,y) from the detid in the GPU

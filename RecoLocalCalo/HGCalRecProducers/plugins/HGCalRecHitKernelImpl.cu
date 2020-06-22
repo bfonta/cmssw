@@ -153,7 +153,6 @@ void fill_positions_from_detids(const hgcal_conditions::HeterogeneousHEFConditio
       const float wU     = static_cast<float>( did.waferU() );
       const float wV     = static_cast<float>( did.waferV() );
       const float ncells = static_cast<float>( did.nCells() );
-      const float side   = static_cast<float>( did.zside()  );
       const int32_t layer =  did.layer();
       
       //based on `std::pair<float, float> HGCalDDDConstants::locateCell(const HGCSiliconDetId&, bool)
@@ -172,9 +171,8 @@ void fill_positions_from_detids(const hgcal_conditions::HeterogeneousHEFConditio
       xpos += (1.5f * (cV - ncells) + 1.f) * R1;
       ypos += (cU - 0.5f * cV - n2) * r1_x2;
 
-      conds->posmap.x[i] = xpos * side;
+      conds->posmap.x[i] = xpos; //* side; multiply by -1 if one wants to obtain the position from the opposite endcap
       conds->posmap.y[i] = ypos;
-      conds->posmap.z[i] = 1.3;
 
       //printf( "%d - %lf - %lf\n", cV - ncells, 1.5f*(static_cast<float>(cV) - static_cast<float>(ncells)), 1.5f*(static_cast<float>(cV - ncells)) );
       //printf("waferU: %d\t waferV: %d\t cellU: %d\t cellV: %d\t nCells: %d\t R1: %lf\t Layer: %d\t PosX: %lf\t PosY: %lf\t PosZ: %lf\n", wU, wV, cU, cV, ncells, R1, layer, conds->posmap.x[i], conds->posmap.y[i], conds->posmap.z[i]);
@@ -188,6 +186,9 @@ void print_positions_from_detids(const hgcal_conditions::HeterogeneousHEFConditi
 
   for (unsigned int i = tid; i < conds->nelems_posmap; i += blockDim.x * gridDim.x)
     {
-      printf("PosX: %lf\t PosY: %lf\t Posz: %lf\n", conds->posmap.x[i], conds->posmap.y[i], conds->posmap.z[i]);
+      HeterogeneousHGCSiliconDetId did(conds->posmap.detid[i]);
+      const int32_t layer = did.layer();
+      float posz = conds->posmap.z_per_layer[ layer-1 ]; //multiply by -1 if one wants to obtain the position from the opposite endcap
+      printf("PosX: %lf\t PosY: %lf\t Posz: %lf\n", conds->posmap.x[i], conds->posmap.y[i], posz);
     } 
 }
