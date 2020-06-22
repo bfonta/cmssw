@@ -88,10 +88,10 @@ __global__
 void ee_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const HGCeeUncalibratedRecHitConstantData cdata, int length)
 {
   unsigned int tid = blockDim.x * blockIdx.x + threadIdx.x;
-  HeterogeneousHGCSiliconDetId detid(src_soa.id_[tid]);
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
+      HeterogeneousHGCSiliconDetId detid(src_soa.id_[i]);
       double weight         = get_weight_from_layer(detid.layer(), cdata.weights_);
       double rcorr          = get_thickness_correction(detid.type(), cdata.rcorr_);
       double noise          = get_noise(detid.type(), cdata.noise_fC_);
@@ -110,7 +110,7 @@ void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
   
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
-      HeterogeneousHGCSiliconDetId detid(src_soa.id_[tid]);
+      HeterogeneousHGCSiliconDetId detid(src_soa.id_[i]);
       printf("cellCoarseY: %lf - cellX: %d - numberCellsHexagon: %d - DetId: %d - Var: %d\n", conds->params.cellCoarseY_[12], detid.cellX(), conds->posmap.numberCellsHexagon[0], conds->posmap.detid[9], conds->posmap.waferMax);
 
       double weight         = get_weight_from_layer(detid.layer(), cdata.weights_);
@@ -128,10 +128,10 @@ __global__
 void heb_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const HGChebUncalibratedRecHitConstantData cdata, int length)
 {
   unsigned int tid = blockDim.x * blockIdx.x + threadIdx.x;
-  HeterogeneousHGCScintillatorDetId detid(src_soa.id_[tid]);
 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
+      HeterogeneousHGCScintillatorDetId detid(src_soa.id_[i]);
       double weight        = get_weight_from_layer(detid.layer(), cdata.weights_);
       double noise         = cdata.noise_MIP_;
       double sigmaNoiseGeV = 1e-3 * noise * weight;
@@ -147,31 +147,38 @@ void fill_positions_from_detids(const hgcal_conditions::HeterogeneousHEFConditio
 
   for (unsigned int i = tid; i < conds->nelems_posmap; i += blockDim.x * gridDim.x)
     {
-      HeterogeneousHGCSiliconDetId did(conds->posmap.detid[tid]);
-      uint32_t cU = did.cellU();
-      uint32_t cV = did.cellV();
-      uint32_t wU = did.waferU();
-      uint32_t wV = did.waferV();
-      uint32_t ncells = did.nCells();
+      HeterogeneousHGCSiliconDetId did(conds->posmap.detid[i]);
+      const float cU     = static_cast<float>( did.cellU()  );
+      const float cV     = static_cast<float>( did.cellV()  );
+      const float wU     = static_cast<float>( did.waferU() );
+      const float wV     = static_cast<float>( did.waferV() );
+      const float ncells = static_cast<float>( did.nCells() );
+      const float side   = static_cast<float>( did.zside()  );
+      const int32_t layer =  did.layer();
       
-      float r = 0.5f * (conds->posmap.waferSize + conds->posmap.sensorSeparation);
-      float sqrt3 = __fsqrt_rn(3.);
-      float rsqrt3 = __frsqrt_rn(3.);
-      float R = 2.f * r * rsqrt3; //rsqrt: 1 / sqrt
-      uint32_t n2 = ncells / 2;
-      float yoff = rsqrt3 * 2.f * r; //CHANGE according to Sunanda's reply
+      //based on `std::pair<float, float> HGCalDDDConstants::locateCell(const HGCSiliconDetId&, bool)
+      const float r_x2 = conds->posmap.waferSize + conds->posmap.sensorSeparation;
+      const float r = 0.5f * r_x2;
+      const float sqrt3 = __fsqrt_rn(3.f);
+      const float rsqrt3 = __frsqrt_rn(3.f);//rsqrt: 1 / sqrt
+      const float R = r_x2 * rsqrt3;
+      const float n2 = ncells / 2.f;
+      const float yoff_abs = rsqrt3 * r_x2;
+      const float yoff = (layer%2==1) ? yoff_abs : -1.f * yoff_abs; //CHANGE according to Sunanda's reply
       float xpos = (-2.f * wU + wV) * r;
-      float ypos = yoff + (1.5 * wV * R);
-      float R1 = __fdividef( conds->posmap.waferSize, 3.f * ncells );
-      float r1 = 0.5 * R1 * sqrt3;
-      xpos += (1.5 * (cV - ncells) + 1.0) * R1;
-      ypos += (cU - 0.5 * cV - n2) * 2 * r1;
+      float ypos = yoff + (1.5f * wV * R);
+      const float R1 = __fdividef( conds->posmap.waferSize, 3.f * ncells );
+      const float r1_x2 = R1 * sqrt3;
+      xpos += (1.5f * (cV - ncells) + 1.f) * R1;
+      ypos += (cU - 0.5f * cV - n2) * r1_x2;
 
-      conds->posmap.x[tid] = xpos * did.zside();
-      conds->posmap.y[tid] = ypos;
-      conds->posmap.z[tid] = 1.3;
+      conds->posmap.x[i] = xpos * side;
+      conds->posmap.y[i] = ypos;
+      conds->posmap.z[i] = 1.3;
+
+      //printf( "%d - %lf - %lf\n", cV - ncells, 1.5f*(static_cast<float>(cV) - static_cast<float>(ncells)), 1.5f*(static_cast<float>(cV - ncells)) );
+      //printf("waferU: %d\t waferV: %d\t cellU: %d\t cellV: %d\t nCells: %d\t R1: %lf\t Layer: %d\t PosX: %lf\t PosY: %lf\t PosZ: %lf\n", wU, wV, cU, cV, ncells, R1, layer, conds->posmap.x[i], conds->posmap.y[i], conds->posmap.z[i]);
     }
-  
 }
 
 __global__
@@ -181,7 +188,6 @@ void print_positions_from_detids(const hgcal_conditions::HeterogeneousHEFConditi
 
   for (unsigned int i = tid; i < conds->nelems_posmap; i += blockDim.x * gridDim.x)
     {
-      printf("PosX: %lf - PosY: %lf - Posz: %lf - waferSize: %lf - sensorSeparation: %lf\n", conds->posmap.x[tid], conds->posmap.y[tid], conds->posmap.z[tid], conds->posmap.waferSize, conds->posmap.sensorSeparation);
-    }
-  
+      printf("PosX: %lf\t PosY: %lf\t Posz: %lf\n", conds->posmap.x[i], conds->posmap.y[i], conds->posmap.z[i]);
+    } 
 }
