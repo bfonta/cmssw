@@ -10,8 +10,6 @@ KernelManagerHGCalRecHit::KernelManagerHGCalRecHit(KernelModifiableData<HGCUncal
   ::nblocks_ = (data_->nhits_ + ::nthreads_.x - 1) / ::nthreads_.x;
   nbytes_host_ = (data_->h_out_)->nbytes_ * data_->stride_;
   nbytes_device_ = (data_->d_1_)->nbytes_ * data_->stride_;
-
-  printf("NUMBERS: %d - %d - %d\n", nblocks_.x, nthreads_.x, nblocks_.x*nthreads_.x);
 }
 
 KernelManagerHGCalRecHit::~KernelManagerHGCalRecHit()

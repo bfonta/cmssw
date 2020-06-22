@@ -129,6 +129,7 @@ void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup&
   */
 
   //fill the CPU position structure from the geometry
+  posmap_->z_per_layer.clear();
   posmap_->numberCellsHexagon.clear();
   posmap_->detid.clear();
 
@@ -147,7 +148,7 @@ void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup&
 
   //store detids following a geometry ordering
   for(int ilayer=1; ilayer<=posmap_->lastLayer; ++ilayer) {
-    //float z_ = iside<0 ? -1.f * static_cast<float>( ddd_->waferZ(ilayer, true) ) : static_cast<float>( ddd_->waferZ(ilayer, true) ); //originally a double
+    posmap_->z_per_layer.push_back( static_cast<float>( ddd_->waferZ(ilayer, true) ) ); //originally a double
     
     for(int iwaferU=posmap_->waferMin; iwaferU<posmap_->waferMax; ++iwaferU) {
       for(int iwaferV=posmap_->waferMin; iwaferV<posmap_->waferMax; ++iwaferV) {

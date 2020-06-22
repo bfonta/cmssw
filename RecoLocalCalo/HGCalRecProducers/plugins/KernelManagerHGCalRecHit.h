@@ -32,7 +32,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 
 namespace {
   dim3 nblocks_;
-  constexpr dim3 nthreads_(1); //some kernels will potentially not allocate shared memory properly with a lower number
+  constexpr dim3 nthreads_(256); //some kernels will potentially not allocate shared memory properly with a lower number
 }
 
 template <typename T>
