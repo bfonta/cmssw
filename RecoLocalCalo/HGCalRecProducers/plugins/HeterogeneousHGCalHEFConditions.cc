@@ -118,7 +118,7 @@ void HeterogeneousHGCalHEFConditionsWrapper::transfer_data_to_heterogeneous_poin
       }
 
     //copying the pointers' content
-    if( j>this->number_position_arrays ) //required due to the assymetry between cpos::HeterogeneousHGCalPositionsMapping and cpos::HGCalPositionsMapping
+    if( j>=this->number_position_arrays ) //required due to the assymetry between cpos::HeterogeneousHGCalPositionsMapping and cpos::HGCalPositionsMapping
       {
 	for(unsigned int i=cumsum_sizes[j]; i<cumsum_sizes[j+1]; ++i) 
 	  {
@@ -394,6 +394,7 @@ hgcal_conditions::HeterogeneousHEFConditionsESProduct const *HeterogeneousHGCalH
 
 	    //Important: The transfer does *not* start at posmap.x because the positions are not known in the CPU side!
 	    size_t position_memory_size_to_transfer = chunk_pos_ -  this->number_position_arrays*this->nelems_posmap_*sfloat; //size in bytes occupied by the non-position information
+	    std::cout <<  position_memory_size_to_transfer << ", " << chunk_pos_ << ", " << this->number_position_arrays*this->nelems_posmap_*sfloat << ", " << this->number_position_arrays*this->nelems_posmap_ << ", " << this->nelems_posmap_ << std::endl;
 	    gpuErrchk(cudaMemcpyAsync(data.host->posmap.numberCellsHexagon, this->posmap_.numberCellsHexagon, position_memory_size_to_transfer, cudaMemcpyHostToDevice, stream));
 	    
 	    // ... and then the payload object

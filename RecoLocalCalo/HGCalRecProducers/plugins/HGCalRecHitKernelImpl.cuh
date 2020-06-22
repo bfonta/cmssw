@@ -30,9 +30,9 @@ __global__
 void heb_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, HGChebUncalibratedRecHitConstantData cdata, int length);
 
 __global__
-void fill_positions_from_detids(const hgcal_conditions::HeterogeneousHEFConditionsESProduct* conds);
+void fill_positions_from_detids(const hgcal_conditions::HeterogeneousHEFConditionsESProduct*);
   
 __global__
-void print_positions_from_detids(const hgcal_conditions::HeterogeneousHEFConditionsESProduct* conds);
+void print_positions_from_detids(const hgcal_conditions::HeterogeneousHEFConditionsESProduct*);
   
 #endif //RecoLocalCalo_HGCalRecProducers_HGCalRecHitKernelImpl_cuh
