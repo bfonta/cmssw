@@ -33,6 +33,11 @@
 #include <iostream>
 #include <string>
 
+struct ValidRecHits {
+  std::vector<float> son;
+  std::vector<unsigned int> detid;
+};
+  
 class HeterogeneousHGCalRecHitsValidator : public edm::EDAnalyzer 
 {
  public:
@@ -42,22 +47,20 @@ class HeterogeneousHGCalRecHitsValidator : public edm::EDAnalyzer
   void endJob();
 
  private:
-  edm::EDGetTokenT<edm::HepMCProduct> mc_;
-  std::vector< edm::EDGetTokenT<HGCRecHitCollection> > recHitsTokens_;
-  edm::EDGetTokenT<reco::GenParticleCollection> genParticles_;
-
+  static const unsigned int nsubdetectors = 3; //ce-e, ce-h-fine, ce-h-coarse
+  static const unsigned int ncomputingdevices = 2; //cpu, gpu
+  //cpu amd gpu tokens and handles for the 3 subdetectors, cpu and gpu
+  std::array< std::array< edm::EDGetTokenT<HGChefRecHitCollection>, ncomputingdevices>, nsubdetectors> tokens_; 
+  std::array< std::array< edm::Handle<HGChefRecHitCollection>, ncomputingdevices>, nsubdetectors> handles_;
+  std::array< std::string, nsubdetectors> handles_str_ = {{"HGCalEESensitive", "HGCalHESiliconSensitive", "HGCalHEScintillatorSensitive"}};
   hgcal::RecHitTools recHitTools_;
-
-  std::vector< TH1F* > zhist;
-  std::vector< TH1F* > xhist;
-  std::vector< TH1F* > yhist; 
-  std::vector< TH1F* > zsidehist;
-  std::vector< TH1F* > ehist;
-  std::vector< TH1F* > layerhist;
-  std::vector< TH1F* > offsetlayerhist;
 
   TTree* tree_;
   std::string treename_;
+  ValidRecHits cpuValidRecHits, gpuValidRecHits;
+  //std::vector< TH1F* > zhist;
+
+  void set_geometry_(const edm::EventSetup&, const unsigned int&);
 };
  
 
