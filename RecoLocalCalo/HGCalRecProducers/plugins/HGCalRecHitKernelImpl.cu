@@ -171,7 +171,7 @@ void fill_positions_from_detids(const hgcal_conditions::HeterogeneousHEFConditio
       xpos += (1.5f * (cV - ncells) + 1.f) * R1;
       ypos += (cU - 0.5f * cV - n2) * r1_x2;
 
-      conds->posmap.x[i] = xpos; //* side; multiply by -1 if one wants to obtain the position from the opposite endcap
+      conds->posmap.x[i] = xpos; //* side; multiply by -1 if one wants to obtain the position from the opposite endcap. CAREFUL WITH LATER DETECTOR ALIGNMENT!!!
       conds->posmap.y[i] = ypos;
 
       //printf( "%d - %lf - %lf\n", cV - ncells, 1.5f*(static_cast<float>(cV) - static_cast<float>(ncells)), 1.5f*(static_cast<float>(cV - ncells)) );
@@ -188,7 +188,7 @@ void print_positions_from_detids(const hgcal_conditions::HeterogeneousHEFConditi
     {
       HeterogeneousHGCSiliconDetId did(conds->posmap.detid[i]);
       const int32_t layer = did.layer();
-      float posz = conds->posmap.z_per_layer[ layer-1 ]; //multiply by -1 if one wants to obtain the position from the opposite endcap
+      float posz = conds->posmap.z_per_layer[ layer-1 ];
       printf("PosX: %lf\t PosY: %lf\t Posz: %lf\n", conds->posmap.x[i], conds->posmap.y[i], posz);
     } 
 }

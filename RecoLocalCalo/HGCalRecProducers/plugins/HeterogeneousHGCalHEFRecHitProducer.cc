@@ -135,6 +135,7 @@ void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup&
 
   int upper_estimate_wafer_number  = 2 * ddd_->lastLayer(true) * (ddd_->waferMax() - ddd_->waferMin());
   int upper_estimate_cell_number = upper_estimate_wafer_number * 24 * 24; 
+  posmap_->z_per_layer.resize( (ddd_->lastLayer(true) - ddd_->firstLayer()) * 2 );
   posmap_->numberCellsHexagon.reserve(upper_estimate_wafer_number);
   posmap_->detid.reserve(upper_estimate_cell_number);
   //set positons-related variables
@@ -148,7 +149,8 @@ void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup&
 
   //store detids following a geometry ordering
   for(int ilayer=1; ilayer<=posmap_->lastLayer; ++ilayer) {
-    posmap_->z_per_layer.push_back( static_cast<float>( ddd_->waferZ(ilayer, true) ) ); //originally a double
+    posmap_->z_per_layer[ilayer-1+(ddd_->lastLayer(true) - ddd_->firstLayer())] = static_cast<float>( ddd_->waferZ(ilayer, true) ); //originally a double
+    posmap_->z_per_layer[ilayer-1] = static_cast<float>( ddd_->waferZ(-ilayer, true) ); //originally a double
     
     for(int iwaferU=posmap_->waferMin; iwaferU<posmap_->waferMax; ++iwaferU) {
       for(int iwaferV=posmap_->waferMin; iwaferV<posmap_->waferMax; ++iwaferV) {

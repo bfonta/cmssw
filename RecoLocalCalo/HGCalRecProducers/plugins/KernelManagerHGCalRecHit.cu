@@ -52,17 +52,18 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChefUncali
 {
   transfer_soas_to_device_();
 
-  fill_positions_from_detids<<<::nblocks_,::nthreads_>>>(d_conds);
-  after_();
+  //fill_positions_from_detids<<<::nblocks_,::nthreads_>>>(d_conds);
+  //after_();
   
-  print_positions_from_detids<<<::nblocks_,::nthreads_>>>(d_conds);
+  //print_positions_from_detids<<<::nblocks_,::nthreads_>>>(d_conds);
   /*
   hef_step1<<<::nblocks_,::nthreads_>>>( *(data_->d_2), *(data_->d_1_), d_kcdata->data, data_->nhits_);
   after_();
   reuse_device_pointers_();
   */
 
-  //hef_to_rechit<<<::nblocks_,::nthreads_>>>( *(data_->d_out_), *(data_->d_1_), kcdata->data_, d_conds, data_->nhits_ );
+  after_();
+  hef_to_rechit<<<::nblocks_,::nthreads_>>>( *(data_->d_out_), *(data_->d_1_), kcdata->data_, d_conds, data_->nhits_ );
   after_();
 
   transfer_soa_to_host_and_synchronize_();
