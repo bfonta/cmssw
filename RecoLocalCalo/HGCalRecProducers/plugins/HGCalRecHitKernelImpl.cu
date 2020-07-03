@@ -25,7 +25,7 @@ void make_rechit(unsigned int tid, HGCRecHitSoA& dst_soa, HGCUncalibratedRecHitS
   float son = __fdividef( dst_soa.energy_[tid], sigmaNoiseGeV);
   float son_norm = fminf(32.f, son) / 32.f * ((1 << 8)-1);
   long int son_round = lroundf( son_norm );
-  //there is an extra 0.125 factor in HGCRecHit::signalOverSigmaNoise()
+  //there is an extra 0.125 factor in HGCRecHit::signalOverSigmaNoise(), which should not affect CPU/GPU comparison
   dst_soa.son_[tid] = static_cast<uint8_t>( son_round );
 
   if(heb_flag==0)
