@@ -48,7 +48,7 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
   unsigned int nhitsmax_ = 0;
   unsigned int stride_ = 0;
   edm::EDGetTokenT<HGChefUncalibratedRecHitCollection> token_;
-  const std::string collection_name_ = "HeterogeneousHGChefUncalibratedRecHits";
+  const std::string collection_name_ = "HeterogeneousHGCalHEFRecHits";
   edm::Handle<HGChefUncalibratedRecHitCollection> handle_hef_; 
   size_t handle_size_;
   std::unique_ptr< HGChefRecHitCollection > rechits_;

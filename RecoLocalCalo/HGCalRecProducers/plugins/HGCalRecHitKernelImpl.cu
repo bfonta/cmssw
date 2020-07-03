@@ -111,7 +111,7 @@ void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
       HeterogeneousHGCSiliconDetId detid(src_soa.id_[i]);
-      printf("cellCoarseY: %lf - cellX: %d - numberCellsHexagon: %d - DetId: %d - Var: %d\n", conds->params.cellCoarseY_[12], detid.cellX(), conds->posmap.numberCellsHexagon[0], conds->posmap.detid[9], conds->posmap.waferMax);
+      //printf("cellCoarseY: %lf - cellX: %d - numberCellsHexagon: %d - DetId: %d - Var: %d\n", conds->params.cellCoarseY_[12], detid.cellX(), conds->posmap.numberCellsHexagon[0], conds->posmap.detid[9], conds->posmap.waferMax);
 
       double weight         = get_weight_from_layer(detid.layer(), cdata.weights_);
       double rcorr          = get_thickness_correction(detid.type(), cdata.rcorr_);

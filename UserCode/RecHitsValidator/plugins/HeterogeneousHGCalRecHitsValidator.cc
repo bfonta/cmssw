@@ -18,12 +18,12 @@
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
 HeterogeneousHGCalRecHitsValidator::HeterogeneousHGCalRecHitsValidator( const edm::ParameterSet &ps ) : 
-  tokens_( {{ {{consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("cpuRecHitsCEEToken")),
-		consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("gpuRecHitsCEEToken"))}},
-	      {{consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("cpuRecHitsCEEToken")),
-		consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("gpuRecHitsCEEToken"))}},
-	      {{consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("cpuRecHitsCEEToken")),
-		consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("gpuRecHitsCEEToken"))}} }} ),
+  tokens_( {{ {{consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("cpuRecHitsHSiToken")),
+		consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("gpuRecHitsHSiToken"))}},
+	      {{consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("cpuRecHitsHSiToken")),
+		consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("gpuRecHitsHSiToken"))}},
+	      {{consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("cpuRecHitsHSiToken")),
+		consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("gpuRecHitsHSiToken"))}} }} ),
   treename_("tree")
 {
   edm::Service<TFileService> fs;
@@ -69,12 +69,17 @@ void HeterogeneousHGCalRecHitsValidator::analyze(const edm::Event &event, const 
       const HGCRecHit &cpuHit = cpuhits[i];
       const HGCRecHit &gpuHit = gpuhits[i];
 
+      /*
       const HGCalDetId cpuDetid = cpuHit.detid();
       const HGCalDetId gpuDetid = gpuHit.detid();
+      */
+      const float cpuSoN = cpuHit.signalOverSigmaNoise();
+      const float gpuSoN = gpuHit.signalOverSigmaNoise();
+      /*
       cpuValidRecHits.detid.push_back( cpuDetid );
       gpuValidRecHits.detid.push_back( gpuDetid );
-
-      std::cout << cpuDetid << ", " << gpuDetid << std::endl;
+      */
+      std::cout << gpuSoN << ", " << cpuSoN << std::endl;
     }
   }    
   tree_->Fill();
