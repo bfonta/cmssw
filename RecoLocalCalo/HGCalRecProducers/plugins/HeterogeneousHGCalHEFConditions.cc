@@ -80,7 +80,7 @@ void HeterogeneousHGCalHEFConditionsWrapper::transfer_data_to_heterogeneous_poin
 
 void HeterogeneousHGCalHEFConditionsWrapper::transfer_data_to_heterogeneous_pointers_pos_(const std::vector<size_t>& sz, cpos::HGCalPositionsMapping* cpuPos)
 {
-  //store cumulative sum in bytes and convert it to sizes in units of C++ typesHEF, i.e., number if items to be transferred to GPU
+  //store cumulative sum in bytes and convert it to sizes in units of C++ cpos::types, i.e., number if items to be transferred to GPU
   std::vector<size_t> cumsum_sizes( sz.size()+1, 0 ); //starting with zero
   std::partial_sum(sz.begin(), sz.end(), cumsum_sizes.begin()+1);
   for(unsigned int i=1; i<cumsum_sizes.size(); ++i) //start at second element (the first is zero)
@@ -181,12 +181,14 @@ std::vector<size_t> HeterogeneousHGCalHEFConditionsWrapper::calculate_memory_byt
   std::vector<size_t> sizes(npointers);
   for(unsigned int i=0; i<npointers; ++i)
     {
-      if(cpos::types[i] == cpos::HeterogeneousHGCalPositionsType::Float)
-	sizes[i] = select_pointer_u_(cpuPos, 1).size(); //each position array (x, y and z) will have the same size as the detid array
+      if(cpos::types[i] == cpos::HeterogeneousHGCalPositionsType::Float and i<2)
+	sizes[i] = select_pointer_u_(cpuPos, 2).size(); //each position array (x, y) will have the same size as the detid array
+      else if(cpos::types[i] == cpos::HeterogeneousHGCalPositionsType::Float and i==2)
+	sizes[i] = 44; //the z position array will only include one value per layer (each HEF endcap has 22 layers)
       else if(cpos::types[i] == cpos::HeterogeneousHGCalPositionsType::Int32_t)
-	sizes[i] = select_pointer_i_(cpuPos, 0).size();
+	sizes[i] = select_pointer_i_(cpuPos, 1).size();
       else if(cpos::types[i] == cpos::HeterogeneousHGCalPositionsType::Uint32_t)
-	sizes[i] = select_pointer_u_(cpuPos, 1).size();
+	sizes[i] = select_pointer_u_(cpuPos, 2).size();
     }
 
   std::vector<size_t> sizes_units(npointers);
@@ -259,7 +261,7 @@ float*& HeterogeneousHGCalHEFConditionsWrapper::select_pointer_f_(cpos::Heteroge
     case 2:
       return cpuObject->z_per_layer;
     default:
-      edm::LogError("HeterogeneousHGCalHEFConditionsWrapper") << "select_pointer_i(heterogeneous): no item.";
+      edm::LogError("HeterogeneousHGCalHEFConditionsWrapper") << "select_pointer_f(heterogeneous): no item.";
       return cpuObject->x;
     }
 }
@@ -271,7 +273,7 @@ std::vector<float>& HeterogeneousHGCalHEFConditionsWrapper::select_pointer_f_(cp
     case 0:
       return cpuObject->z_per_layer;
     default:
-      edm::LogError("HeterogeneousHGCalHEFConditionsWrapper") << "select_pointer_i(non-heterogeneous): no item.";
+      edm::LogError("HeterogeneousHGCalHEFConditionsWrapper") << "select_pointer_f(non-heterogeneous): no item.";
       return cpuObject->z_per_layer;
     }
 }
@@ -283,7 +285,7 @@ int32_t*& HeterogeneousHGCalHEFConditionsWrapper::select_pointer_i_(cpar::Hetero
     case 4:
       return cpuObject->waferTypeL_;
     default:
-      edm::LogError("HeterogeneousHGCalHEFConditionsWrapper") << "select_pointer_i(heterogeneous): no item.";
+      edm::LogError("HeterogeneousHGCalHEFConditionsWrapper") << "select_pointer_i(heterogeneous, parameters): no item.";
       return cpuObject->waferTypeL_;
     }
 }
@@ -295,7 +297,7 @@ std::vector<int32_t> HeterogeneousHGCalHEFConditionsWrapper::select_pointer_i_(c
     case 4:
       return cpuObject->waferTypeL_;
     default:
-      edm::LogError("HeterogeneousHGCalHEFConditionsWrapper") << "select_pointer_i(non-heterogeneous): no item.";
+      edm::LogError("HeterogeneousHGCalHEFConditionsWrapper") << "select_pointer_i(non-heterogeneous, parameters): no item.";
       return cpuObject->waferTypeL_;
     }
 }
@@ -307,7 +309,7 @@ int32_t*& HeterogeneousHGCalHEFConditionsWrapper::select_pointer_i_(cpos::Hetero
     case 3:
       return cpuObject->numberCellsHexagon;
     default:
-      edm::LogError("HeterogeneousHGCalHEFConditionsWrapper") << "select_pointer_i(heterogeneous): no item.";
+      edm::LogError("HeterogeneousHGCalHEFConditionsWrapper") << "select_pointer_i(heterogeneous, positions mapping): no item.";
       return cpuObject->numberCellsHexagon;
     }
 }
@@ -319,7 +321,8 @@ std::vector<int32_t>& HeterogeneousHGCalHEFConditionsWrapper::select_pointer_i_(
     case 1:
       return cpuObject->numberCellsHexagon;
     default:
-      edm::LogError("HeterogeneousHGCalHEFConditionsWrapper") << "select_pointer_i(non-heterogeneous): no item.";
+      edm::LogError("HeterogeneousHGCalHEFConditionsWrapper") << "select_pointer_i(non-heterogeneous, positions mapping): no item "
+							      << item;
       return cpuObject->numberCellsHexagon;
     }
 }
@@ -343,7 +346,8 @@ std::vector<uint32_t>& HeterogeneousHGCalHEFConditionsWrapper::select_pointer_u_
     case 2:
       return cpuObject->detid;
     default:
-      edm::LogError("HeterogeneousHGCalHEFConditionsWrapper") << "select_pointer_u(non-heterogeneous): no item.";
+      edm::LogError("HeterogeneousHGCalHEFConditionsWrapper") << "select_pointer_u(non-heterogeneous): no item "
+							      << item;
       return cpuObject->detid;
     }
 }
@@ -409,7 +413,7 @@ hgcal_conditions::HeterogeneousHEFConditionsESProduct const *HeterogeneousHGCalH
 
 	    //Important: The transfer does *not* start at posmap.x because the positions are not known in the CPU side!
 	    size_t position_memory_size_to_transfer = chunk_pos_ -  this->number_position_arrays*this->nelems_posmap_*sfloat; //size in bytes occupied by the non-position information
-	    std::cout <<  position_memory_size_to_transfer << ", " << chunk_pos_ << ", " << this->number_position_arrays*this->nelems_posmap_*sfloat << ", " << this->number_position_arrays*this->nelems_posmap_ << ", " << this->nelems_posmap_ << std::endl;
+	    //std::cout <<  position_memory_size_to_transfer << ", " << chunk_pos_ << ", " << this->number_position_arrays*this->nelems_posmap_*sfloat << ", " << this->number_position_arrays*this->nelems_posmap_ << ", " << this->nelems_posmap_ << std::endl;
 	    gpuErrchk(cudaMemcpyAsync(data.host->posmap.z_per_layer, this->posmap_.z_per_layer, position_memory_size_to_transfer, cudaMemcpyHostToDevice, stream));
 	    
 	    // ... and then the payload object
