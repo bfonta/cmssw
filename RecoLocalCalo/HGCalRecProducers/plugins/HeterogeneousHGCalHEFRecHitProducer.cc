@@ -241,7 +241,7 @@ void HeterogeneousHGCalHEFRecHitProducer::convert_soa_data_to_collection_(HGCRec
   for(uint i=0; i<nhits; ++i)
     {
       DetId id_converted( d->id_[i] );
-      rechits.emplace_back( HGCRecHit(id_converted, d->energy_[i], d->time_[i], 0, d->flagBits_[i]) );
+      rechits.emplace_back( HGCRecHit(id_converted, d->energy_[i], d->time_[i], 0, d->flagBits_[i], d->son_[i], d->timeError_[i]) );
     }
 }
 
