@@ -45,7 +45,7 @@ class HeterogeneousHGCalHEBRecHitProducer: public edm::stream::EDProducer<edm::E
   unsigned int nhitsmax_ = 0;
   unsigned int stride_ = 0;
   edm::EDGetTokenT<HGChebUncalibratedRecHitCollection> token_;
-  const std::string collection_name_ = "HeterogeneousHGChebUncalibratedRecHits";
+  const std::string collection_name_ = "HeterogeneousHGCalHEBRecHits";
   edm::Handle<HGChebUncalibratedRecHitCollection> handle_heb_; 
   size_t handle_size_;
   std::unique_ptr< HGChebRecHitCollection > rechits_;
