@@ -67,7 +67,7 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
   cms::cuda::host::unique_ptr<std::byte[]> mem_out_;
 
   //conditions (geometry, topology, ...)
-  void set_conditions_(const edm::EventSetup&);
+  void set_conditions_(const edm::EventSetup&, HGChefUncalibratedRecHitConstantData&);
   std::unique_ptr<hgcal::RecHitTools> tools_;
   const hgcal_conditions::HeterogeneousHEFConditionsESProduct* d_conds = nullptr;
   const HGCalDDDConstants* ddd_ = nullptr;

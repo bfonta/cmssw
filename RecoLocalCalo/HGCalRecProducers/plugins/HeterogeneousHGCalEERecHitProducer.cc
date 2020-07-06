@@ -54,15 +54,15 @@ std::string HeterogeneousHGCalEERecHitProducer::assert_error_message_(std::strin
 
 void HeterogeneousHGCalEERecHitProducer::assert_sizes_constants_(const HGCConstantVectorData& vd)
 {
-  if( vdata_.fCPerMIP_.size() > maxsizes_constants::hef_fCPerMIP )
+  if( vdata_.fCPerMIP_.size() > maxsizes_constants::ee_fCPerMIP )
     cms::cuda::LogError("MaxSizeExceeded") << this->assert_error_message_("fCPerMIP", vdata_.fCPerMIP_.size());
-  else if( vdata_.cce_.size() > maxsizes_constants::hef_cce )
+  else if( vdata_.cce_.size() > maxsizes_constants::ee_cce )
     cms::cuda::LogError("MaxSizeExceeded") << this->assert_error_message_("cce", vdata_.cce_.size());
-  else if( vdata_.noise_fC_.size() > maxsizes_constants::hef_noise_fC )
+  else if( vdata_.noise_fC_.size() > maxsizes_constants::ee_noise_fC )
     cms::cuda::LogError("MaxSizeExceeded") << this->assert_error_message_("noise_fC", vdata_.noise_fC_.size());
-  else if( vdata_.rcorr_.size() > maxsizes_constants::hef_rcorr ) 
+  else if( vdata_.rcorr_.size() > maxsizes_constants::ee_rcorr ) 
     cms::cuda::LogError("MaxSizeExceeded") << this->assert_error_message_("rcorr", vdata_.rcorr_.size());
-  else if( vdata_.weights_.size() > maxsizes_constants::hef_weights ) 
+  else if( vdata_.weights_.size() > maxsizes_constants::ee_weights ) 
     cms::cuda::LogError("MaxSizeExceeded") << this->assert_error_message_("weights", vdata_.weights_.size());
 }
 

@@ -6,14 +6,14 @@
 #include "HGCalRecHitKernelImpl.cuh"
 
 __device__ 
-double get_weight_from_layer(const int& layer, const double (&weights)[maxsizes_constants::hef_weights])
+float get_weight_from_layer(const int& layer, const double (&weights)[maxsizes_constants::hef_weights])
 {
-  return weights[layer];
+  return (float)weights[layer];
 }
 
 __device__
 void make_rechit(unsigned int tid, HGCRecHitSoA& dst_soa, HGCUncalibratedRecHitSoA& src_soa, const bool &heb_flag, 
-		 const double& weight, const double& rcorr, const double& cce_correction, const double &sigmaNoiseGeV,
+		 const float& weight, const float& rcorr, const float& cce_correction, const float &sigmaNoiseGeV,
 		 const float& xmin, const float& xmax, const float& aterm, const float& cterm)
 {
   dst_soa.id_[tid] = src_soa.id_[tid];
@@ -21,7 +21,10 @@ void make_rechit(unsigned int tid, HGCRecHitSoA& dst_soa, HGCUncalibratedRecHitS
   if(!heb_flag)
     dst_soa.energy_[tid] *=  __fdividef(rcorr, cce_correction);
   dst_soa.time_[tid] = src_soa.jitter_[tid];
-  dst_soa.flagBits_[tid] |= (0x1 << HGCRecHit::kGood);
+
+  HeterogeneousHGCSiliconDetId detid(src_soa.id_[tid]);
+  dst_soa.flagBits_[tid] = detid.layer() + 28;
+  //dst_soa.flagBits_[tid] |= (0x1 << HGCRecHit::kGood);
   float son = __fdividef( dst_soa.energy_[tid], sigmaNoiseGeV);
   float son_norm = fminf(32.f, son) / 32.f * ((1 << 8)-1);
   long int son_round = lroundf( son_norm );
@@ -47,27 +50,27 @@ void make_rechit(unsigned int tid, HGCRecHitSoA& dst_soa, HGCUncalibratedRecHitS
 }
 
 __device__ 
-double get_thickness_correction(const int& type, const double (&rcorr)[maxsizes_constants::hef_rcorr])
+float get_thickness_correction(const int& type, const double (&rcorr)[maxsizes_constants::hef_rcorr])
 {
-  return rcorr[type];
+  return __fdividef( 1.f,  (float)rcorr[type] );
 }
 
 __device__
-double get_noise(const int& type, const double (&noise_fC)[maxsizes_constants::hef_noise_fC])
+float get_noise(const int& type, const double (&noise_fC)[maxsizes_constants::hef_noise_fC])
 {
-  return noise_fC[type - 1];
+  return (float)noise_fC[type];
 }
 
 __device__
-double get_cce_correction(const int& type, const double (&cce)[maxsizes_constants::hef_cce])
+float get_cce_correction(const int& type, const double (&cce)[maxsizes_constants::hef_cce])
 {
-  return cce[type - 1];
+  return (float)cce[type];
 }
 
 __device__ 
-double get_fCPerMIP(const int& type, const double (&fCPerMIP)[maxsizes_constants::hef_fCPerMIP])
+float get_fCPerMIP(const int& type, const double (&fCPerMIP)[maxsizes_constants::hef_fCPerMIP])
 {
-  return fCPerMIP[type - 1];
+  return (float)fCPerMIP[type];
 }
 
 __global__
@@ -93,12 +96,12 @@ void ee_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const 
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
       HeterogeneousHGCSiliconDetId detid(src_soa.id_[i]);
-      double weight         = get_weight_from_layer(detid.layer(), cdata.weights_);
-      double rcorr          = get_thickness_correction(detid.type(), cdata.rcorr_);
-      double noise          = get_noise(detid.type(), cdata.noise_fC_);
-      double cce_correction = get_cce_correction(detid.type(), cdata.cce_);
-      double fCPerMIP       = get_fCPerMIP(detid.type(), cdata.fCPerMIP_);
-      double sigmaNoiseGeV  = 1e-3 * weight * rcorr * __fdividef( noise,  fCPerMIP );
+      float weight         = get_weight_from_layer(detid.layer(), cdata.weights_);
+      float rcorr          = get_thickness_correction(detid.type(), cdata.rcorr_);
+      float noise          = get_noise(detid.type(), cdata.noise_fC_);
+      float cce_correction = get_cce_correction(detid.type(), cdata.cce_);
+      float fCPerMIP       = get_fCPerMIP(detid.type(), cdata.fCPerMIP_);
+      float sigmaNoiseGeV  = 1e-3 * weight * rcorr * __fdividef( noise,  fCPerMIP );
       make_rechit(i, dst_soa, src_soa, false, weight, rcorr, cce_correction, sigmaNoiseGeV,
 		  cdata.xmin_, cdata.xmax_, cdata.aterm_, cdata.cterm_);
     }
@@ -113,13 +116,13 @@ void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
     {
       HeterogeneousHGCSiliconDetId detid(src_soa.id_[i]);
       //printf("cellCoarseY: %lf - cellX: %d - numberCellsHexagon: %d - DetId: %d - Var: %d\n", conds->params.cellCoarseY_[12], detid.cellX(), conds->posmap.numberCellsHexagon[0], conds->posmap.detid[9], conds->posmap.waferMax);
-
-      double weight         = get_weight_from_layer(detid.layer(), cdata.weights_);
-      double rcorr          = get_thickness_correction(detid.type(), cdata.rcorr_);
-      double noise          = get_noise(detid.type(), cdata.noise_fC_);
-      double cce_correction = get_cce_correction(detid.type(), cdata.cce_);
-      double fCPerMIP       = get_fCPerMIP(detid.type(), cdata.fCPerMIP_);
-      double sigmaNoiseGeV  = 1e-3 * weight * rcorr * __fdividef( noise,  fCPerMIP );
+      uint32_t layer = detid.layer() + cdata.layerOffset_;
+      float weight         = get_weight_from_layer(layer, cdata.weights_);
+      float rcorr          = get_thickness_correction(detid.type(), cdata.rcorr_);
+      float noise          = get_noise(detid.type(), cdata.noise_fC_);
+      float cce_correction = get_cce_correction(detid.type(), cdata.cce_);
+      float fCPerMIP       = get_fCPerMIP(detid.type(), cdata.fCPerMIP_);
+      float sigmaNoiseGeV  = 1e-3 * weight * rcorr * __fdividef( noise,  fCPerMIP );
       make_rechit(i, dst_soa, src_soa, false, weight, rcorr, cce_correction, sigmaNoiseGeV,
 		  cdata.xmin_, cdata.xmax_, cdata.aterm_, cdata.cterm_);
     }
@@ -133,9 +136,11 @@ void heb_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
       HeterogeneousHGCScintillatorDetId detid(src_soa.id_[i]);
-      double weight        = get_weight_from_layer(detid.layer(), cdata.weights_);
-      double noise         = cdata.noise_MIP_;
-      double sigmaNoiseGeV = 1e-3 * noise * weight;
+      uint32_t layer = detid.layer(); //+ cdata.layerOffset_; CHECK LAYERS!!!!!!!
+      //printf("layer: %d\n", layer);
+      float weight        = get_weight_from_layer(layer, cdata.weights_);
+      float noise         = cdata.noise_MIP_;
+      float sigmaNoiseGeV = 1e-3 * noise * weight;
       make_rechit(i, dst_soa, src_soa, true, weight, 0., 0., sigmaNoiseGeV,
 		  0, 0, 0, 0);
     }
