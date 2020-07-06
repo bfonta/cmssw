@@ -8,6 +8,7 @@ HeterogeneousHGCalHEFRecHitProducer::HeterogeneousHGCalHEFRecHitProducer(const e
   cdata_.xmax_              = ps.getParameter<double>("maxValSiPar"); //float
   cdata_.aterm_             = ps.getParameter<double>("constSiPar"); //float
   cdata_.cterm_             = ps.getParameter<double>("noiseSiPar"); //float
+  //cdata_.layerOffset_       = ps.getParameter<double>("fhOffset");
   vdata_.fCPerMIP_          = ps.getParameter< std::vector<double> >("HGCHEF_fCPerMIP");
   vdata_.cce_               = ps.getParameter<edm::ParameterSet>("HGCHEF_cce").getParameter<std::vector<double> >("values");
   vdata_.noise_fC_          = ps.getParameter<edm::ParameterSet>("HGCHEF_noise_fC").getParameter<std::vector<double> >("values");
@@ -50,22 +51,22 @@ std::string HeterogeneousHGCalHEFRecHitProducer::assert_error_message_(std::stri
 
 void HeterogeneousHGCalHEFRecHitProducer::assert_sizes_constants_(const HGCConstantVectorData& vd)
 {
-  if( vdata_.fCPerMIP_.size() > maxsizes_constants::hef_fCPerMIP )
-    cms::cuda::LogError("MaxSizeExceeded") << this->assert_error_message_("fCPerMIP", vdata_.fCPerMIP_.size());
-  else if( vdata_.cce_.size() > maxsizes_constants::hef_cce )
-    cms::cuda::LogError("MaxSizeExceeded") << this->assert_error_message_("cce", vdata_.cce_.size());
-  else if( vdata_.noise_fC_.size() > maxsizes_constants::hef_noise_fC )
-    cms::cuda::LogError("MaxSizeExceeded") << this->assert_error_message_("noise_fC", vdata_.noise_fC_.size());
-  else if( vdata_.rcorr_.size() > maxsizes_constants::hef_rcorr ) 
-    cms::cuda::LogError("MaxSizeExceeded") << this->assert_error_message_("rcorr", vdata_.rcorr_.size());
-  else if( vdata_.weights_.size() > maxsizes_constants::hef_weights ) 
-    cms::cuda::LogError("MaxSizeExceeded") << this->assert_error_message_("weights", vdata_.weights_.size());
+  if( vdata_.fCPerMIP_.size() != maxsizes_constants::hef_fCPerMIP )
+    cms::cuda::LogError("WrongSize") << this->assert_error_message_("fCPerMIP", vdata_.fCPerMIP_.size());
+  else if( vdata_.cce_.size() != maxsizes_constants::hef_cce )
+    cms::cuda::LogError("WrongSize") << this->assert_error_message_("cce", vdata_.cce_.size());
+  else if( vdata_.noise_fC_.size() != maxsizes_constants::hef_noise_fC )
+    cms::cuda::LogError("WrongSize") << this->assert_error_message_("noise_fC", vdata_.noise_fC_.size());
+  else if( vdata_.rcorr_.size() != maxsizes_constants::hef_rcorr ) 
+    cms::cuda::LogError("WrongSize") << this->assert_error_message_("rcorr", vdata_.rcorr_.size());
+  else if( vdata_.weights_.size() != maxsizes_constants::hef_weights ) 
+    cms::cuda::LogError("WrongSize") << this->assert_error_message_("weights", vdata_.weights_.size());
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {
   const cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w), ctxState_};
 
-  set_conditions_(setup);
+  set_conditions_(setup, cdata_);
   HeterogeneousHGCalHEFConditionsWrapper esproduct(params_, posmap_);
   d_conds = esproduct.getHeterogeneousConditionsESProductAsync(ctx.stream());
 
@@ -87,7 +88,7 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
   convert_soa_data_to_collection_(*rechits_, calibSoA_, nhits);
 }
 
-void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup& setup) {
+void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup& setup, HGChefUncalibratedRecHitConstantData& cdata) {
   tools_->getEventSetup(setup);
   std::string handle_str;
   handle_str = "HGCalHESiliconSensitive";
@@ -95,6 +96,7 @@ void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup&
   setup.get<IdealGeometryRecord>().get(handle_str, handle);
   ddd_ = &( handle->topology().dddConstants() );
   params_ = ddd_->getParameter();
+  cdata.layerOffset_ = params_->layerOffset_; //=28 (6-07-2020)
 
   /* Geometry Inspection
   int counter = 0;
@@ -214,7 +216,11 @@ void HeterogeneousHGCalHEFRecHitProducer::convert_constant_data_(KernelConstantD
   for(size_t i=0; i<kcdata->vdata_.noise_fC_.size(); ++i)
     kcdata->data_.noise_fC_[i] = kcdata->vdata_.noise_fC_[i];
   for(size_t i=0; i<kcdata->vdata_.rcorr_.size(); ++i)
-    kcdata->data_.rcorr_[i] = kcdata->vdata_.rcorr_[i];
+    {
+      kcdata->data_.rcorr_[i] = kcdata->vdata_.rcorr_[i];
+      std::cout << kcdata->vdata_.rcorr_.size() << ", " << kcdata->vdata_.rcorr_[i] << std::endl;
+    }
+
   for(size_t i=0; i<kcdata->vdata_.weights_.size(); ++i)
     kcdata->data_.weights_[i] = kcdata->vdata_.weights_[i];
 }
