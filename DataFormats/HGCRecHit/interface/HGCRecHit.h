@@ -102,8 +102,8 @@ public:
   /// check if one of the flags in a set is true
   bool checkFlags(const std::vector<int>& flagsvec) const;
 
-  //REMOVE!!!!!
-  int layer() const { return flagBits_; }
+  //added for validation
+  uint32_t flagBits() const { return flagBits_; }
 
 private:
   /// store rechit condition (see Flags enum) in a bit-wise way
