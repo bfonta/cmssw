@@ -50,14 +50,17 @@ process.options = cms.untracked.PSet(
 process.HeterogeneousHGCalEERecHits = HeterogeneousHGCalEERecHits.clone()
 process.HeterogeneousHGCalHEFRecHits = HeterogeneousHGCalHEFRecHits.clone()
 process.HeterogeneousHGCalHEBRecHits = HeterogeneousHGCalHEBRecHits.clone()
+process.task_HeterogeneousHGCalEERecHits = cms.Task( process.HeterogeneousHGCalEERecHits )
+process.task_HeterogeneousHGCalHEFRecHits = cms.Task( process.HeterogeneousHGCalHEFRecHits )
+process.task_HeterogeneousHGCalHEBRecHits = cms.Task( process.HeterogeneousHGCalHEBRecHits )
 process.HGCalRecHits = HGCalRecHit.clone() #CPU version
 
 from HeterogeneousCore.CUDACore.SwitchProducerCUDA import SwitchProducerCUDA
 process.switch = SwitchProducerCUDA( cpu = process.HGCalRecHits, # legacy CPU
                                      cuda = cms.EDAlias(
-                                         HeterogeneousHGCalEERecHits = cms.VPSet( cms.PSet(type = cms.string("HGCEERecHits")) ),
-                                         HeterogeneousHGCalHEFRecHits = cms.VPSet( cms.PSet(type = cms.string("HGCHEFRecHits")) ),
-                                         HeterogeneousHGCalHEBRecHits = cms.VPSet( cms.PSet(type = cms.string("HGCHEBRecHits")) )
+                                         task_HeterogeneousHGCalEERecHits = cms.VPSet( cms.PSet(type = cms.string("HGCEERecHits")) ),
+                                         task_HeterogeneousHGCalHEFRecHits = cms.VPSet( cms.PSet(type = cms.string("HGCHEFRecHits")) ),
+                                         task_HeterogeneousHGCalHEBRecHits = cms.VPSet( cms.PSet(type = cms.string("HGCHEBRecHits")) )
                                      ) )
 
 #process.fooCUDA = cms.EDProducer("FooProducerCUDA")
