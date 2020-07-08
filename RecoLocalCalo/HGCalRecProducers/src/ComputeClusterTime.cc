@@ -48,6 +48,7 @@ float ComputeClusterTime::getTimeError(std::string type, float xVal) {
     //xVal is S/N
     //time is in ns units
     //std::cout << type << ", " << xVal << ", " << xMax_ << ", " < xMin_ << ", " << timeResolution(xMin_) << ", " << timeResolution(xVal) << std::endl;
+
     if (xVal < xMin_)
       return timeResolution(xMin_);
     else if (xVal > xMax_)

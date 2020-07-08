@@ -21,7 +21,7 @@ void make_rechit_silicon(unsigned int tid, HGCRecHitSoA& dst_soa, HGCUncalibrate
   dst_soa.time_[tid] = src_soa.jitter_[tid];
 
   HeterogeneousHGCSiliconDetId detid(src_soa.id_[tid]);
-  dst_soa.flagBits_[tid] |= (0x1 << HGCRecHit::kGood);
+  dst_soa.flagBits_[tid] = 0 | (0x1 << HGCRecHit::kGood);
   float son = __fdividef( dst_soa.energy_[tid], sigmaNoiseGeV);
   float son_norm = fminf(32.f, son) / 32.f * ((1 << 8)-1);
   long int son_round = lroundf( son_norm );
@@ -36,8 +36,8 @@ void make_rechit_silicon(unsigned int tid, HGCRecHitSoA& dst_soa, HGCUncalibrate
     3) xmin -> xmax -> xval
     The time error is calculated with the number in the middle.
   */
-  float max = fminf( fmaxf(son, xmin), xmax);
-  float div_ = __fdividef(aterm, max);
+  float denominator = fminf( fmaxf(son, xmin), xmax);
+  float div_ = __fdividef(aterm, denominator);
   dst_soa.timeError_[tid] = dst_soa.time_[tid] < 0 ? -1 : __fsqrt_rn( div_*div_ + cterm*cterm );
   //if dst_soa.time_[tid] < 1 always, then the above conditional expression can be replaced by
   //dst_soa.timeError_[tid] = fminf( fmaxf( dst_soa.time_[tid]-1, -1 ), sqrt( div_*div_ + cterm*cterm ) )
@@ -53,7 +53,7 @@ void make_rechit_scintillator(unsigned int tid, HGCRecHitSoA& dst_soa, HGCUncali
   dst_soa.time_[tid] = src_soa.jitter_[tid];
 
   HeterogeneousHGCScintillatorDetId detid(src_soa.id_[tid]);
-  dst_soa.flagBits_[tid] |= (0x1 << HGCRecHit::kGood);
+  dst_soa.flagBits_[tid] = 0 | (0x1 << HGCRecHit::kGood);
   float son = __fdividef( dst_soa.energy_[tid], sigmaNoiseGeV);
   float son_norm = fminf(32.f, son) / 32.f * ((1 << 8)-1);
   long int son_round = lroundf( son_norm );

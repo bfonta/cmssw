@@ -1,4 +1,4 @@
-#include "RecoLocalCalo/HGCalRecProducers/plugins/HeterogeneousHGCalHEFConditions.h"
+#include "RecoLocalCalo/HGCalRecProducers/plugins/HeterogeneousHGCalConditions_TEST.h"
 
 HeterogeneousHGCalHEFConditionsWrapper::HeterogeneousHGCalHEFConditionsWrapper(const HGCalParameters* cpuHGCalParameters,
 									       cpos::HGCalPositionsMapping* cpuPos)
