@@ -26,6 +26,8 @@ process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic', '')
 from RecoLocalCalo.HGCalRecProducers.HGCalRecHit_cfi import dEdX_weights_v10
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
+#process.Tracer = cms.Service("Tracer")
+
 #TFileService
 fileName = 'switch.root'
 process.TFileService = cms.Service("TFileService", 
@@ -42,7 +44,7 @@ process.source = cms.Source("PoolSource",
                             duplicateCheckMode = cms.untracked.string("noDuplicateCheck"))
 
 process.options = cms.untracked.PSet(
-    wantSummary = cms.untracked.bool( False )) #add option for edmStreams
+    wantSummary = cms.untracked.bool( True ) ) #add option for edmStreams
 
 
 process.HeterogeneousHGCalEERecHits = HeterogeneousHGCalEERecHits.clone()
@@ -52,7 +54,11 @@ process.HGCalRecHits = HGCalRecHit.clone() #CPU version
 
 from HeterogeneousCore.CUDACore.SwitchProducerCUDA import SwitchProducerCUDA
 process.switch = SwitchProducerCUDA( cpu = process.HGCalRecHits, # legacy CPU
-                                     cuda = process.HeterogeneousHGCalHEFRecHits )
+                                     cuda = cms.EDAlias(
+                                         HeterogeneousHGCalEERecHits = cms.VPSet( cms.PSet(type = cms.string("HGCEERecHits")) ),
+                                         HeterogeneousHGCalHEFRecHits = cms.VPSet( cms.PSet(type = cms.string("HGCHEFRecHits")) ),
+                                         HeterogeneousHGCalHEBRecHits = cms.VPSet( cms.PSet(type = cms.string("HGCHEBRecHits")) )
+                                     ) )
 
 #process.fooCUDA = cms.EDProducer("FooProducerCUDA")
 #process.fooTaskCUDA = cms.Task(process.fooCUDA)
