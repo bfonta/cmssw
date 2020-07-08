@@ -1,5 +1,5 @@
-#ifndef HeterogeneousHGCalHEFRecHitProducer_h
-#define HeterogeneousHGCalHEFRecHitProducer_h
+#ifndef RecoLocalCalo_HGCalRecProducers_HeterogeneousHGCalHEFRecHitProducer_h
+#define RecoLocalCalo_HGCalRecProducers_HeterogeneousHGCalHEFRecHitProducer_h
 
 #include <iostream>
 #include <string>
@@ -30,7 +30,6 @@
 
 #include "HeterogeneousHGCalProducerMemoryWrapper.h"
 #include "KernelManagerHGCalRecHit.h"
-#include "HeterogeneousHGCalHEFConditions.h"
 
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
@@ -62,6 +61,7 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
   std::string assert_error_message_(std::string var, const size_t& s);
   void assert_sizes_constants_(const HGCConstantVectorData& vd);
   void allocate_memory_();
+  void deallocate_memory_();
   cms::cuda::host::noncached::unique_ptr<std::byte[]> mem_in_;
   cms::cuda::device::unique_ptr<std::byte[]> d_mem_;
   cms::cuda::host::unique_ptr<std::byte[]> mem_out_;
@@ -69,10 +69,12 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
   //conditions (geometry, topology, ...)
   void set_conditions_(const edm::EventSetup&, HGChefUncalibratedRecHitConstantData&);
   std::unique_ptr<hgcal::RecHitTools> tools_;
+  /*
   const hgcal_conditions::HeterogeneousHEFConditionsESProduct* d_conds = nullptr;
+  hgcal_conditions::positions::HGCalPositionsMapping* posmap_;
+  */
   const HGCalDDDConstants* ddd_ = nullptr;
   const HGCalParameters* params_ = nullptr;
-  hgcal_conditions::positions::HGCalPositionsMapping* posmap_;
 
   edm::Service<TFileService> fs;
   TH1F *x0, *x1, *x2, *y0, *y1, *y2;
@@ -88,4 +90,4 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
   KernelConstantData<HGChefUncalibratedRecHitConstantData> *kcdata_;
 };
 
-#endif //HeterogeneousHGCalHEFRecHitProducer_h
+#endif //RecoLocalCalo_HGCalRecProducers_HeterogeneousHGCalHEFRecHitProducer_h
