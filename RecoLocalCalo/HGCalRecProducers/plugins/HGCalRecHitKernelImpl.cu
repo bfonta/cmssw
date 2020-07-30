@@ -151,8 +151,7 @@ void heb_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
   for (unsigned int i = tid; i < length; i += blockDim.x * gridDim.x)
     {
       HeterogeneousHGCScintillatorDetId detid(src_soa.id_[i]);
-      uint32_t layer = detid.layer(); //+ cdata.layerOffset_; CHECK LAYERS!!!!!!!
-      //printf("layer: %d\n", layer);
+      uint32_t layer = detid.layer() + cdata.layerOffset_;
       float weight        = get_weight_from_layer(layer, cdata.weights_);
       float noise         = cdata.noise_MIP_;
       float sigmaNoiseGeV = 1e-3 * noise * weight;

@@ -57,10 +57,9 @@ process.HGCalRecHits = HGCalRecHit.clone() #CPU version
 
 from HeterogeneousCore.CUDACore.SwitchProducerCUDA import SwitchProducerCUDA
 process.switch = SwitchProducerCUDA( cpu = process.HGCalRecHits, # legacy CPU
-                                     cuda = cms.EDAlias(
-                                         task_HeterogeneousHGCalEERecHits = cms.VPSet( cms.PSet(type = cms.string("HGCEERecHits")) ),
-                                         task_HeterogeneousHGCalHEFRecHits = cms.VPSet( cms.PSet(type = cms.string("HGCHEFRecHits")) ),
-                                         task_HeterogeneousHGCalHEBRecHits = cms.VPSet( cms.PSet(type = cms.string("HGCHEBRecHits")) )
+                                     cuda = cms.EDAlias( HeterogeneousHGCalEERecHitsTask = cms.VPSet( cms.PSet(type = cms.string("HGCEERecHits")) ),
+                                                         HeterogeneousHGCalHEFRecHitsTask = cms.VPSet( cms.PSet(type = cms.string("HGCHEFRecHits")) ),
+                                                         HeterogeneousHGCalHEBRecHitsTask = cms.VPSet( cms.PSet(type = cms.string("HGCHEBRecHits")) )
                                      ) )
 
 #process.fooCUDA = cms.EDProducer("FooProducerCUDA")

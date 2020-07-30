@@ -34,7 +34,7 @@ void HeterogeneousHGCalHEBRecHitProducer::assert_sizes_constants_(const HGCConst
 void HeterogeneousHGCalHEBRecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {
   const cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w), ctxState_};
 
-  //set_conditions_(setup);
+  set_conditions_(setup, cdata_);
   
   event.getByToken(token_, handle_heb_);
   const auto &hits_heb = *handle_heb_;
@@ -59,9 +59,8 @@ void HeterogeneousHGCalHEBRecHitProducer::acquire(edm::Event const& event, edm::
     }
 }
 
-void HeterogeneousHGCalHEBRecHitProducer::set_conditions_(const edm::EventSetup& setup)
+void HeterogeneousHGCalHEBRecHitProducer::set_conditions_(const edm::EventSetup& setup, HGChebUncalibratedRecHitConstantData& cdata)
 {
-  /*
   tools_->getEventSetup(setup);
   std::string handle_str;
   handle_str = "HGCalHEScintillatorSensitive";
@@ -69,7 +68,7 @@ void HeterogeneousHGCalHEBRecHitProducer::set_conditions_(const edm::EventSetup&
   setup.get<IdealGeometryRecord>().get(handle_str, handle);
   ddd_ = &( handle->topology().dddConstants() );
   params_ = ddd_->getParameter();
-  */
+  cdata.layerOffset_ = params_->layerOffset_; //=28 (30-07-2020)
 }
 
 void HeterogeneousHGCalHEBRecHitProducer::produce(edm::Event& event, const edm::EventSetup& setup)
