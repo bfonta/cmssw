@@ -87,7 +87,9 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
     }
 }
 
-void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup& setup, HGChefUncalibratedRecHitConstantData& cdata) {
+//the geometry is not required if the layer offset is hardcoded (potential speed-up)
+void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup& setup, HGChefUncalibratedRecHitConstantData& cdata)
+{
   tools_->getEventSetup(setup);
   std::string handle_str;
   handle_str = "HGCalHESiliconSensitive";

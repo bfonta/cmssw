@@ -70,6 +70,7 @@ class HGChebUncalibratedRecHitConstantData {
   double keV2DIGI_;   //energy to femto coloumb conversion: 1000 eV/3.62 (eV per e) / 6.24150934e3 (e per fC)
   double uncalib2GeV_; //sets the ADC; obtained by dividing 1e-6 by hgcHEB_keV2DIGI_
   double noise_MIP_;  //noise
+  uint32_t layerOffset_;  //layer offset relative to layer#1 of the EE subsetector
 };
 
 #endif
