@@ -20,9 +20,9 @@ HeterogeneousHGCalEERecHitProducer::HeterogeneousHGCalEERecHitProducer(const edm
   produces<HGCeeRecHitCollection>(collection_name_);
 }
 
+/*
 void HeterogeneousHGCalEERecHitProducer::set_conditions_(const edm::EventSetup& setup)
 {
-  /*
   tools_->getEventSetup(setup);
   std::string handle_str;
   handle_str = "HGCalEESensitive";
@@ -30,8 +30,8 @@ void HeterogeneousHGCalEERecHitProducer::set_conditions_(const edm::EventSetup& 
   setup.get<IdealGeometryRecord>().get(handle_str, handle);
   ddd_ = &( handle->topology().dddConstants() );
   params_ = ddd_->getParameter();
-  */
 }
+*/
 
 HeterogeneousHGCalEERecHitProducer::~HeterogeneousHGCalEERecHitProducer()
 {
@@ -76,7 +76,7 @@ void HeterogeneousHGCalEERecHitProducer::acquire(edm::Event const& event, edm::E
 
   if(stride_ > 0)
     {
-      allocate_memory_();
+      allocate_memory_(ctx.stream());
       kcdata_ = new KernelConstantData<HGCeeUncalibratedRecHitConstantData>(cdata_, vdata_);
       convert_constant_data_(kcdata_);
       convert_collection_data_to_soa_(hits_ee, uncalibSoA_, nhits);
@@ -97,7 +97,7 @@ void HeterogeneousHGCalEERecHitProducer::produce(edm::Event& event, const edm::E
   event.put(std::move(rechits_), collection_name_);
 }
 
-void HeterogeneousHGCalEERecHitProducer::allocate_memory_()
+void HeterogeneousHGCalEERecHitProducer::allocate_memory_(const cudaStream_t& stream)
 {
   uncalibSoA_        = new HGCUncalibratedRecHitSoA();
   d_uncalibSoA_      = new HGCUncalibratedRecHitSoA();
@@ -106,11 +106,11 @@ void HeterogeneousHGCalEERecHitProducer::allocate_memory_()
   calibSoA_          = new HGCRecHitSoA();
 
   //_allocate memory for hits on the host
-  memory::allocation::host(stride_, uncalibSoA_, mem_in_);
+  memory::allocation::host(stride_, uncalibSoA_, mem_in_, stream);
   //_allocate memory for hits on the device
-  memory::allocation::device(stride_, d_uncalibSoA_, d_intermediateSoA_, d_calibSoA_, d_mem_);
+  memory::allocation::device(stride_, d_uncalibSoA_, d_intermediateSoA_, d_calibSoA_, d_mem_, stream);
   //_allocate memory for hits on the host
-  memory::allocation::host(stride_, calibSoA_, mem_out_);
+  memory::allocation::host(stride_, calibSoA_, mem_out_, stream);
 }
 
 void HeterogeneousHGCalEERecHitProducer::deallocate_memory_()

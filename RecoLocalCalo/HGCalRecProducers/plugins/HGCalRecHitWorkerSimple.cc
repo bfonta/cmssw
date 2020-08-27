@@ -201,6 +201,15 @@ bool HGCalRecHitWorkerSimple::run(const edm::Event& evt,
   }  //regional factors for silicon in CE_H
   else if (idtype == hgcfh) {
     new_E *= rcorr_[thickness + deltasi_index_regemfac_] / cce_correction;
+
+    std::cout << "HEF: " << thickness << ", " << deltasi_index_regemfac_ << ", " << rcorr_[thickness + deltasi_index_regemfac_] << ", " << cce_correction << ", " << thickness << std::endl;
+    for(unsigned int i=0; i<rcorr_.size(); ++i)
+      {
+	std::cout << rcorr_[i] << ", ";
+	std::cout << std::endl;
+      }
+    
+    
   }  //regional factors for scintillator and silicon in CE_E
   else {
     new_E *= (thickness == -1 ? rcorrscint_ : rcorr_[thickness]) / cce_correction;
@@ -209,7 +218,7 @@ bool HGCalRecHitWorkerSimple::run(const edm::Event& evt,
   myrechit.setEnergy(new_E);
   float SoN = new_E / sigmaNoiseGeV;
   myrechit.setSignalOverSigmaNoise(SoN);
-
+  
   if (detid.det() == DetId::HGCalHSc || myrechit.time() < 0. ) {
     myrechit.setTimeError(-1.);
   } else {

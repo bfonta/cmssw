@@ -62,11 +62,13 @@ template <typename TYPE_IN, typename TYPE_OUT>
 
 class KernelManagerHGCalRecHit {
  public:
+  KernelManagerHGCalRecHit();
   KernelManagerHGCalRecHit(KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>*);
   ~KernelManagerHGCalRecHit();
   void run_kernels(const KernelConstantData<HGCeeUncalibratedRecHitConstantData>*);
   void run_kernels(const KernelConstantData<HGChefUncalibratedRecHitConstantData>*, const hgcal_conditions::HeterogeneousHEFConditionsESProduct*);
   void run_kernels(const KernelConstantData<HGChebUncalibratedRecHitConstantData>*);
+  void fill_positions(const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct*);
   HGCRecHitSoA* get_output();
 
  private:

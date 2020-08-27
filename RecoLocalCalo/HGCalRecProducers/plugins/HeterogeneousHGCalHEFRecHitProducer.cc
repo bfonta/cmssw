@@ -19,13 +19,15 @@ HeterogeneousHGCalHEFRecHitProducer::HeterogeneousHGCalHEFRecHitProducer(const e
   //posmap_ = new hgcal_conditions::positions::HGCalPositionsMapping();
   tools_.reset(new hgcal::RecHitTools());
   produces<HGChefRecHitCollection>(collection_name_);
-  
+
+  /*
   x0 = fs->make<TH1F>( "x_type0"  , "x_type0", 300, -120., 120. );
   y0 = fs->make<TH1F>( "y_type0"  , "y_type0", 300, -120., 120. );
   x1 = fs->make<TH1F>( "x_type1"  , "x_type1", 300, -120., 120. );
   y1 = fs->make<TH1F>( "y_type1"  , "y_type1", 300, -120., 120. );
   x2 = fs->make<TH1F>( "x_type2"  , "x_type2", 300, -120., 120. );
   y2 = fs->make<TH1F>( "y_type2"  , "y_type2", 300, -120., 120. );
+  */
 }
 
 HeterogeneousHGCalHEFRecHitProducer::~HeterogeneousHGCalHEFRecHitProducer()
@@ -55,11 +57,22 @@ void HeterogeneousHGCalHEFRecHitProducer::assert_sizes_constants_(const HGCConst
     cms::cuda::LogError("WrongSize") << this->assert_error_message_("weights", vdata_.weights_.size());
 }
 
+void HeterogeneousHGCalHEFRecHitProducer::beginRun(edm::Run const&, edm::EventSetup const& setup) {
+  tools_->getEventSetup(setup);
+  std::string handle_str;
+  handle_str = "HGCalHESiliconSensitive";
+  edm::ESHandle<HGCalGeometry> handle;
+  setup.get<IdealGeometryRecord>().get(handle_str, handle);
+  ddd_ = &( handle->topology().dddConstants() );
+  params_ = ddd_->getParameter();
+  cdata_.layerOffset_ = params_->layerOffset_; //=28 (6-07-2020)
+}
+
 void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {
   const cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w), ctxState_};
 
-  set_conditions_(setup, cdata_);
   /*
+  set_conditions_(setup);
   HeterogeneousHGCalHEFConditionsWrapper esproduct(params_, posmap_);
   d_conds = esproduct.getHeterogeneousConditionsESProductAsync(ctx.stream());
   */
@@ -73,7 +86,7 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
 
   if(stride_ > 0)
     {
-      allocate_memory_();
+      allocate_memory_(ctx.stream());
       kcdata_ = new KernelConstantData<HGChefUncalibratedRecHitConstantData>(cdata_, vdata_);
       convert_constant_data_(kcdata_);
       convert_collection_data_to_soa_(hits_hef, uncalibSoA_, nhits);
@@ -88,17 +101,8 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
 }
 
 //the geometry is not required if the layer offset is hardcoded (potential speed-up)
-void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup& setup, HGChefUncalibratedRecHitConstantData& cdata)
+void HeterogeneousHGCalHEFRecHitProducer::set_conditions_(const edm::EventSetup& setup)
 {
-  tools_->getEventSetup(setup);
-  std::string handle_str;
-  handle_str = "HGCalHESiliconSensitive";
-  edm::ESHandle<HGCalGeometry> handle;
-  setup.get<IdealGeometryRecord>().get(handle_str, handle);
-  ddd_ = &( handle->topology().dddConstants() );
-  params_ = ddd_->getParameter();
-  cdata.layerOffset_ = params_->layerOffset_; //=28 (6-07-2020)
-
   /*
   //fill the CPU position structure from the geometry
   posmap_->z_per_layer.clear();
@@ -162,7 +166,7 @@ void HeterogeneousHGCalHEFRecHitProducer::produce(edm::Event& event, const edm::
   event.put(std::move(rechits_), collection_name_);
 }
 
-void HeterogeneousHGCalHEFRecHitProducer::allocate_memory_()
+void HeterogeneousHGCalHEFRecHitProducer::allocate_memory_(const cudaStream_t& stream)
 {
   uncalibSoA_        = new HGCUncalibratedRecHitSoA();
   d_uncalibSoA_      = new HGCUncalibratedRecHitSoA();
@@ -171,11 +175,11 @@ void HeterogeneousHGCalHEFRecHitProducer::allocate_memory_()
   calibSoA_          = new HGCRecHitSoA();
 
   //_allocate memory for hits on the host
-  memory::allocation::host(stride_, uncalibSoA_, mem_in_);
+  memory::allocation::host(stride_, uncalibSoA_, mem_in_, stream);
   //_allocate memory for hits on the device
-  memory::allocation::device(stride_, d_uncalibSoA_, d_intermediateSoA_, d_calibSoA_, d_mem_);
+  memory::allocation::device(stride_, d_uncalibSoA_, d_intermediateSoA_, d_calibSoA_, d_mem_, stream);
   //_allocate memory for hits on the host
-  memory::allocation::host(stride_, calibSoA_, mem_out_);
+  memory::allocation::host(stride_, calibSoA_, mem_out_, stream);
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::deallocate_memory_()
