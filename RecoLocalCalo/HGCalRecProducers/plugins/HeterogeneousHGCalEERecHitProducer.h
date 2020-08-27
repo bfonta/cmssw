@@ -55,14 +55,14 @@ class HeterogeneousHGCalEERecHitProducer: public edm::stream::EDProducer<edm::Ex
   //memory
   std::string assert_error_message_(std::string var, const size_t& s);
   void assert_sizes_constants_(const HGCConstantVectorData& vd);
-  void allocate_memory_();
+  void allocate_memory_(const cudaStream_t&);
   void deallocate_memory_();
-  cms::cuda::host::noncached::unique_ptr<std::byte[]> mem_in_;
+  cms::cuda::host::unique_ptr<std::byte[]> mem_in_;
   cms::cuda::device::unique_ptr<std::byte[]> d_mem_;
   cms::cuda::host::unique_ptr<std::byte[]> mem_out_;
 
   //conditions (geometry, topology, ...)
-  void set_conditions_(const edm::EventSetup&);
+  //void set_conditions_(const edm::EventSetup&);
   std::unique_ptr<hgcal::RecHitTools> tools_;
 
   //data processing

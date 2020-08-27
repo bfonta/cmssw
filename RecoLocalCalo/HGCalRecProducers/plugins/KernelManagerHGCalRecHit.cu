@@ -4,6 +4,11 @@
 #include "RecoLocalCalo/HGCalRecProducers/plugins/KernelManagerHGCalRecHit.h"
 #include "HGCalRecHitKernelImpl.cuh"
 
+KernelManagerHGCalRecHit::KernelManagerHGCalRecHit()
+{
+  ::nblocks_ = (data_->nhits_ + ::nthreads_.x - 1) / ::nthreads_.x;
+}
+
 KernelManagerHGCalRecHit::KernelManagerHGCalRecHit(KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA> *data):
   data_(data)
 {
@@ -52,20 +57,14 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChefUncali
 {
   transfer_soas_to_device_();
 
-  //fill_positions_from_detids<<<::nblocks_,::nthreads_>>>(d_conds);
-  //after_();
-  
-  //print_positions_from_detids<<<::nblocks_,::nthreads_>>>(d_conds);
   /*
   hef_step1<<<::nblocks_,::nthreads_>>>( *(data_->d_2), *(data_->d_1_), d_kcdata->data, data_->nhits_);
   after_();
   reuse_device_pointers_();
   */
 
-  after_();
   hef_to_rechit<<<::nblocks_,::nthreads_>>>( *(data_->d_out_), *(data_->d_1_), kcdata->data_, d_conds, data_->nhits_ );
   after_();
-
   transfer_soa_to_host_and_synchronize_();
 }
 
@@ -82,6 +81,14 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChebUncali
   heb_to_rechit<<<::nblocks_, ::nthreads_>>>( *(data_->d_out_), *(data_->d_1_), kcdata->data_, data_->nhits_ );
   after_();
   transfer_soa_to_host_and_synchronize_();
+}
+
+void KernelManagerHGCalRecHit::fill_positions(const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct* d_conds)
+{
+  fill_positions_from_detids<<<::nblocks_,::nthreads_>>>(d_conds);
+  after_();
+  
+  //print_positions_from_detids<<<::nblocks_,::nthreads_>>>(d_conds);
 }
 
 void KernelManagerHGCalRecHit::after_() {

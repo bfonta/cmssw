@@ -31,10 +31,20 @@ void HeterogeneousHGCalHEBRecHitProducer::assert_sizes_constants_(const HGCConst
     cms::cuda::LogError("MaxSizeExceeded") << this->assert_error_message_("weights", vdata_.fCPerMIP_.size());
 }
 
+void HeterogeneousHGCalHEBRecHitProducer::beginRun(edm::Run const&, edm::EventSetup const& setup)
+{
+  tools_->getEventSetup(setup);
+  std::string handle_str;
+  handle_str = "HGCalHEScintillatorSensitive";
+  edm::ESHandle<HGCalGeometry> handle;
+  setup.get<IdealGeometryRecord>().get(handle_str, handle);
+  ddd_ = &( handle->topology().dddConstants() );
+  params_ = ddd_->getParameter();
+  cdata_.layerOffset_ = params_->layerOffset_; //=28 (30-07-2020)
+}
+
 void HeterogeneousHGCalHEBRecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {
   const cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w), ctxState_};
-
-  set_conditions_(setup, cdata_);
   
   event.getByToken(token_, handle_heb_);
   const auto &hits_heb = *handle_heb_;
@@ -45,7 +55,7 @@ void HeterogeneousHGCalHEBRecHitProducer::acquire(edm::Event const& event, edm::
   
   if(stride_ > 0)
     {
-      allocate_memory_();
+      allocate_memory_(ctx.stream());
       kcdata_ = new KernelConstantData<HGChebUncalibratedRecHitConstantData>(cdata_, vdata_);  
       convert_constant_data_(kcdata_);
       convert_collection_data_to_soa_(hits_heb, uncalibSoA_, nhits);
@@ -59,25 +69,13 @@ void HeterogeneousHGCalHEBRecHitProducer::acquire(edm::Event const& event, edm::
     }
 }
 
-void HeterogeneousHGCalHEBRecHitProducer::set_conditions_(const edm::EventSetup& setup, HGChebUncalibratedRecHitConstantData& cdata)
-{
-  tools_->getEventSetup(setup);
-  std::string handle_str;
-  handle_str = "HGCalHEScintillatorSensitive";
-  edm::ESHandle<HGCalGeometry> handle;
-  setup.get<IdealGeometryRecord>().get(handle_str, handle);
-  ddd_ = &( handle->topology().dddConstants() );
-  params_ = ddd_->getParameter();
-  cdata.layerOffset_ = params_->layerOffset_; //=28 (30-07-2020)
-}
-
 void HeterogeneousHGCalHEBRecHitProducer::produce(edm::Event& event, const edm::EventSetup& setup)
 {
   cms::cuda::ScopedContextProduce ctx{ctxState_}; //only for GPU to GPU producers
   event.put(std::move(rechits_), collection_name_);
 }
 
-void HeterogeneousHGCalHEBRecHitProducer::allocate_memory_()
+void HeterogeneousHGCalHEBRecHitProducer::allocate_memory_(const cudaStream_t& stream)
 {
   uncalibSoA_ = new HGCUncalibratedRecHitSoA();
   d_uncalibSoA_ = new HGCUncalibratedRecHitSoA();
@@ -86,11 +84,11 @@ void HeterogeneousHGCalHEBRecHitProducer::allocate_memory_()
   calibSoA_ = new HGCRecHitSoA();
 
   //_allocate memory for hits on the host
-  memory::allocation::host(stride_, uncalibSoA_, mem_in_);
+  memory::allocation::host(stride_, uncalibSoA_, mem_in_, stream);
   //_allocate memory for hits on the device
-  memory::allocation::device(stride_, d_uncalibSoA_, d_intermediateSoA_, d_calibSoA_, d_mem_);
+  memory::allocation::device(stride_, d_uncalibSoA_, d_intermediateSoA_, d_calibSoA_, d_mem_, stream);
   //_allocate memory for hits on the host
-  memory::allocation::host(stride_, calibSoA_, mem_out_);
+  memory::allocation::host(stride_, calibSoA_, mem_out_, stream);
 }
 
 void HeterogeneousHGCalHEBRecHitProducer::deallocate_memory_()

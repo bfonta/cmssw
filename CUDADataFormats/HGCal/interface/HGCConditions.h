@@ -164,11 +164,16 @@ namespace hgcal_conditions {
   };
   struct HeterogeneousHEFConditionsESProduct {
     parameters::HeterogeneousHGCalHEFParameters params;
-    positions::HeterogeneousHGCalPositionsMapping posmap;
+    //positions::HeterogeneousHGCalPositionsMapping posmap;
     size_t nelems_posmap;
   };
   struct HeterogeneousHEBConditionsESProduct {
     parameters::HeterogeneousHGCalHEBParameters params;
+  };
+
+  struct HeterogeneousHEFCellPositionsConditionsESProduct {
+    positions::HeterogeneousHGCalPositionsMapping posmap;
+    size_t nelems_posmap;
   };
 
 } //namespace conditions

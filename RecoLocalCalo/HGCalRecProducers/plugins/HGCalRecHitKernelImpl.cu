@@ -131,6 +131,7 @@ void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
 	CUDADataFormats/HGCal/interface/HGCUncalibratedRecHitsToRecHitsConstants.h maxsizes_constanats will perhaps have to be changed (change some 3's to 6's) 
       */
       HeterogeneousHGCSiliconDetId detid(src_soa.id_[i]);
+      //printf( "Layer offset: %d\n", cdata.layerOffset_ );
       uint32_t layer = detid.layer() + cdata.layerOffset_;
       float weight         = get_weight_from_layer(layer, cdata.weights_);
       float rcorr          = 1.f;//get_thickness_correction(detid.type(), cdata.rcorr_);
@@ -160,7 +161,7 @@ void heb_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
 }
 
 __global__
-void fill_positions_from_detids(const hgcal_conditions::HeterogeneousHEFConditionsESProduct* conds)
+void fill_positions_from_detids(const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct* conds)
 {
   unsigned int tid = blockDim.x * blockIdx.x + threadIdx.x;
 

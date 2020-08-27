@@ -39,7 +39,8 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
  public:
   explicit HeterogeneousHGCalHEFRecHitProducer(const edm::ParameterSet& ps);
   ~HeterogeneousHGCalHEFRecHitProducer() override;
-
+  void beginRun(edm::Run const&, edm::EventSetup const&) override;
+  
   virtual void acquire(edm::Event const&, edm::EventSetup const&, edm::WaitingTaskWithArenaHolder) override;
   virtual void produce(edm::Event&, const edm::EventSetup&) override;
 
@@ -60,14 +61,14 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
   //memory
   std::string assert_error_message_(std::string var, const size_t& s);
   void assert_sizes_constants_(const HGCConstantVectorData& vd);
-  void allocate_memory_();
+  void allocate_memory_(const cudaStream_t&);
   void deallocate_memory_();
-  cms::cuda::host::noncached::unique_ptr<std::byte[]> mem_in_;
+  cms::cuda::host::unique_ptr<std::byte[]> mem_in_;
   cms::cuda::device::unique_ptr<std::byte[]> d_mem_;
   cms::cuda::host::unique_ptr<std::byte[]> mem_out_;
 
   //conditions (geometry, topology, ...)
-  void set_conditions_(const edm::EventSetup&, HGChefUncalibratedRecHitConstantData&);
+  void set_conditions_(const edm::EventSetup&);
   std::unique_ptr<hgcal::RecHitTools> tools_;
   /*
   const hgcal_conditions::HeterogeneousHEFConditionsESProduct* d_conds = nullptr;
@@ -76,8 +77,10 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
   const HGCalDDDConstants* ddd_ = nullptr;
   const HGCalParameters* params_ = nullptr;
 
+  /*
   edm::Service<TFileService> fs;
   TH1F *x0, *x1, *x2, *y0, *y1, *y2;
+  */
 
   //data processing
   void convert_collection_data_to_soa_(const HGChefUncalibratedRecHitCollection&, HGCUncalibratedRecHitSoA*, const unsigned int&);
