@@ -49,7 +49,9 @@ void HeterogeneousHGCalRecHitsValidator::set_geometry_(const edm::EventSetup& se
 
 void HeterogeneousHGCalRecHitsValidator::analyze(const edm::Event &event, const edm::EventSetup &setup)
 {
-  recHitTools_.getEventSetup(setup);
+  edm::ESHandle<CaloGeometry> baseGeom;
+  setup.get<CaloGeometryRecord>().get(baseGeom);
+  recHitTools_.setGeometry(*baseGeom);
     
   //future subdetector loop
   for(size_t idet=0; idet<1; ++idet) {
