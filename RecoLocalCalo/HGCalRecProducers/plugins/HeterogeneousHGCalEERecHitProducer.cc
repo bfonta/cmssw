@@ -16,22 +16,9 @@ HeterogeneousHGCalEERecHitProducer::HeterogeneousHGCalEERecHitProducer(const edm
   cdata_.uncalib2GeV_ = 1e-6 / cdata_.keV2DIGI_;
 
   assert_sizes_constants_(vdata_);
-  tools_.reset(new hgcal::RecHitTools());
+  tools_ = std::make_unique<hgcal::RecHitTools>();
   produces<HGCeeRecHitCollection>(collection_name_);
 }
-
-/*
-void HeterogeneousHGCalEERecHitProducer::set_conditions_(const edm::EventSetup& setup)
-{
-  tools_->getEventSetup(setup);
-  std::string handle_str;
-  handle_str = "HGCalEESensitive";
-  edm::ESHandle<HGCalGeometry> handle;
-  setup.get<IdealGeometryRecord>().get(handle_str, handle);
-  ddd_ = &( handle->topology().dddConstants() );
-  params_ = ddd_->getParameter();
-}
-*/
 
 HeterogeneousHGCalEERecHitProducer::~HeterogeneousHGCalEERecHitProducer()
 {
@@ -62,12 +49,6 @@ void HeterogeneousHGCalEERecHitProducer::assert_sizes_constants_(const HGCConsta
 void HeterogeneousHGCalEERecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {
   const cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w), ctxState_};
 
-  /*
-  set_conditions_(setup);
-  HeterogeneousHGCalEEConditionsWrapper esproduct(params_);
-  d_conds = esproduct.getHeterogeneousConditionsESProductAsync(ctx.stream());
-  */
-  
   event.getByToken(token_, handle_ee_);
   const auto &hits_ee = *handle_ee_;
 

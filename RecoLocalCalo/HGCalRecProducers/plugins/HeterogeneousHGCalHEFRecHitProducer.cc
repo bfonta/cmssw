@@ -17,7 +17,7 @@ HeterogeneousHGCalHEFRecHitProducer::HeterogeneousHGCalHEFRecHitProducer(const e
 
   assert_sizes_constants_(vdata_);
   //posmap_ = new hgcal_conditions::positions::HGCalPositionsMapping();
-  tools_.reset(new hgcal::RecHitTools());
+  tools_ = std::make_unique<hgcal::RecHitTools>();
   produces<HGChefRecHitCollection>(collection_name_);
 
   /*
@@ -58,11 +58,15 @@ void HeterogeneousHGCalHEFRecHitProducer::assert_sizes_constants_(const HGCConst
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::beginRun(edm::Run const&, edm::EventSetup const& setup) {
-  tools_->getEventSetup(setup);
+  edm::ESHandle<CaloGeometry> baseGeom;
+  setup.get<CaloGeometryRecord>().get(baseGeom);
+  tools_->setGeometry(*baseGeom);
+  
   std::string handle_str;
   handle_str = "HGCalHESiliconSensitive";
   edm::ESHandle<HGCalGeometry> handle;
   setup.get<IdealGeometryRecord>().get(handle_str, handle);
+  
   ddd_ = &( handle->topology().dddConstants() );
   params_ = ddd_->getParameter();
   cdata_.layerOffset_ = params_->layerOffset_; //=28 (6-07-2020)

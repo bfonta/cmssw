@@ -9,7 +9,7 @@ HeterogeneousHGCalHEBRecHitProducer::HeterogeneousHGCalHEBRecHitProducer(const e
   cdata_.uncalib2GeV_ = 1e-6 / cdata_.keV2DIGI_;
 
   assert_sizes_constants_(vdata_);
-  tools_.reset(new hgcal::RecHitTools());
+  tools_ = std::make_unique<hgcal::RecHitTools>();
   produces<HGChebRecHitCollection>(collection_name_);
 }
 
@@ -33,12 +33,16 @@ void HeterogeneousHGCalHEBRecHitProducer::assert_sizes_constants_(const HGCConst
 
 void HeterogeneousHGCalHEBRecHitProducer::beginRun(edm::Run const&, edm::EventSetup const& setup)
 {
-  tools_->getEventSetup(setup);
+  edm::ESHandle<CaloGeometry> baseGeom;
+  setup.get<CaloGeometryRecord>().get(baseGeom);
+  tools_->setGeometry(*baseGeom);
+
   std::string handle_str;
   handle_str = "HGCalHEScintillatorSensitive";
-  edm::ESHandle<HGCalGeometry> handle;
-  setup.get<IdealGeometryRecord>().get(handle_str, handle);
-  ddd_ = &( handle->topology().dddConstants() );
+  edm::ESHandle<HGCalGeometry> geom;
+  setup.get<IdealGeometryRecord>().get(handle_str, geom);
+
+  ddd_ = &( geom->topology().dddConstants() );
   params_ = ddd_->getParameter();
   cdata_.layerOffset_ = params_->layerOffset_; //=28 (30-07-2020)
 }
