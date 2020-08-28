@@ -200,7 +200,7 @@ void fill_positions_from_detids(const hgcal_conditions::HeterogeneousHEFCellPosi
 }
 
 __global__
-void print_positions_from_detids(const hgcal_conditions::HeterogeneousHEFConditionsESProduct* conds)
+void print_positions_from_detids(const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct* conds)
 {
   unsigned int tid = blockDim.x * blockIdx.x + threadIdx.x;
 
