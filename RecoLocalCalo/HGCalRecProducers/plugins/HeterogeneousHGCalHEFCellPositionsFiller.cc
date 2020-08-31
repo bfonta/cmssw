@@ -1,4 +1,4 @@
-#include "HeterogeneousHGCalHEFCellPositionsFiller.h"
+#include "RecoLocalCalo/HGCalRecProducers/plugins/HeterogeneousHGCalHEFCellPositionsFiller.h"
 
 HeterogeneousHGCalHEFCellPositionsFiller::HeterogeneousHGCalHEFCellPositionsFiller(const edm::ParameterSet& ps)
 {
@@ -98,4 +98,7 @@ std::unique_ptr<HeterogeneousHGCalHEFCellPositionsConditions> HeterogeneousHGCal
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"
-DEFINE_FWK_MODULE(HeterogeneousHGCalHEFCellPositionsFiller);
+#include "FWCore/Utilities/interface/typelookup.h"
+#include "FWCore/Framework/interface/eventsetuprecord_registration_macro.h"
+
+DEFINE_FWK_EVENTSETUP_MODULE(HeterogeneousHGCalHEFCellPositionsFiller);

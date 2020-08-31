@@ -14,6 +14,7 @@
 <use name="Geometry/HGCalGeometry"/>
 <use name="Geometry/HGCalCommonData"/>
 <use name="PhysicsTools/UtilAlgos"/>
+<use name="CondFormats/DataRecord"/>
 <library   file="*.cc *.cu" name="RecoLocalCaloHGCalRecProducersPlugins">
   <flags   EDM_PLUGIN="1"/>
 </library>
