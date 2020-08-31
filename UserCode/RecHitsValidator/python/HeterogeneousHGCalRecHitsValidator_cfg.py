@@ -12,7 +12,7 @@ process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
 process.load('Configuration.StandardSequences.MagneticField_cff')
 #process.load('Configuration.EventContent.EventContent_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.load('Configuration.Geometry.GeometryExtended2026D46Reco_cff')
+process.load('Configuration.Geometry.GeometryExtended2026D49Reco_cff')
 process.load('HeterogeneousCore.CUDAServices.CUDAService_cfi')
 process.load('RecoLocalCalo.HGCalRecProducers.HGCalRecHit_cfi')
 process.load('SimCalorimetry.HGCalSimProducers.hgcalDigitizer_cfi')
@@ -20,7 +20,6 @@ process.load('SimCalorimetry.HGCalSimProducers.hgcalDigitizer_cfi')
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic', '')
 
-from RecoLocalCalo.HGCalRecProducers.HGCalRecHit_cfi import dEdX_weights_v10
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 #TFileService
@@ -41,6 +40,20 @@ process.source = cms.Source("PoolSource",
 
 process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool( False )) #add option for edmStreams
+process.HeterogeneousHGCalEERecHits = cms.EDProducer('HeterogeneousHGCalEERecHitProducer',
+                                                     HGCEEUncalibRecHitsTok = cms.InputTag('HGCalUncalibRecHit', 'HGCEEUncalibRecHits'),
+                                                     HGCEE_keV2DIGI = HGCalRecHit.__dict__['HGCEE_keV2DIGI'],
+                                                     minValSiPar    = HGCalRecHit.__dict__['minValSiPar'],
+                                                     maxValSiPar    = HGCalRecHit.__dict__['maxValSiPar'],
+                                                     constSiPar     = HGCalRecHit.__dict__['constSiPar'],
+                                                     noiseSiPar     = HGCalRecHit.__dict__['noiseSiPar'],
+                                                     HGCEE_fCPerMIP = HGCalRecHit.__dict__['HGCEE_fCPerMIP'],
+                                                     HGCEE_isSiFE   = HGCalRecHit.__dict__['HGCEE_isSiFE'],
+                                                     HGCEE_noise_fC = HGCalRecHit.__dict__['HGCEE_noise_fC'],
+                                                     HGCEE_cce      = HGCalRecHit.__dict__['HGCEE_cce'],
+                                                     rcorr          = HGCalRecHit.__dict__['thicknessCorrection'],
+                                                     weights        = HGCalRecHit.__dict__['layerWeights']
+)
 process.HeterogeneousHGCalHEFRecHits = cms.EDProducer( 'HeterogeneousHGCalHEFRecHitProducer',
                                                        HGCHEFUncalibRecHitsTok = cms.InputTag('HGCalUncalibRecHit', 'HGCHEFUncalibRecHits'),
                                                        HGCHEF_keV2DIGI = HGCalRecHit.__dict__['HGCHEF_keV2DIGI'],
@@ -56,13 +69,22 @@ process.HeterogeneousHGCalHEFRecHits = cms.EDProducer( 'HeterogeneousHGCalHEFRec
                                                        rangeMask       = HGCalRecHit.__dict__['rangeMask'],
                                                        rcorr           = HGCalRecHit.__dict__['thicknessCorrection'],
                                                        weights         = HGCalRecHit.__dict__['layerWeights'] )
+process.HeterogeneousHGCalHEBRecHits = cms.EDProducer('HeterogeneousHGCalHEBRecHitProducer',
+                                                      HGCHEBUncalibRecHitsTok = cms.InputTag('HGCalUncalibRecHit', 'HGCHEBUncalibRecHits'),
+                                                      HGCHEB_keV2DIGI  = HGCalRecHit.__dict__['HGCHEB_keV2DIGI'],
+                                                      HGCHEB_noise_MIP = HGCalRecHit.__dict__['HGCHEB_noise_MIP'],
+                                                      weights          = HGCalRecHit.__dict__['layerWeights'] )
 
 
 process.valid = cms.EDAnalyzer( "HeterogeneousHGCalRecHitsValidator",
+                                cpuRecHitsEEToken = cms.InputTag('HeterogeneousHGCalEERecHits','HeterogeneousHGCalEERecHits'),
+                                gpuRecHitsEEToken = cms.InputTag('HeterogeneousHGCalEERecHits','HeterogeneousHGCalEERecHits'),
                                 cpuRecHitsHSiToken = cms.InputTag('HeterogeneousHGCalHEFRecHits','HeterogeneousHGCalHEFRecHits'),
-                                gpuRecHitsHSiToken = cms.InputTag('HeterogeneousHGCalHEFRecHits','HeterogeneousHGCalHEFRecHits') )
+                                gpuRecHitsHSiToken = cms.InputTag('HeterogeneousHGCalHEFRecHits','HeterogeneousHGCalHEFRecHits'),
+                                cpuRecHitsHSciToken = cms.InputTag('HeterogeneousHGCalHEBRecHits','HeterogeneousHGCalHEBRecHits'),
+                                gpuRecHitsHSciToken = cms.InputTag('HeterogeneousHGCalHEBRecHits','HeterogeneousHGCalHEBRecHits') )
 
-process.recHitsTask = cms.Task( process.HeterogeneousHGCalHEFRecHits )
+process.recHitsTask = cms.Task( process.HeterogeneousHGCalEERecHits, process.HeterogeneousHGCalHEFRecHits, process.HeterogeneousHGCalHEBRecHits )
 process.path = cms.Path( process.valid, process.recHitsTask )
 
 process.out = cms.OutputModule( "PoolOutputModule", 

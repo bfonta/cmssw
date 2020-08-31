@@ -1,5 +1,5 @@
-#ifndef RecoLocalCalo_HGCRecProducers_HeterogeneousHGCalHEFConditions_h
-#define RecoLocalCalo_HGCRecProducers_HeterogeneousHGCalHEFConditions_h
+#ifndef CondFormats_HGCalObjects_HeterogeneousHGCalHEFConditions_h
+#define CondFormats_HGCalObjects_HeterogeneousHGCalHEFConditions_h
 
 #include <numeric> //accumulate
 #include <typeinfo>
@@ -70,4 +70,4 @@ class HeterogeneousHGCalHEFCellPositionsConditions {
   cms::cuda::ESProduct<GPUData> gpuData_;
 };
 
-#endif //RecoLocalCalo_HGCRecProducers_HeterogeneousHGCalHEFConditions_h
+#endif //CondFormats_HGCalObjects_HeterogeneousHGCalHEFConditions_h

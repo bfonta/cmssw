@@ -27,6 +27,8 @@
 #include "SimDataFormats/Vertex/interface/SimVertex.h"
 #include "SimDataFormats/Vertex/interface/SimVertexContainer.h"
 
+#include "UserCode/RecHitsValidator/interface/validHit.h"
+
 #include "TTree.h"
 #include "TH1F.h"
 
@@ -34,8 +36,12 @@
 #include <string>
 
 struct ValidRecHits {
-  std::vector<float> son;
+  std::vector<float> energy;
+  std::vector<float> time;
+  std::vector<float> timeError;
   std::vector<unsigned int> detid;
+  std::vector<unsigned int> flagBits;
+  std::vector<float> son;
 };
   
 class HeterogeneousHGCalRecHitsValidator : public edm::EDAnalyzer 
@@ -55,9 +61,9 @@ class HeterogeneousHGCalRecHitsValidator : public edm::EDAnalyzer
   std::array< std::string, nsubdetectors> handles_str_ = {{"HGCalEESensitive", "HGCalHESiliconSensitive", "HGCalHEScintillatorSensitive"}};
   hgcal::RecHitTools recHitTools_;
 
-  TTree* tree_;
-  std::string treename_;
-  ValidRecHits cpuValidRecHits, gpuValidRecHits;
+  std::array< TTree*, nsubdetectors > trees_;
+  std::array< std::string, nsubdetectors > treenames_;
+  validHitCollection cpuValidRecHits, gpuValidRecHits, diffsValidRecHits;
   //std::vector< TH1F* > zhist;
 
   void set_geometry_(const edm::EventSetup&, const unsigned int&);
