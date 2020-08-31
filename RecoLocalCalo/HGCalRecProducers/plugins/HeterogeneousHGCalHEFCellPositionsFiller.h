@@ -7,15 +7,19 @@
 #include <chrono>
 #include <cuda_runtime.h>
 
+#include "FWCore/Framework/interface/ESProducer.h"
 #include "FWCore/Utilities/interface/EDGetToken.h"
 #include "FWCore/Utilities/interface/EDPutToken.h"
+#include "FWCore/Framework/interface/ESHandle.h"
+#include "FWCore/Framework/interface/ESTransientHandle.h"
+#include "FWCore/Framework/interface/ModuleFactory.h"
 #include "FWCore/Utilities/interface/InputTag.h"
-#include "FWCore/Framework/interface/stream/EDProducer.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/Exception.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
-#include "FWCore/Framework/interface/ESProducer.h"
 #include "FWCore/Framework/interface/EventSetup.h"
+#include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
+#include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 
 #include "DataFormats/HGCRecHit/interface/HGCRecHit.h"
 #include "DataFormats/HGCRecHit/interface/HGCRecHitCollections.h"
@@ -35,15 +39,15 @@
 #include "HeterogeneousCore/CUDAServices/interface/CUDAService.h"
 #include "HeterogeneousCore/CUDAUtilities/interface/cudaCheck.h"
 
-#include "HeterogeneousHGCalHEFCellPositionsConditions.h"
-#include "HeterogeneousHGCalProducerMemoryWrapper.h"
-#include "KernelManagerHGCalRecHit.h"
+#include "RecoLocalCalo/HGCalRecProducers/plugins/HeterogeneousHGCalHEFCellPositionsConditions.h"
+#include "RecoLocalCalo/HGCalRecProducers/plugins/HeterogeneousHGCalProducerMemoryWrapper.h"
+#include "RecoLocalCalo/HGCalRecProducers/plugins/KernelManagerHGCalRecHit.h"
 #include "CondFormats/DataRecord/interface/HeterogeneousHGCalHEFCellPositionsConditionsRecord.h"
 
 class HeterogeneousHGCalHEFCellPositionsFiller: public edm::ESProducer 
 {
  public:
-  explicit HeterogeneousHGCalHEFCellPositionsFiller(const edm::ParameterSet& ps);
+  explicit HeterogeneousHGCalHEFCellPositionsFiller(const edm::ParameterSet&);
   ~HeterogeneousHGCalHEFCellPositionsFiller() override;
   std::unique_ptr<HeterogeneousHGCalHEFCellPositionsConditions> produce(const HeterogeneousHGCalHEFCellPositionsConditionsRecord&);
 
