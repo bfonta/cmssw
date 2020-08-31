@@ -18,19 +18,22 @@
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
 HeterogeneousHGCalRecHitsValidator::HeterogeneousHGCalRecHitsValidator( const edm::ParameterSet &ps ) : 
-  tokens_( {{ {{consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("cpuRecHitsHSiToken")),
-		consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("gpuRecHitsHSiToken"))}},
+  tokens_( {{ {{consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("cpuRecHitsEEToken")),
+		consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("gpuRecHitsEEToken"))}},
 	      {{consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("cpuRecHitsHSiToken")),
 		consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("gpuRecHitsHSiToken"))}},
-	      {{consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("cpuRecHitsHSiToken")),
-		consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("gpuRecHitsHSiToken"))}} }} ),
-  treename_("tree")
+	      {{consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("cpuRecHitsHSciToken")),
+		consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("gpuRecHitsHSciToken"))}} }} ),
+  treenames_( {{"CEE", "CHSi", "CHSci"}} )
 {
   edm::Service<TFileService> fs;
-  tree_ = fs->make<TTree>(treename_.c_str(), treename_.c_str());
-  tree_->Branch( "cpuDetid", "std::vector<unsigned int>", &cpuValidRecHits.detid );
-  tree_->Branch( "gpuDetid", "std::vector<unsigned int>", &gpuValidRecHits.detid );
-  //zhist.push_back(fs->make<TH1F>(("z"+treename_).c_str(), ("z"+treename_).c_str(), 2000, -10, 650));
+  for(unsigned int i=0; i<nsubdetectors; ++i)
+    {
+      trees_[i] = fs->make<TTree>(treenames_[i].c_str(), treenames_[i].c_str());
+      trees_[i]->Branch( "cpu", "validHitCollection", &cpuValidRecHits );
+      trees_[i]->Branch( "gpu", "validHitCollection", &gpuValidRecHits );
+      trees_[i]->Branch( "diffs", "validHitCollection", &diffsValidRecHits );
+    }
 }
 
 HeterogeneousHGCalRecHitsValidator::~HeterogeneousHGCalRecHitsValidator()
@@ -54,8 +57,8 @@ void HeterogeneousHGCalRecHitsValidator::analyze(const edm::Event &event, const 
   recHitTools_.setGeometry(*baseGeom);
     
   //future subdetector loop
-  for(size_t idet=0; idet<1; ++idet) {
-    set_geometry_(setup, 1/*idet*/);
+  for(size_t idet=0; idet<nsubdetectors; ++idet) {
+    set_geometry_(setup, idet);
 
     //get hits produced with the CPU
     event.getByToken(tokens_[idet][0], handles_[idet][0]);
@@ -71,20 +74,29 @@ void HeterogeneousHGCalRecHitsValidator::analyze(const edm::Event &event, const 
       const HGCRecHit &cpuHit = cpuhits[i];
       const HGCRecHit &gpuHit = gpuhits[i];
 
-      /*
-      const HGCalDetId cpuDetid = cpuHit.detid();
-      const HGCalDetId gpuDetid = gpuHit.detid();
-      */
+      const float cpuEn = cpuHit.energy();
+      const float gpuEn = gpuHit.energy();
+      const float cpuTime = cpuHit.time();
+      const float gpuTime = gpuHit.time();
+      const float cpuTimeErr = cpuHit.timeError();
+      const float gpuTimeErr = gpuHit.timeError();
+      const HGCalDetId cpuDetId = cpuHit.detid();
+      const HGCalDetId gpuDetId = gpuHit.detid();
+      const float cpuFB = cpuHit.flagBits();
+      const float gpuFB = gpuHit.flagBits();
       const float cpuSoN = cpuHit.signalOverSigmaNoise();
       const float gpuSoN = gpuHit.signalOverSigmaNoise();
-      /*
-      cpuValidRecHits.detid.push_back( cpuDetid );
-      gpuValidRecHits.detid.push_back( gpuDetid );
-      */
-      std::cout << gpuSoN << ", " << cpuSoN << std::endl;
+
+      validHit vCPU(cpuEn, cpuTime, cpuTimeErr, cpuDetId, cpuFB, cpuSoN);
+      validHit vGPU(gpuEn, gpuTime, gpuTimeErr, gpuDetId, gpuFB, gpuSoN);
+      validHit vDiffs(cpuEn-gpuEn, cpuTime-gpuTime, cpuTimeErr-gpuTimeErr, cpuDetId-gpuDetId, cpuFB-gpuFB, cpuSoN-gpuSoN);
+      
+      cpuValidRecHits.push_back( vCPU );
+      gpuValidRecHits.push_back( vGPU );
+      diffsValidRecHits.push_back( vDiffs );
     }
-  }    
-  tree_->Fill();
+    trees_[idet]->Fill();
+  }
 }
 
 //define this as a plug-in

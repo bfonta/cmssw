@@ -1,5 +1,5 @@
-#ifndef RecoLocalCalo_HGCalRecProducers_HeterogeneousHGCalHEFCellPositionsFiller_h
-#define RecoLocalCalo_HGCalRecProducers_HeterogeneousHGCalHEFCellPositionsFiller_h
+#ifndef RecoLocalCalo_HGCalESProducers_HeterogeneousHGCalHEFCellPositionsFiller_h
+#define RecoLocalCalo_HGCalESProducers_HeterogeneousHGCalHEFCellPositionsFiller_h
 
 #include <iostream>
 #include <string>
@@ -16,16 +16,9 @@
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/Exception.h"
-#include "FWCore/ServiceRegistry/interface/Service.h"
 #include "FWCore/Framework/interface/EventSetup.h"
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
-
-#include "DataFormats/HGCRecHit/interface/HGCRecHit.h"
-#include "DataFormats/HGCRecHit/interface/HGCRecHitCollections.h"
-#include "DataFormats/ForwardDetId/interface/HGCSiliconDetId.h"
-
-#include "CommonTools/UtilAlgos/interface/TFileService.h"
 
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
 
@@ -33,13 +26,7 @@
 #include "Geometry/HGCalCommonData/interface/HGCalDDDConstants.h"
 #include "Geometry/HGCalCommonData/interface/HGCalWaferIndex.h"
 
-#include "HeterogeneousCore/CUDAUtilities/interface/cudaCheck.h"
-#include "HeterogeneousCore/CUDACore/interface/ScopedContext.h"
-#include "HeterogeneousCore/CUDACore/interface/ContextState.h"
-#include "HeterogeneousCore/CUDAServices/interface/CUDAService.h"
-#include "HeterogeneousCore/CUDAUtilities/interface/cudaCheck.h"
-
-#include "RecoLocalCalo/HGCalRecProducers/plugins/HeterogeneousHGCalHEFCellPositionsConditions.h"
+#include "RecoLocalCalo/HGCalESProducers/plugins/HeterogeneousHGCalHEFCellPositionsConditions.h"
 #include "RecoLocalCalo/HGCalRecProducers/plugins/HeterogeneousHGCalProducerMemoryWrapper.h"
 #include "RecoLocalCalo/HGCalRecProducers/plugins/KernelManagerHGCalRecHit.h"
 #include "CondFormats/DataRecord/interface/HeterogeneousHGCalHEFCellPositionsConditionsRecord.h"
@@ -66,4 +53,4 @@ class HeterogeneousHGCalHEFCellPositionsFiller: public edm::ESProducer
   const HGCalParameters* params_ = nullptr;
 };
 
-#endif //RecoLocalCalo_HGCalRecProducers_HeterogeneousHGCalHEFCellPositionsFiller_h
+#endif //RecoLocalCalo_HGCalESProducers_HeterogeneousHGCalHEFCellPositionsFiller_h

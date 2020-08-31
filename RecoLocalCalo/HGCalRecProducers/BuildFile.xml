@@ -1,7 +1,7 @@
 <use name="FWCore/Framework"/>
 <use name="FWCore/Utilities"/>
 <use name="FWCore/ParameterSet"/>
-<use name="FWCore/ServicRegistry"/>
+<use name="FWCore/ServiceRegistry"/>
 <use name="FWCore/MessageLogger"/>
 <use name="DataFormats/HGCRecHit"/>
 <use name="DataFormats/ForwardDetId"/>

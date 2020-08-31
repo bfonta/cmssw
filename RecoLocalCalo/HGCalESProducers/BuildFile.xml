@@ -1,0 +1,13 @@
+<use   name="FWCore/MessageLogger"/>
+<use   name="FWCore/Framework"/>
+<use   name="FWCore/Utilities"/>
+<use   name="FWCore/ParameterSet"/>
+<use   name="RecoLocalCalo/HGCalRecAlgos"/>
+<use   name="RecoLocalCalo/HGCalRecProducers"/>
+<use   name="Geometry/HGCalGeometry"/>
+<use   name="Geometry/HGCalCommonData"/>
+<use   name="CondFormats/DataRecord"/>
+<use   name="clhep"/>
+<export>
+  <lib   name="1"/>
+</export>

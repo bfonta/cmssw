@@ -100,5 +100,4 @@ std::unique_ptr<HeterogeneousHGCalHEFCellPositionsConditions> HeterogeneousHGCal
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/Utilities/interface/typelookup.h"
 #include "FWCore/Framework/interface/eventsetuprecord_registration_macro.h"
-
 DEFINE_FWK_EVENTSETUP_MODULE(HeterogeneousHGCalHEFCellPositionsFiller);
