@@ -44,6 +44,7 @@ class HeterogeneousHGCalHEFCellPositionsFiller: public edm::ESProducer
   //cms::cuda::ContextState ctxState_;
 
   //conditions (geometry, topology, ...)
+  void geometryCallback(const &IdealGeometryRecord);
   void set_conditions_();
 
   const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct* d_conds = nullptr;

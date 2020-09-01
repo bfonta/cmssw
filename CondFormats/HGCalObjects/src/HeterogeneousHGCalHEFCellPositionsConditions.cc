@@ -12,7 +12,7 @@ HeterogeneousHGCalHEFCellPositionsConditions::HeterogeneousHGCalHEFCellPositions
 size_t HeterogeneousHGCalHEFCellPositionsConditions::allocate_memory_pos_(const std::vector<size_t>& sz)
 {
   size_t chunk_ = std::accumulate(sz.begin(), sz.end(), 0); //total memory required in bytes
-  gpuErrchk(cudaMallocHost(&this->posmap_.x, chunk_));
+  cudaCheck(cudaMallocHost(&this->posmap_.x, chunk_));
   return chunk_;
 }
 
@@ -119,7 +119,7 @@ std::vector<size_t> HeterogeneousHGCalHEFCellPositionsConditions::calculate_memo
 }
 
 HeterogeneousHGCalHEFCellPositionsConditions::~HeterogeneousHGCalHEFCellPositionsConditions() {
-  gpuErrchk(cudaFreeHost(this->posmap_.x));
+  cudaCheck(cudaFreeHost(this->posmap_.x));
 }
 
 //I could use template specializations
@@ -211,9 +211,9 @@ hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct const *Hetero
 	  [this](GPUData& data, cudaStream_t stream)
 	  {    
 	    // Allocate the payload object on pinned host memory.
-	    gpuErrchk(cudaMallocHost(&data.host, sizeof(hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct)));
+	    cudaCheck(cudaMallocHost(&data.host, sizeof(hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct)));
 	    // Allocate the payload array(s) on device memory.
-	    gpuErrchk(cudaMalloc(&(data.host->posmap.x), chunk_pos_));
+	    cudaCheck(cudaMalloc(&(data.host->posmap.x), chunk_pos_));
 	    // Complete the host-side information on the payload
 	    data.host->posmap.waferSize        = this->posmap_.waferSize;
 	    data.host->posmap.sensorSeparation = this->posmap_.sensorSeparation;
@@ -240,16 +240,16 @@ hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct const *Hetero
 	      }
 
 	    // Allocate the payload object on the device memory.
-	    gpuErrchk(cudaMalloc(&data.device, sizeof(hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct)));
+	    cudaCheck(cudaMalloc(&data.device, sizeof(hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct)));
 
 	    // Transfer the payload, first the array(s) ...
 	    //Important: The transfer does *not* start at posmap.x because the positions are not known in the CPU side!
 	    size_t position_memory_size_to_transfer = chunk_pos_ -  this->number_position_arrays*this->nelems_posmap_*sfloat; //size in bytes occupied by the non-position information
 	    std::cout <<  position_memory_size_to_transfer << ", " << chunk_pos_ << ", " << this->number_position_arrays*this->nelems_posmap_*sfloat << ", " << this->number_position_arrays*this->nelems_posmap_ << ", " << this->nelems_posmap_ << std::endl;
-	    gpuErrchk(cudaMemcpyAsync(data.host->posmap.z_per_layer, this->posmap_.z_per_layer, position_memory_size_to_transfer, cudaMemcpyHostToDevice, stream));
+	    cudaCheck(cudaMemcpyAsync(data.host->posmap.z_per_layer, this->posmap_.z_per_layer, position_memory_size_to_transfer, cudaMemcpyHostToDevice, stream));
 	    
 	    // ... and then the payload object
-	    gpuErrchk(cudaMemcpyAsync(data.device, data.host, sizeof(hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct), cudaMemcpyHostToDevice, stream));
+	    cudaCheck(cudaMemcpyAsync(data.device, data.host, sizeof(hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct), cudaMemcpyHostToDevice, stream));
 	  }); //gpuData_.dataForCurrentDeviceAsync
 
   // Returns the payload object on the memory of the current device
@@ -260,8 +260,8 @@ hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct const *Hetero
 HeterogeneousHGCalHEFCellPositionsConditions::GPUData::~GPUData() {
   if(host != nullptr) 
     {
-      gpuErrchk(cudaFree(host->posmap.x));
-      gpuErrchk(cudaFreeHost(host));
+      cudaCheck(cudaFree(host->posmap.x));
+      cudaCheck(cudaFreeHost(host));
     }
-  gpuErrchk(cudaFree(device));
+  cudaCheck(cudaFree(device));
 }
