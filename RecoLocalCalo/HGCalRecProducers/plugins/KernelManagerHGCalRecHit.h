@@ -20,16 +20,6 @@
 extern __constant__ uint32_t calo_rechit_masks[];
 #endif
 
-#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
-inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
-{
-   if (code != cudaSuccess) 
-   {
-      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
-      if (abort) exit(code);
-   }
-}
-
 namespace {
   dim3 nblocks_;
   constexpr dim3 nthreads_(256); //some kernels will potentially not allocate shared memory properly with a lower number

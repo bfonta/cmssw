@@ -2,7 +2,7 @@
 
 HeterogeneousHGCalHEFCellPositionsFiller::HeterogeneousHGCalHEFCellPositionsFiller(const edm::ParameterSet& ps)
 {
-  setWhatProduced(this).setConsumes(geometryToken_);
+  setWhatProduced(this, dependsOn(&HeterogeneousHGCalHEFCellPositionsFiller::geometryCallback)).setConsumes(geometryToken_);
   posmap_ = new hgcal_conditions::positions::HGCalPositionsMapping();
 }
 
