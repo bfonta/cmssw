@@ -78,6 +78,7 @@ process.HeterogeneousHGCalHEBRecHits = cms.EDProducer('HeterogeneousHGCalHEBRecH
                                                       weights          = HGCalRecHit.__dict__['layerWeights'] 
 )
 process.HGCalRecHits = HGCalRecHit.clone()
+
 process.valid = cms.EDAnalyzer( "HeterogeneousHGCalRecHitsValidator",
                                 cpuRecHitsEEToken = cms.InputTag('HGCalRecHits', 'HGCEERecHits'),
                                 gpuRecHitsEEToken = cms.InputTag('HeterogeneousHGCalEERecHits','HeterogeneousHGCalEERecHits'),
@@ -85,8 +86,19 @@ process.valid = cms.EDAnalyzer( "HeterogeneousHGCalRecHitsValidator",
                                 gpuRecHitsHSiToken = cms.InputTag('HeterogeneousHGCalHEFRecHits','HeterogeneousHGCalHEFRecHits'),
                                 cpuRecHitsHSciToken = cms.InputTag('HGCalRecHits', 'HGCHEBRecHits'),
                                 gpuRecHitsHSciToken = cms.InputTag('HeterogeneousHGCalHEBRecHits','HeterogeneousHGCalHEBRecHits') )
+"""
+process.valid = cms.EDAnalyzer( "HeterogeneousHGCalRecHitsValidator",
+                                cpuRecHitsEEToken = cms.InputTag('HGCalRecHits', 'HGCHEFRecHits'),
+                                gpuRecHitsEEToken = cms.InputTag('HeterogeneousHGCalHEFRecHits','HeterogeneousHGCalHEFRecHits'),
+                                cpuRecHitsHSiToken = cms.InputTag('HGCalRecHits', 'HGCHEFRecHits'),
+                                gpuRecHitsHSiToken = cms.InputTag('HeterogeneousHGCalHEFRecHits','HeterogeneousHGCalHEFRecHits'),
+                                cpuRecHitsHSciToken = cms.InputTag('HGCalRecHits', 'HGCHEFRecHits'),
+                                gpuRecHitsHSciToken = cms.InputTag('HeterogeneousHGCalHEFRecHits','HeterogeneousHGCalHEFRecHits') 
+)
+"""
 
 process.recHitsTask = cms.Task( process.HGCalRecHits, process.HeterogeneousHGCalEERecHits, process.HeterogeneousHGCalHEFRecHits, process.HeterogeneousHGCalHEBRecHits )
+#process.recHitsTask = cms.Task( process.HGCalRecHits, process.HeterogeneousHGCalHEFRecHits )
 process.path = cms.Path( process.valid, process.recHitsTask )
 
 process.out = cms.OutputModule( "PoolOutputModule", 
