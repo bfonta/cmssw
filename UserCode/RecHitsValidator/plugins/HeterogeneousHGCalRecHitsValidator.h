@@ -63,7 +63,7 @@ class HeterogeneousHGCalRecHitsValidator : public edm::EDAnalyzer
 
   std::array< TTree*, nsubdetectors > trees_;
   std::array< std::string, nsubdetectors > treenames_;
-  validHitCollection cpuValidRecHits, gpuValidRecHits, diffsValidRecHits;
+  std::array< validHitCollection, nsubdetectors > cpuValidRecHits, gpuValidRecHits, diffsValidRecHits;
   //std::vector< TH1F* > zhist;
 
   void set_geometry_(const edm::EventSetup&, const unsigned int&);

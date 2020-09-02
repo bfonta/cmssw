@@ -1,0 +1,15 @@
+<use name="cuda"/>
+<use name="HeterogeneousCore/CUDACore"/>
+<use name="HeterogeneousCore/CUDAUtilities"/>
+<use name="Geometry/CaloGeometry"/>
+<use name="FWCore/Framework"/>
+<use name="FWCore/Utilities"/>
+<use name="FWCore/ParameterSet"/>
+<use name="RecoLocalCalo/HGCalRecAlgos"/>
+<use name="RecoLocalCalo/HGCalRecProducers"/>
+<use name="Geometry/HGCalGeometry"/>
+<use name="Geometry/HGCalCommonData"/>
+<use name="CondFormats/DataRecord"/>
+<library   file="*.cc *.cu" name="RecoLocalCaloHGCalESProducersPlugins">
+  <flags   EDM_PLUGIN="1"/>
+</library>

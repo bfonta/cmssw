@@ -131,7 +131,6 @@ void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, const
 	CUDADataFormats/HGCal/interface/HGCUncalibratedRecHitsToRecHitsConstants.h maxsizes_constanats will perhaps have to be changed (change some 3's to 6's) 
       */
       HeterogeneousHGCSiliconDetId detid(src_soa.id_[i]);
-      //printf( "Layer offset: %d\n", cdata.layerOffset_ );
       uint32_t layer = detid.layer() + cdata.layerOffset_;
       float weight         = get_weight_from_layer(layer, cdata.weights_);
       float rcorr          = 1.f;//get_thickness_correction(detid.type(), cdata.rcorr_);
@@ -193,9 +192,6 @@ void fill_positions_from_detids(const hgcal_conditions::HeterogeneousHEFCellPosi
 
       conds->posmap.x[i] = xpos; //* side; multiply by -1 if one wants to obtain the position from the opposite endcap. CAREFUL WITH LATER DETECTOR ALIGNMENT!!!
       conds->posmap.y[i] = ypos;
-
-      //printf( "%d - %lf - %lf\n", cV - ncells, 1.5f*(static_cast<float>(cV) - static_cast<float>(ncells)), 1.5f*(static_cast<float>(cV - ncells)) );
-      //printf("waferU: %d\t waferV: %d\t cellU: %d\t cellV: %d\t nCells: %d\t R1: %lf\t Layer: %d\t PosX: %lf\t PosY: %lf\t PosZ: %lf\n", wU, wV, cU, cV, ncells, R1, layer, conds->posmap.x[i], conds->posmap.y[i], conds->posmap.z[i]);
     }
 }
 
