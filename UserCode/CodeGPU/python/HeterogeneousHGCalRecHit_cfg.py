@@ -48,7 +48,7 @@ process.HeterogeneousHGCalEERecHits = cms.EDProducer('HeterogeneousHGCalEERecHit
                                                      HGCEE_isSiFE   = HGCalRecHit.__dict__['HGCEE_isSiFE'],
                                                      HGCEE_noise_fC = HGCalRecHit.__dict__['HGCEE_noise_fC'],
                                                      HGCEE_cce      = HGCalRecHit.__dict__['HGCEE_cce'],
-                                                     rcorr          = HGCalRecHit.__dict__['thicknessCorrection'],
+                                                     rcorr          = cms.vdouble( HGCalRecHit.__dict__['thicknessCorrection'][0:3] ),
                                                      weights        = HGCalRecHit.__dict__['layerWeights']
 )
 process.HeterogeneousHGCalHEFCellPositionsFiller = cms.ESProducer("HeterogeneousHGCalHEFCellPositionsFiller")
@@ -63,7 +63,7 @@ process.HeterogeneousHGCalHEFRecHits = cms.EDProducer('HeterogeneousHGCalHEFRecH
                                                       HGCHEF_isSiFE   = HGCalRecHit.__dict__['HGCHEF_isSiFE'],
                                                       HGCHEF_noise_fC = HGCalRecHit.__dict__['HGCHEF_noise_fC'],
                                                       HGCHEF_cce      = HGCalRecHit.__dict__['HGCHEF_cce'],
-                                                      rcorr           = HGCalRecHit.__dict__['thicknessCorrection'],
+                                                      rcorr           = cms.vdouble( HGCalRecHit.__dict__['thicknessCorrection'][3:6] ),
                                                       weights         = HGCalRecHit.__dict__['layerWeights'] )
 
 process.HeterogeneousHGCalHEBRecHits = cms.EDProducer('HeterogeneousHGCalHEBRecHitProducer',

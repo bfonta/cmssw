@@ -1,8 +1,9 @@
-#include "RecoLocalCalo/HGCalRecProducers/plugins/HeterogeneousHGCalHEFCellPositionsFiller.h"
+#include "RecoLocalCalo/HGCalESProducers/plugins/HeterogeneousHGCalHEFCellPositionsFiller.h"
 
 HeterogeneousHGCalHEFCellPositionsFiller::HeterogeneousHGCalHEFCellPositionsFiller(const edm::ParameterSet& ps)
 {
-  setWhatProduced(this, dependsOn(&HeterogeneousHGCalHEFCellPositionsFiller::geometryCallback)).setConsumes(geometryToken_);
+  //setWhatProduced(this/*, dependsOn(&HeterogeneousHGCalHEFCellPositionsFiller::geometryCallback)*/).setConsumes(geometryToken_);
+  geometryToken_ = setWhatProduced(this).consumesFrom<HGCalGeometry, IdealGeometryRecord>(edm::ESInputTag{"", "HGCalHESiliconSensitive"});
   posmap_ = new hgcal_conditions::positions::HGCalPositionsMapping();
 }
 
@@ -70,17 +71,10 @@ void HeterogeneousHGCalHEFCellPositionsFiller::set_conditions_()
 
 std::unique_ptr<HeterogeneousHGCalHEFCellPositionsConditions> HeterogeneousHGCalHEFCellPositionsFiller::produce(const HeterogeneousHGCalHEFCellPositionsConditionsRecord& iRecord)
 {
-  /*
-  std::string handle_str;
-  handle_str = "HGCalHESiliconSensitive";
-  edm::ESHandle<HGCalGeometry> handle;
-  setup.get<IdealGeometryRecord>().get(handle_str, handle);
-  */
-
   auto geom = iRecord.getTransientHandle(geometryToken_);
   ddd_ = &( geom->topology().dddConstants() );
   params_ = ddd_->getParameter();
-  
+
   //const cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w), ctxState_};
   
   set_conditions_();

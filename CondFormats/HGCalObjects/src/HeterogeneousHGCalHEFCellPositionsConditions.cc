@@ -135,7 +135,7 @@ float*& HeterogeneousHGCalHEFCellPositionsConditions::select_pointer_f_(cpos::He
     case 2:
       return cpuObject->z_per_layer;
     default:
-      edm::LogError("HeterogeneousHGCalHEFCellPositionsConditions") << "select_pointer_i(heterogeneous): no item.";
+      edm::LogError("HeterogeneousHGCalHEFCellPositionsConditions") << "select_pointer_i(heterogeneous): no item (typed " << item << ").";
       return cpuObject->x;
     }
 }
@@ -147,7 +147,7 @@ std::vector<float>& HeterogeneousHGCalHEFCellPositionsConditions::select_pointer
     case 0:
       return cpuObject->z_per_layer;
     default:
-      edm::LogError("HeterogeneousHGCalHEFCellPositionsConditions") << "select_pointer_i(non-heterogeneous): no item.";
+      edm::LogError("HeterogeneousHGCalHEFCellPositionsConditions") << "select_pointer_i(non-heterogeneous): no item (typed " << item << ").";
       return cpuObject->z_per_layer;
     }
 }
@@ -183,19 +183,19 @@ uint32_t*& HeterogeneousHGCalHEFCellPositionsConditions::select_pointer_u_(cpos:
     case 4:
       return cpuObject->detid;
     default:
-      edm::LogError("HeterogeneousHGCalHEFCellPositionsConditions") << "select_pointer_u(heterogeneous): no item.";
+      edm::LogError("HeterogeneousHGCalHEFCellPositionsConditions") << "select_pointer_u(heterogeneous): no item (typed " << item << ").";
       return cpuObject->detid;
     }
 }
 
 std::vector<uint32_t>& HeterogeneousHGCalHEFCellPositionsConditions::select_pointer_u_(cpos::HGCalPositionsMapping* cpuObject, 
-										 const unsigned int& item) {
+										       const unsigned int& item) {
   switch(item) 
     {
     case 2:
       return cpuObject->detid;
     default:
-      edm::LogError("HeterogeneousHGCalHEFCellPositionsConditions") << "select_pointer_u(non-heterogeneous): no item.";
+      edm::LogError("HeterogeneousHGCalHEFCellPositionsConditions") << "select_pointer_u(non-heterogeneous): no item (typed " << item << ").";
       return cpuObject->detid;
     }
 }

@@ -24,26 +24,26 @@ HeterogeneousHGCalEERecHitProducer::~HeterogeneousHGCalEERecHitProducer()
 {
 }
 
-std::string HeterogeneousHGCalEERecHitProducer::assert_error_message_(std::string var, const size_t& s)
+std::string HeterogeneousHGCalEERecHitProducer::assert_error_message_(std::string var, const size_t& s1, const size_t& s2)
 {
   std::string str1 = "The '";
   std::string str2 = "' array must be at least of size ";
-  std::string str3 = " to hold the configuration data.";
-  return str1 + var + str2 + std::to_string(s) + str3;
+  std::string str3 = " to hold the configuration data, but is of size ";
+  return str1 + var + str2 + std::to_string(s1) + str3 + std::to_string(s2);
 }
 
 void HeterogeneousHGCalEERecHitProducer::assert_sizes_constants_(const HGCConstantVectorData& vd)
 {
   if( vdata_.fCPerMIP_.size() != maxsizes_constants::ee_fCPerMIP )
-    cms::cuda::LogError("WrongSize") << this->assert_error_message_("fCPerMIP", vdata_.fCPerMIP_.size());
+    cms::cuda::LogError("WrongSize") << this->assert_error_message_("fCPerMIP", maxsizes_constants::ee_fCPerMIP, vdata_.fCPerMIP_.size());
   else if( vdata_.cce_.size() != maxsizes_constants::ee_cce )
-    cms::cuda::LogError("WrongSize") << this->assert_error_message_("cce", vdata_.cce_.size());
+    cms::cuda::LogError("WrongSize") << this->assert_error_message_("cce", maxsizes_constants::ee_cce, vdata_.cce_.size());
   else if( vdata_.noise_fC_.size() != maxsizes_constants::ee_noise_fC )
-    cms::cuda::LogError("WrongSize") << this->assert_error_message_("noise_fC", vdata_.noise_fC_.size());
+    cms::cuda::LogError("WrongSize") << this->assert_error_message_("noise_fC", maxsizes_constants::ee_noise_fC, vdata_.noise_fC_.size());
   else if( vdata_.rcorr_.size() != maxsizes_constants::ee_rcorr ) 
-    cms::cuda::LogError("WrongSize") << this->assert_error_message_("rcorr", vdata_.rcorr_.size());
+    cms::cuda::LogError("WrongSize") << this->assert_error_message_("rcorr", maxsizes_constants::ee_rcorr, vdata_.rcorr_.size());
   else if( vdata_.weights_.size() != maxsizes_constants::ee_weights ) 
-    cms::cuda::LogError("WrongSize") << this->assert_error_message_("weights", vdata_.weights_.size());
+    cms::cuda::LogError("WrongSize") << this->assert_error_message_("weights", maxsizes_constants::ee_weights, vdata_.weights_.size());
 }
 
 void HeterogeneousHGCalEERecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {
