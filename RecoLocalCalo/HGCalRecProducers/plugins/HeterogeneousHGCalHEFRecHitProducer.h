@@ -62,8 +62,8 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
   HGCConstantVectorData vdata_;
 
   //memory
-  std::string assert_error_message_(std::string var, const size_t& s);
-  void assert_sizes_constants_(const HGCConstantVectorData& vd);
+  std::string assert_error_message_(std::string, const size_t&, const size_t&);
+  void assert_sizes_constants_(const HGCConstantVectorData&);
   void allocate_memory_(const cudaStream_t&);
   void deallocate_memory_();
   cms::cuda::host::unique_ptr<std::byte[]> mem_in_;

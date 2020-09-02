@@ -165,7 +165,7 @@ namespace hgcal_conditions {
   struct HeterogeneousHEFConditionsESProduct {
     parameters::HeterogeneousHGCalHEFParameters params;
     //positions::HeterogeneousHGCalPositionsMapping posmap;
-    size_t nelems_posmap;
+    //size_t nelems_posmap;
   };
   struct HeterogeneousHEBConditionsESProduct {
     parameters::HeterogeneousHGCalHEBParameters params;

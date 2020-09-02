@@ -26,7 +26,7 @@
 #include "Geometry/HGCalCommonData/interface/HGCalDDDConstants.h"
 #include "Geometry/HGCalCommonData/interface/HGCalWaferIndex.h"
 
-#include "RecoLocalCalo/HGCalESProducers/plugins/HeterogeneousHGCalHEFCellPositionsConditions.h"
+#include "CondFormats/HGCalObjects/interface/HeterogeneousHGCalHEFCellPositionsConditions.h"
 #include "RecoLocalCalo/HGCalRecProducers/plugins/HeterogeneousHGCalProducerMemoryWrapper.h"
 #include "RecoLocalCalo/HGCalRecProducers/plugins/KernelManagerHGCalRecHit.h"
 #include "CondFormats/DataRecord/interface/HeterogeneousHGCalHEFCellPositionsConditionsRecord.h"
@@ -44,7 +44,7 @@ class HeterogeneousHGCalHEFCellPositionsFiller: public edm::ESProducer
   //cms::cuda::ContextState ctxState_;
 
   //conditions (geometry, topology, ...)
-  void geometryCallback(const &IdealGeometryRecord);
+  //void geometryCallback(const IdealGeometryRecord&);
   void set_conditions_();
 
   const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct* d_conds = nullptr;

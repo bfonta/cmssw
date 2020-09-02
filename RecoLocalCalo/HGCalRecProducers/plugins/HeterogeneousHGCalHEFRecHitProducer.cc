@@ -35,26 +35,26 @@ HeterogeneousHGCalHEFRecHitProducer::~HeterogeneousHGCalHEFRecHitProducer()
   //delete posmap_;
 }
 
-std::string HeterogeneousHGCalHEFRecHitProducer::assert_error_message_(std::string var, const size_t& s)
+std::string HeterogeneousHGCalHEFRecHitProducer::assert_error_message_(std::string var, const size_t& s1, const size_t& s2)
 {
   std::string str1 = "The '";
   std::string str2 = "' array must be at least of size ";
-  std::string str3 = " to hold the configuration data.";
-  return str1 + var + str2 + std::to_string(s) + str3;
+  std::string str3 = " to hold the configuration data, but is of size ";
+  return str1 + var + str2 + std::to_string(s1) + str3 + std::to_string(s2);
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::assert_sizes_constants_(const HGCConstantVectorData& vd)
 {
   if( vdata_.fCPerMIP_.size() != maxsizes_constants::hef_fCPerMIP )
-    cms::cuda::LogError("WrongSize") << this->assert_error_message_("fCPerMIP", vdata_.fCPerMIP_.size());
+    cms::cuda::LogError("WrongSize") << this->assert_error_message_("fCPerMIP", maxsizes_constants::hef_fCPerMIP, vdata_.fCPerMIP_.size());
   else if( vdata_.cce_.size() != maxsizes_constants::hef_cce )
-    cms::cuda::LogError("WrongSize") << this->assert_error_message_("cce", vdata_.cce_.size());
+    cms::cuda::LogError("WrongSize") << this->assert_error_message_("cce", maxsizes_constants::hef_cce, vdata_.cce_.size());
   else if( vdata_.noise_fC_.size() != maxsizes_constants::hef_noise_fC )
-    cms::cuda::LogError("WrongSize") << this->assert_error_message_("noise_fC", vdata_.noise_fC_.size());
-  else if( vdata_.rcorr_.size() != maxsizes_constants::hef_rcorr ) 
-    cms::cuda::LogError("WrongSize") << this->assert_error_message_("rcorr", vdata_.rcorr_.size());
+    cms::cuda::LogError("WrongSize") << this->assert_error_message_("noise_fC", maxsizes_constants::hef_noise_fC, vdata_.noise_fC_.size());
+  else if( vdata_.rcorr_.size() != maxsizes_constants::hef_rcorr )
+    cms::cuda::LogError("WrongSize") << this->assert_error_message_("rcorr", maxsizes_constants::hef_rcorr, vdata_.rcorr_.size());
   else if( vdata_.weights_.size() != maxsizes_constants::hef_weights ) 
-    cms::cuda::LogError("WrongSize") << this->assert_error_message_("weights", vdata_.weights_.size());
+    cms::cuda::LogError("WrongSize") << this->assert_error_message_("weights", maxsizes_constants::hef_weights, vdata_.weights_.size());
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::beginRun(edm::Run const&, edm::EventSetup const& setup) {
@@ -62,8 +62,7 @@ void HeterogeneousHGCalHEFRecHitProducer::beginRun(edm::Run const&, edm::EventSe
   setup.get<CaloGeometryRecord>().get(baseGeom);
   tools_->setGeometry(*baseGeom);
   
-  std::string handle_str;
-  handle_str = "HGCalHESiliconSensitive";
+  std::string handle_str = "HGCalHESiliconSensitive";
   edm::ESHandle<HGCalGeometry> handle;
   setup.get<IdealGeometryRecord>().get(handle_str, handle);
   
@@ -75,13 +74,15 @@ void HeterogeneousHGCalHEFRecHitProducer::beginRun(edm::Run const&, edm::EventSe
 void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {
   const cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w), ctxState_};
 
-  edm::ESHandle<HeterogeneousHGCalHEFCellPositionsConditions> celpos;
-  setup.get<HeterogeneousHGCalHEFCellPositionsConditionsRecord>().get(celpos);
-  celpos->getHeterogeneousConditionsESProductAsync( 0 );
   /*
-  for(unsigned int i=0; i<celpos->z_per_layer.size(); ++i)
-    std::cout << celpos->z_per_layer[i] << std::endl;
+  edm::ESHandle<HeterogeneousHGCalHEFCellPositionsConditions> celpos_handle;
+  setup.get<HeterogeneousHGCalHEFCellPositionsConditionsRecord>().get(celpos_handle);
+  hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct const * celpos = celpos_handle->getHeterogeneousConditionsESProductAsync( 0 );
+  std::cout << "PRINT"  << std::endl;
+  std::cout << celpos->nelems_posmap << std::endl;
   */
+  //for(unsigned int i=0; i<40; ++i)
+  //  std::cout << celpos->posmap.z_per_layer[i] << std::endl;
     
   /*
   HeterogeneousHGCalHEFConditionsWrapper esproduct(params_, posmap_);

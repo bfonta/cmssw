@@ -7,18 +7,18 @@
 namespace maxsizes_constants {
   //EE
   constexpr size_t ee_fCPerMIP = 3; //number of elements pointed by hgcEE_fCPerMIP_
-  constexpr size_t ee_cce = 3; //number of elements posize_ted by hgcEE_cce_
-  constexpr size_t ee_noise_fC = 3; //number of elements posize_ted by hgcEE_noise_fC_
-  constexpr size_t ee_rcorr = 3; //number of elements posize_ted by rcorr_
-  constexpr size_t ee_weights = 53; //number of elements posize_ted by weights_
+  constexpr size_t ee_cce = 3; //number of elements pointed by hgcEE_cce_
+  constexpr size_t ee_noise_fC = 3; //number of elements pointed by hgcEE_noise_fC_
+  constexpr size_t ee_rcorr = 3; //number of elements pointed by rcorr_
+  constexpr size_t ee_weights = 51; //number of elements posize_ted by weights_
   //HEF
   constexpr size_t hef_fCPerMIP = 3; //number of elements pointed by hgcEE_fCPerMIP_
-  constexpr size_t hef_cce = 3; //number of elements posize_ted by hgcEE_cce_
-  constexpr size_t hef_noise_fC = 3; //number of elements posize_ted by hgcEE_noise_fC_
+  constexpr size_t hef_cce = 3; //number of elements pointed by hgcEE_cce_
+  constexpr size_t hef_noise_fC = 3; //number of elements pointed by hgcEE_noise_fC_
   constexpr size_t hef_rcorr = 3; //number of elements pointed by rcorr_
-  constexpr size_t hef_weights = 53; //number of elements posize_ted by weights_
+  constexpr size_t hef_weights = 51; //number of elements pointed by weights_
   //HEB
-  constexpr size_t heb_weights = 53; //number of elements posize_ted by weights_
+  constexpr size_t heb_weights = 51; //number of elements pointed by weights_
 }
 
 class HGCConstantVectorData {
