@@ -54,6 +54,7 @@ process.HeterogeneousHGCalEERecHits = cms.EDProducer('HeterogeneousHGCalEERecHit
                                                      rcorr          = cms.vdouble( HGCalRecHit.__dict__['thicknessCorrection'][0:3] ),
                                                      weights        = HGCalRecHit.__dict__['layerWeights']
 )
+
 process.HeterogeneousHGCalHEFRecHits = cms.EDProducer( 'HeterogeneousHGCalHEFRecHitProducer',
                                                        HGCHEFUncalibRecHitsTok = cms.InputTag('HGCalUncalibRecHit', 'HGCHEFUncalibRecHits'),
                                                        HGCHEF_keV2DIGI = HGCalRecHit.__dict__['HGCHEF_keV2DIGI'],
@@ -68,22 +69,24 @@ process.HeterogeneousHGCalHEFRecHits = cms.EDProducer( 'HeterogeneousHGCalHEFRec
                                                        rangeMatch      = HGCalRecHit.__dict__['rangeMatch'],
                                                        rangeMask       = HGCalRecHit.__dict__['rangeMask'],
                                                        rcorr           = cms.vdouble( HGCalRecHit.__dict__['thicknessCorrection'][3:6] ),
-                                                       weights         = HGCalRecHit.__dict__['layerWeights'] )
+                                                       weights         = HGCalRecHit.__dict__['layerWeights'] 
+)
 process.HeterogeneousHGCalHEBRecHits = cms.EDProducer('HeterogeneousHGCalHEBRecHitProducer',
                                                       HGCHEBUncalibRecHitsTok = cms.InputTag('HGCalUncalibRecHit', 'HGCHEBUncalibRecHits'),
                                                       HGCHEB_keV2DIGI  = HGCalRecHit.__dict__['HGCHEB_keV2DIGI'],
                                                       HGCHEB_noise_MIP = HGCalRecHit.__dict__['HGCHEB_noise_MIP'],
-                                                      weights          = HGCalRecHit.__dict__['layerWeights'] )
-
+                                                      weights          = HGCalRecHit.__dict__['layerWeights'] 
+)
+process.HGCalRecHits = HGCalRecHit.clone()
 process.valid = cms.EDAnalyzer( "HeterogeneousHGCalRecHitsValidator",
-                                cpuRecHitsEEToken = cms.InputTag('HGCalRecHit', 'HGCEERecHits'),
+                                cpuRecHitsEEToken = cms.InputTag('HGCalRecHits', 'HGCEERecHits'),
                                 gpuRecHitsEEToken = cms.InputTag('HeterogeneousHGCalEERecHits','HeterogeneousHGCalEERecHits'),
-                                cpuRecHitsHSiToken = cms.InputTag('HGCalRecHit', 'HGCHEFRecHits'),
+                                cpuRecHitsHSiToken = cms.InputTag('HGCalRecHits', 'HGCHEFRecHits'),
                                 gpuRecHitsHSiToken = cms.InputTag('HeterogeneousHGCalHEFRecHits','HeterogeneousHGCalHEFRecHits'),
-                                cpuRecHitsHSciToken = cms.InputTag('HGCalRecHit', 'HGCHEBRecHits'),
+                                cpuRecHitsHSciToken = cms.InputTag('HGCalRecHits', 'HGCHEBRecHits'),
                                 gpuRecHitsHSciToken = cms.InputTag('HeterogeneousHGCalHEBRecHits','HeterogeneousHGCalHEBRecHits') )
 
-process.recHitsTask = cms.Task( process.HeterogeneousHGCalEERecHits, process.HeterogeneousHGCalHEFRecHits, process.HeterogeneousHGCalHEBRecHits )
+process.recHitsTask = cms.Task( process.HGCalRecHits, process.HeterogeneousHGCalEERecHits, process.HeterogeneousHGCalHEFRecHits, process.HeterogeneousHGCalHEBRecHits )
 process.path = cms.Path( process.valid, process.recHitsTask )
 
 process.out = cms.OutputModule( "PoolOutputModule", 
