@@ -94,11 +94,11 @@ std::vector<size_t> HeterogeneousHGCalHEFCellPositionsConditions::calculate_memo
   for(unsigned int i=0; i<npointers; ++i)
     {
       if(cpos::types[i] == cpos::HeterogeneousHGCalPositionsType::Float)
-	sizes[i] = select_pointer_u_(cpuPos, 1).size(); //each position array (x, y and z) will have the same size as the detid array
+	sizes[i] = select_pointer_u_(cpuPos, 2).size(); //each position array (x, y and z) will have the same size as the detid array
       else if(cpos::types[i] == cpos::HeterogeneousHGCalPositionsType::Int32_t)
-	sizes[i] = select_pointer_i_(cpuPos, 0).size();
+	sizes[i] = select_pointer_i_(cpuPos, 1).size();
       else if(cpos::types[i] == cpos::HeterogeneousHGCalPositionsType::Uint32_t)
-	sizes[i] = select_pointer_u_(cpuPos, 1).size();
+	sizes[i] = select_pointer_u_(cpuPos, 2).size();
     }
 
   std::vector<size_t> sizes_units(npointers);

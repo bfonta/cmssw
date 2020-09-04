@@ -20,17 +20,23 @@ process.load('SimCalorimetry.HGCalSimProducers.hgcalDigitizer_cfi')
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic', '')
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10) )
 
 #TFileService
+dirName = '/eos/user/b/bfontana/Samples/'
 fileName = 'validation.root'
 process.TFileService = cms.Service("TFileService", 
-                                   fileName = cms.string(fileName),
+                                   fileName = cms.string( os.path.join(dirName,fileName) ),
                                    closeFileFast = cms.untracked.bool(True)
                                )
 
 
-fNames = ['file:/afs/cern.ch/user/b/bfontana/CMSSW_11_1_0_pre6/src/20495.0_CloseByPGun_CE_E_Front_200um+CE_E_Front_200um_2026D41_GenSimHLBeamSpotFull+DigiFullTrigger_2026D41+RecoFullGlobal_2026D41+HARVESTFullGlobal_2026D41/step3.root']
+fNames = ['file:/afs/cern.ch/user/b/bfontana/CMSSW_11_2_0_pre5/src/23234.0_TTbar_14TeV+2026D49+TTbar_14TeV_TuneCP5_GenSimHLBeamSpot14+DigiTrigger+RecoGlobal+HARVESTGlobal/step3.root']
+#indir = '/eos/cms/store/group/dpg_hgcal/comm_hgcal/bfontana/GPUScintillator/'
+#file_wildcard = 'step3_0.root'
+#glob = glob.glob( os.path.join(indir, file_wildcard) )
+#fNames = ['file:' + it for it in glob][:]
+
 keep = 'keep *'
 drop = 'drop CSCDetIdCSCALCTPreTriggerDigiMuonDigiCollection_simCscTriggerPrimitiveDigis__HLT'
 process.source = cms.Source("PoolSource",
@@ -85,22 +91,12 @@ process.valid = cms.EDAnalyzer( "HeterogeneousHGCalRecHitsValidator",
                                 cpuRecHitsHSiToken = cms.InputTag('HGCalRecHits', 'HGCHEFRecHits'),
                                 gpuRecHitsHSiToken = cms.InputTag('HeterogeneousHGCalHEFRecHits','HeterogeneousHGCalHEFRecHits'),
                                 cpuRecHitsHSciToken = cms.InputTag('HGCalRecHits', 'HGCHEBRecHits'),
-                                gpuRecHitsHSciToken = cms.InputTag('HeterogeneousHGCalHEBRecHits','HeterogeneousHGCalHEBRecHits') )
-"""
-process.valid = cms.EDAnalyzer( "HeterogeneousHGCalRecHitsValidator",
-                                cpuRecHitsEEToken = cms.InputTag('HGCalRecHits', 'HGCHEFRecHits'),
-                                gpuRecHitsEEToken = cms.InputTag('HeterogeneousHGCalHEFRecHits','HeterogeneousHGCalHEFRecHits'),
-                                cpuRecHitsHSiToken = cms.InputTag('HGCalRecHits', 'HGCHEFRecHits'),
-                                gpuRecHitsHSiToken = cms.InputTag('HeterogeneousHGCalHEFRecHits','HeterogeneousHGCalHEFRecHits'),
-                                cpuRecHitsHSciToken = cms.InputTag('HGCalRecHits', 'HGCHEFRecHits'),
-                                gpuRecHitsHSciToken = cms.InputTag('HeterogeneousHGCalHEFRecHits','HeterogeneousHGCalHEFRecHits') 
+                                gpuRecHitsHSciToken = cms.InputTag('HeterogeneousHGCalHEBRecHits','HeterogeneousHGCalHEBRecHits')
 )
-"""
 
 process.recHitsTask = cms.Task( process.HGCalRecHits, process.HeterogeneousHGCalEERecHits, process.HeterogeneousHGCalHEFRecHits, process.HeterogeneousHGCalHEBRecHits )
-#process.recHitsTask = cms.Task( process.HGCalRecHits, process.HeterogeneousHGCalHEFRecHits )
 process.path = cms.Path( process.valid, process.recHitsTask )
 
 process.out = cms.OutputModule( "PoolOutputModule", 
-                                fileName = cms.untracked.string('out.root') )
+                                fileName = cms.untracked.string( os.path.join(dirName, 'out.root') ) )
 process.outpath = cms.EndPath(process.out)

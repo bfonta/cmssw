@@ -34,15 +34,15 @@ std::string HeterogeneousHGCalEERecHitProducer::assert_error_message_(std::strin
 
 void HeterogeneousHGCalEERecHitProducer::assert_sizes_constants_(const HGCConstantVectorData& vd)
 {
-  if( vdata_.fCPerMIP_.size() != maxsizes_constants::ee_fCPerMIP )
+  if( vdata_.fCPerMIP_.size() > maxsizes_constants::ee_fCPerMIP )
     cms::cuda::LogError("WrongSize") << this->assert_error_message_("fCPerMIP", maxsizes_constants::ee_fCPerMIP, vdata_.fCPerMIP_.size());
-  else if( vdata_.cce_.size() != maxsizes_constants::ee_cce )
+  else if( vdata_.cce_.size() > maxsizes_constants::ee_cce )
     cms::cuda::LogError("WrongSize") << this->assert_error_message_("cce", maxsizes_constants::ee_cce, vdata_.cce_.size());
-  else if( vdata_.noise_fC_.size() != maxsizes_constants::ee_noise_fC )
+  else if( vdata_.noise_fC_.size() > maxsizes_constants::ee_noise_fC )
     cms::cuda::LogError("WrongSize") << this->assert_error_message_("noise_fC", maxsizes_constants::ee_noise_fC, vdata_.noise_fC_.size());
-  else if( vdata_.rcorr_.size() != maxsizes_constants::ee_rcorr ) 
+  else if( vdata_.rcorr_.size() > maxsizes_constants::ee_rcorr ) 
     cms::cuda::LogError("WrongSize") << this->assert_error_message_("rcorr", maxsizes_constants::ee_rcorr, vdata_.rcorr_.size());
-  else if( vdata_.weights_.size() != maxsizes_constants::ee_weights ) 
+  else if( vdata_.weights_.size() > maxsizes_constants::ee_weights ) 
     cms::cuda::LogError("WrongSize") << this->assert_error_message_("weights", maxsizes_constants::ee_weights, vdata_.weights_.size());
 }
 
@@ -59,12 +59,13 @@ void HeterogeneousHGCalEERecHitProducer::acquire(edm::Event const& event, edm::E
     {
       allocate_memory_(ctx.stream());
       kcdata_ = new KernelConstantData<HGCeeUncalibratedRecHitConstantData>(cdata_, vdata_);
-      convert_constant_data_(kcdata_);
-      convert_collection_data_to_soa_(hits_ee, uncalibSoA_, nhits);
       kmdata_ = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(nhits, stride_, uncalibSoA_, d_uncalibSoA_, d_intermediateSoA_, d_calibSoA_, calibSoA_);
 
+      convert_constant_data_(kcdata_);
+      convert_collection_data_to_soa_(hits_ee, uncalibSoA_, nhits);
+
       KernelManagerHGCalRecHit kernel_manager(kmdata_);
-      kernel_manager.run_kernels(kcdata_);
+      kernel_manager.run_kernels(kcdata_, ctx.stream());
 
       rechits_ = std::make_unique<HGCRecHitCollection>();
       convert_soa_data_to_collection_(*rechits_, calibSoA_, nhits);
