@@ -55,16 +55,15 @@ class KernelManagerHGCalRecHit {
   KernelManagerHGCalRecHit();
   KernelManagerHGCalRecHit(KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>*);
   ~KernelManagerHGCalRecHit();
-  void run_kernels(const KernelConstantData<HGCeeUncalibratedRecHitConstantData>*);
-  void run_kernels(const KernelConstantData<HGChefUncalibratedRecHitConstantData>*, const hgcal_conditions::HeterogeneousHEFConditionsESProduct*);
-  void run_kernels(const KernelConstantData<HGChebUncalibratedRecHitConstantData>*);
+  void run_kernels(const KernelConstantData<HGCeeUncalibratedRecHitConstantData>*, const cudaStream_t&);
+  void run_kernels(const KernelConstantData<HGChefUncalibratedRecHitConstantData>*, const cudaStream_t&);
+  void run_kernels(const KernelConstantData<HGChebUncalibratedRecHitConstantData>*, const cudaStream_t&);
   void fill_positions(const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct*);
   HGCRecHitSoA* get_output();
 
  private:
-  void after_();
-  void transfer_soas_to_device_();
-  void transfer_soa_to_host_and_synchronize_();
+  void transfer_soas_to_device_(const cudaStream_t&);
+  void transfer_soa_to_host_and_synchronize_(const cudaStream_t&);
   void reuse_device_pointers_();
 
   int nbytes_host_;

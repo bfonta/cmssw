@@ -1,4 +1,5 @@
 import FWCore.ParameterSet.Config as cms
+import os, glob
 
 enableGPU = True
 from Configuration.ProcessModifiers.gpu_cff import gpu
@@ -24,9 +25,13 @@ process.TFileService = cms.Service("TFileService",
                                )
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32( 10 ))
+    input = cms.untracked.int32( 5 ))
 
-fNames = ['file:/afs/cern.ch/user/b/bfontana/CMSSW_11_1_0_pre6/src/20495.0_CloseByPGun_CE_E_Front_200um+CE_E_Front_200um_2026D41_GenSimHLBeamSpotFull+DigiFullTrigger_2026D41+RecoFullGlobal_2026D41+HARVESTFullGlobal_2026D41/step3.root']
+indir = '/afs/cern.ch/user/b/bfontana/CMSSW_11_2_0_pre5/src/23234.0_TTbar_14TeV+2026D49+TTbar_14TeV_TuneCP5_GenSimHLBeamSpot14+DigiTrigger+RecoGlobal+HARVESTGlobal'
+file_wildcard = 'step3.root'
+glob = glob.glob( os.path.join(indir, file_wildcard) )
+fNames = ['file:' + it for it in glob][:]
+
 keep = 'keep *'
 drop = 'drop CSCDetIdCSCALCTPreTriggerDigiMuonDigiCollection_simCscTriggerPrimitiveDigis__HLT'
 process.source = cms.Source("PoolSource",
@@ -51,6 +56,7 @@ process.HeterogeneousHGCalEERecHits = cms.EDProducer('HeterogeneousHGCalEERecHit
                                                      rcorr          = cms.vdouble( HGCalRecHit.__dict__['thicknessCorrection'][0:3] ),
                                                      weights        = HGCalRecHit.__dict__['layerWeights']
 )
+
 process.HeterogeneousHGCalHEFCellPositionsFiller = cms.ESProducer("HeterogeneousHGCalHEFCellPositionsFiller")
 process.HeterogeneousHGCalHEFRecHits = cms.EDProducer('HeterogeneousHGCalHEFRecHitProducer',
                                                       HGCHEFUncalibRecHitsTok = cms.InputTag('HGCalUncalibRecHit', 'HGCHEFUncalibRecHits'),
@@ -74,8 +80,8 @@ process.HeterogeneousHGCalHEBRecHits = cms.EDProducer('HeterogeneousHGCalHEBRecH
 process.HGCalRecHits = HGCalRecHit.clone()
 
 fNameOut = 'out'
-#process.task = cms.Task( process.HeterogeneousHGCalHEFCellPositionsFiller, process.HeterogeneousHGCalHEFRecHits )
-process.task = cms.Task( process.HGCalRecHits, process.HeterogeneousHGCalHEFRecHits )
+process.task = cms.Task( process.HeterogeneousHGCalHEFCellPositionsFiller, process.HeterogeneousHGCalHEFRecHits )
+#process.task = cms.Task( process.HGCalRecHits, process.HeterogeneousHGCalHEFRecHits )
 process.path = cms.Path( process.task )
 
 process.out = cms.OutputModule("PoolOutputModule",

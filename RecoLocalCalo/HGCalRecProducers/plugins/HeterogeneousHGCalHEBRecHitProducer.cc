@@ -27,7 +27,7 @@ std::string HeterogeneousHGCalHEBRecHitProducer::assert_error_message_(std::stri
 
 void HeterogeneousHGCalHEBRecHitProducer::assert_sizes_constants_(const HGCConstantVectorData& vd)
 {
-  if( vdata_.weights_.size() != maxsizes_constants::heb_weights )
+  if( vdata_.weights_.size() > maxsizes_constants::heb_weights )
     cms::cuda::LogError("MaxSizeExceeded") << this->assert_error_message_("weights", vdata_.fCPerMIP_.size());
 }
 
@@ -61,12 +61,13 @@ void HeterogeneousHGCalHEBRecHitProducer::acquire(edm::Event const& event, edm::
     {
       allocate_memory_(ctx.stream());
       kcdata_ = new KernelConstantData<HGChebUncalibratedRecHitConstantData>(cdata_, vdata_);  
-      convert_constant_data_(kcdata_);
-      convert_collection_data_to_soa_(hits_heb, uncalibSoA_, nhits);
       kmdata_ = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(nhits, stride_, uncalibSoA_, d_uncalibSoA_, d_intermediateSoA_, d_calibSoA_, calibSoA_);
 
+      convert_constant_data_(kcdata_);
+      convert_collection_data_to_soa_(hits_heb, uncalibSoA_, nhits);
+
       KernelManagerHGCalRecHit kernel_manager(kmdata_);
-      kernel_manager.run_kernels(kcdata_);
+      kernel_manager.run_kernels(kcdata_, ctx.stream());
 
       convert_soa_data_to_collection_(*rechits_, calibSoA_, nhits);
       deallocate_memory_();

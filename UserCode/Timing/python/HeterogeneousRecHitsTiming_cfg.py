@@ -27,7 +27,7 @@ process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
 process.load('Configuration.StandardSequences.MagneticField_cff')
 #process.load('Configuration.EventContent.EventContent_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.load('Configuration.Geometry.GeometryExtended2026D46Reco_cff')
+process.load('Configuration.Geometry.GeometryExtended2026D49Reco_cff')
 process.load('HeterogeneousCore.CUDAServices.CUDAService_cfi')
 process.load('RecoLocalCalo.HGCalRecProducers.HGCalRecHit_cfi')
 process.load('SimCalorimetry.HGCalSimProducers.hgcalDigitizer_cfi')
@@ -35,16 +35,17 @@ process.load('SimCalorimetry.HGCalSimProducers.hgcalDigitizer_cfi')
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic', '')
 
-from RecoLocalCalo.HGCalRecProducers.HGCalRecHit_cfi import dEdX_weights_v10
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
-#fNames = ['file:/afs/cern.ch/user/b/bfontana/CMSSW_11_1_0_pre6/src/20495.0_CloseByPGun_CE_E_Front_200um+CE_E_Front_200um_2026D41_GenSimHLBeamSpotFull+DigiFullTrigger_2026D41+RecoFullGlobal_2026D41+HARVESTFullGlobal_2026D41/step3.root']
 #indir = '/eos/cms/store/group/dpg_hgcal/comm_hgcal/bfontana/GPUScintillator/CloseByParticleGunProducer_bfontana_PDGId22_nPart1_E60_eta1p4to4p0_CE_H_Coarse_Scint_Delta_2p5_20200728_bfontana_PDGId22_nPart1_E60_eta1p4to4p0_CE_H_Coarse_Scint_Delta_2p5_20200728/RECO/'
 #file_wildcard = 'closeby_PDGid22_x100_E60.0To60.0_RECO_*.root'
+"""
 indir = '/eos/cms/store/group/dpg_hgcal/comm_hgcal/bfontana/GPUScintillator/'
 file_wildcard = 'step3_0.root'
 glob = glob.glob( os.path.join(indir, file_wildcard) )
 fNames = ['file:' + it for it in glob][:]
+"""
+fNames = ['file:/afs/cern.ch/user/b/bfontana/CMSSW_11_2_0_pre5/src/23234.0_TTbar_14TeV+2026D49+TTbar_14TeV_TuneCP5_GenSimHLBeamSpot14+DigiTrigger+RecoGlobal+HARVESTGlobal/step3.root']
 
 keep = 'keep *'
 drop = 'drop CSCDetIdCSCALCTPreTriggerDigiMuonDigiCollection_simCscTriggerPrimitiveDigis__HLT'
@@ -81,7 +82,7 @@ HeterogeneousHGCalEERecHits = cms.EDProducer( 'HeterogeneousHGCalEERecHitProduce
                                               HGCEE_isSiFE   	     = HGCalRecHit.__dict__['HGCEE_isSiFE'],
                                               HGCEE_noise_fC 	     = HGCalRecHit.__dict__['HGCEE_noise_fC'],
                                               HGCEE_cce      	     = HGCalRecHit.__dict__['HGCEE_cce'],
-                                              rcorr          	     = HGCalRecHit.__dict__['thicknessCorrection'],
+                                              rcorr          	     = cms.vdouble( HGCalRecHit.__dict__['thicknessCorrection'][0:3] ),
                                               weights        	     = HGCalRecHit.__dict__['layerWeights'] )
 
 HeterogeneousHGCalHEFRecHits = cms.EDProducer( 'HeterogeneousHGCalHEFRecHitProducer',
@@ -95,7 +96,7 @@ HeterogeneousHGCalHEFRecHits = cms.EDProducer( 'HeterogeneousHGCalHEFRecHitProdu
                                                HGCHEF_isSiFE           = HGCalRecHit.__dict__['HGCHEF_isSiFE'],
                                                HGCHEF_noise_fC         = HGCalRecHit.__dict__['HGCHEF_noise_fC'],
                                                HGCHEF_cce              = HGCalRecHit.__dict__['HGCHEF_cce'],
-                                               rcorr                   = HGCalRecHit.__dict__['thicknessCorrection'],
+                                               rcorr                   = cms.vdouble( HGCalRecHit.__dict__['thicknessCorrection'][3:6] ),
                                                weights                 = HGCalRecHit.__dict__['layerWeights'] )
 
 HeterogeneousHGCalHEBRecHits = cms.EDProducer( 'HeterogeneousHGCalHEBRecHitProducer',
@@ -109,7 +110,6 @@ process.HeterogeneousHGCalEERecHits = HeterogeneousHGCalEERecHits
 process.HeterogeneousHGCalHEFRecHits = HeterogeneousHGCalHEFRecHits
 process.HeterogeneousHGCalHEBRecHits = HeterogeneousHGCalHEBRecHits
 process.HGCalRecHits = HGCalRecHit.clone() #CPU version
-
 
 if F.withGPU:
     process.recHitsTask = cms.Task( process.HeterogeneousHGCalEERecHits, process.HeterogeneousHGCalHEFRecHits, process.HeterogeneousHGCalHEBRecHits )
