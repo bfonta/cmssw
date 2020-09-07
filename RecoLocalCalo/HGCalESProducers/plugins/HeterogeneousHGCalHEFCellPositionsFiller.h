@@ -20,16 +20,13 @@
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 
-#include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
-
 #include "Geometry/HGCalGeometry/interface/HGCalGeometry.h"
 #include "Geometry/HGCalCommonData/interface/HGCalDDDConstants.h"
 #include "Geometry/HGCalCommonData/interface/HGCalWaferIndex.h"
 
 #include "CondFormats/HGCalObjects/interface/HeterogeneousHGCalHEFCellPositionsConditions.h"
-#include "RecoLocalCalo/HGCalRecProducers/plugins/HeterogeneousHGCalProducerMemoryWrapper.h"
-#include "RecoLocalCalo/HGCalRecProducers/plugins/KernelManagerHGCalRecHit.h"
 #include "CondFormats/DataRecord/interface/HeterogeneousHGCalHEFCellPositionsConditionsRecord.h"
+#include "RecoLocalCalo/HGCalESProducers/plugins/KernelManagerHGCalCellPositions.h"
 
 class HeterogeneousHGCalHEFCellPositionsFiller: public edm::ESProducer 
 {

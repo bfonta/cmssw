@@ -74,15 +74,11 @@ void HeterogeneousHGCalHEFRecHitProducer::beginRun(edm::Run const&, edm::EventSe
 void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {
   const cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w), ctxState_};
 
-  /*
+  //
   edm::ESHandle<HeterogeneousHGCalHEFCellPositionsConditions> celpos_handle;
   setup.get<HeterogeneousHGCalHEFCellPositionsConditionsRecord>().get(celpos_handle);
   hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct const * celpos = celpos_handle->getHeterogeneousConditionsESProductAsync( 0 );
-  std::cout << "PRINT"  << std::endl;
-  std::cout << celpos->nelems_posmap << std::endl;
-  */
-  //for(unsigned int i=0; i<40; ++i)
-  //  std::cout << celpos->posmap.z_per_layer[i] << std::endl;
+  //
     
   /*
   HeterogeneousHGCalHEFConditionsWrapper esproduct(params_, posmap_);
@@ -107,6 +103,9 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
 
       KernelManagerHGCalRecHit kernel_manager(kmdata_);
       kernel_manager.run_kernels(kcdata_, ctx.stream());
+
+      KernelManagerHGCalCellPositions kernel_manager_celpos( 1 ); //test with one single item (one block of one thread)
+      kernel_manager_celpos.test_cell_positions( celpos );
 
       convert_soa_data_to_collection_(*rechits_, calibSoA_, nhits);
       deallocate_memory_(); //cannot be called in destructor, since pointers are created in a conditional expression

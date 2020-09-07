@@ -1,12 +1,12 @@
-#ifndef RecoLocalCalo_HGCalRecProducers_KernelManager_HGCalRecHit_h
-#define RecoLocalCalo_HGCalRecProducers_KernelManager_HGCalRecHit_h
+#ifndef RecoLocalCalo_HGCalRecProducers_KernelManagerHGCalRecHit_h
+#define RecoLocalCalo_HGCalRecProducers_KernelManagerHGCalRecHit_h
 
 #include "FWCore/Utilities/interface/Exception.h"
 #include "HeterogeneousCore/CUDAUtilities/interface/MessageLogger.h"
 #include "DataFormats/DetId/interface/DetId.h"
 #include "HeterogeneousCore/CUDAUtilities/interface/cudaCompat.h"
 #include "HeterogeneousCore/CUDAUtilities/interface/cudaCheck.h"
-#include "HGCalRecHitKernelImpl.cuh"
+#include "RecoLocalCalo/HGCalRecProducers/plugins/HGCalRecHitKernelImpl.cuh"
 #include "CUDADataFormats/HGCal/interface/HGCConditions.h"
 //#include "Types.h"
 
@@ -20,9 +20,9 @@
 extern __constant__ uint32_t calo_rechit_masks[];
 #endif
 
-namespace {
-  dim3 nblocks_;
-  constexpr dim3 nthreads_(256); //some kernels will potentially not allocate shared memory properly with a lower number
+namespace { //kernel parameters
+  dim3 nb_rechits_;
+  constexpr dim3 nt_rechits_(256);
 }
 
 template <typename T>
@@ -58,7 +58,6 @@ class KernelManagerHGCalRecHit {
   void run_kernels(const KernelConstantData<HGCeeUncalibratedRecHitConstantData>*, const cudaStream_t&);
   void run_kernels(const KernelConstantData<HGChefUncalibratedRecHitConstantData>*, const cudaStream_t&);
   void run_kernels(const KernelConstantData<HGChebUncalibratedRecHitConstantData>*, const cudaStream_t&);
-  void fill_positions(const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct*);
   HGCRecHitSoA* get_output();
 
  private:
@@ -71,4 +70,4 @@ class KernelManagerHGCalRecHit {
   KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA> *data_;
 };
 
-#endif //RecoLocalCalo_HGCalRecProducers_KernelManager_HGCalRecHit_h
+#endif //RecoLocalCalo_HGCalRecProducers_KernelManagerHGCalRecHit_h

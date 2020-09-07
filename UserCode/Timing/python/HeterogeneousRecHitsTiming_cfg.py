@@ -45,8 +45,9 @@ file_wildcard = 'step3_0.root'
 glob = glob.glob( os.path.join(indir, file_wildcard) )
 fNames = ['file:' + it for it in glob][:]
 """
-fNames = ['file:/afs/cern.ch/user/b/bfontana/CMSSW_11_2_0_pre5/src/23234.0_TTbar_14TeV+2026D49+TTbar_14TeV_TuneCP5_GenSimHLBeamSpot14+DigiTrigger+RecoGlobal+HARVESTGlobal/step3.root']
-
+#fNames = ['file:/afs/cern.ch/user/b/bfontana/CMSSW_11_2_0_pre5/src/23234.0_TTbar_14TeV+2026D49+TTbar_14TeV_TuneCP5_GenSimHLBeamSpot14+DigiTrigger+RecoGlobal+HARVESTGlobal/step3.root']
+indir = '/eos/user/b/bfontana/Samples/GPU/'
+fNames = [os.path.join('file:'+indir, 'step3_ttbar_D49_1120pre1_20Events_3.root')]
 keep = 'keep *'
 drop = 'drop CSCDetIdCSCALCTPreTriggerDigiMuonDigiCollection_simCscTriggerPrimitiveDigis__HLT'
 process.source = cms.Source("PoolSource",
