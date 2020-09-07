@@ -58,7 +58,6 @@ class HeterogeneousHGCalHEBRecHitProducer: public edm::stream::EDProducer<edm::E
   std::string assert_error_message_(std::string var, const size_t& s);
   void assert_sizes_constants_(const HGCConstantVectorData& vd);
   void allocate_memory_(const cudaStream_t&);
-  void deallocate_memory_();
   cms::cuda::host::unique_ptr<std::byte[]> mem_in_;
   cms::cuda::device::unique_ptr<std::byte[]> d_mem_;
   cms::cuda::host::unique_ptr<std::byte[]> mem_out_;
@@ -69,8 +68,8 @@ class HeterogeneousHGCalHEBRecHitProducer: public edm::stream::EDProducer<edm::E
   const HGCalParameters* params_ = nullptr;
 
   //data processing
-  void convert_collection_data_to_soa_(const HGChebUncalibratedRecHitCollection&, HGCUncalibratedRecHitSoA*, const unsigned int&);
-  void convert_soa_data_to_collection_(HGCRecHitCollection&, HGCRecHitSoA*, const unsigned int&);
+  void convert_collection_data_to_soa_(const HGChebUncalibratedRecHitCollection&, KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>*);
+  void convert_soa_data_to_collection_(HGCRecHitCollection&, KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>*);
   void convert_constant_data_(KernelConstantData<HGChebUncalibratedRecHitConstantData>*);
 
   HGCUncalibratedRecHitSoA *uncalibSoA_ = nullptr, *d_uncalibSoA_ = nullptr, *d_intermediateSoA_ = nullptr;
