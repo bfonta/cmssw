@@ -91,7 +91,7 @@ void HeterogeneousHGCalRecHitsValidator::analyze(const edm::Event &event, const 
       validHit vGPU(gpuEn, gpuTime, gpuTimeErr, gpuDetId, gpuFB, gpuSoN);
       validHit vDiffs(cpuEn-gpuEn, cpuTime-gpuTime, cpuTimeErr-gpuTimeErr, cpuDetId-gpuDetId, cpuFB-gpuFB, cpuSoN-gpuSoN);
       
-      std::cout << cpuEn << ", " << gpuEn << std::endl;
+      //std::cout << cpuEn << ", " << gpuEn << std::endl;
       cpuValidRecHits[idet].push_back( vCPU );
       gpuValidRecHits[idet].push_back( vGPU );
       diffsValidRecHits[idet].push_back( vDiffs );

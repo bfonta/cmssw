@@ -54,7 +54,6 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGCeeUncalib
 
   transfer_soa_to_host_and_synchronize_( stream );
   cudaCheck( cudaGetLastError() );
-  cudaCheck( cudaStreamSynchronize(stream) );
 }
 
 void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChefUncalibratedRecHitConstantData> *kcdata, const cudaStream_t& stream)
@@ -73,7 +72,6 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChefUncali
 
   transfer_soa_to_host_and_synchronize_( stream );
   cudaCheck( cudaGetLastError() );
-  cudaCheck( cudaStreamSynchronize(stream) );
 }
 
 void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChebUncalibratedRecHitConstantData> *kcdata, const cudaStream_t& stream)
@@ -92,7 +90,6 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChebUncali
 
   transfer_soa_to_host_and_synchronize_( stream );
   cudaCheck( cudaGetLastError() );
-  cudaCheck( cudaStreamSynchronize(stream) );
 }
 
 HGCRecHitSoA* KernelManagerHGCalRecHit::get_output()

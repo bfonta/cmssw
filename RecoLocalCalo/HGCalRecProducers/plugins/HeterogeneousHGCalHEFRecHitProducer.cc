@@ -14,9 +14,16 @@ HeterogeneousHGCalHEFRecHitProducer::HeterogeneousHGCalHEFRecHitProducer(const e
   vdata_.rcorr_             = ps.getParameter< std::vector<double> >("rcorr");
   vdata_.weights_           = ps.getParameter< std::vector<double> >("weights");
   cdata_.uncalib2GeV_ = 1e-6 / cdata_.keV2DIGI_;
-
   assert_sizes_constants_(vdata_);
-  //posmap_ = new hgcal_conditions::positions::HGCalPositionsMapping();
+
+  uncalibSoA_        = new HGCUncalibratedRecHitSoA();
+  d_uncalibSoA_      = new HGCUncalibratedRecHitSoA();
+  d_intermediateSoA_ = new HGCUncalibratedRecHitSoA();
+  d_calibSoA_        = new HGCRecHitSoA();
+  calibSoA_          = new HGCRecHitSoA();
+  kcdata_            = new KernelConstantData<HGChefUncalibratedRecHitConstantData>(cdata_, vdata_);
+  kmdata_            = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(uncalibSoA_, d_uncalibSoA_, d_intermediateSoA_, d_calibSoA_, calibSoA_);
+
   tools_ = std::make_unique<hgcal::RecHitTools>();
   produces<HGChefRecHitCollection>(collection_name_);
 
@@ -32,7 +39,13 @@ HeterogeneousHGCalHEFRecHitProducer::HeterogeneousHGCalHEFRecHitProducer(const e
 
 HeterogeneousHGCalHEFRecHitProducer::~HeterogeneousHGCalHEFRecHitProducer()
 {
-  //delete posmap_;
+  delete kmdata_;
+  delete kcdata_;
+  delete uncalibSoA_;
+  delete d_uncalibSoA_;
+  delete d_intermediateSoA_;
+  delete d_calibSoA_;
+  delete calibSoA_;
 }
 
 std::string HeterogeneousHGCalHEFRecHitProducer::assert_error_message_(std::string var, const size_t& s1, const size_t& s2)
@@ -94,55 +107,36 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
 
   if(stride_ > 0)
     {
+      kmdata_->nhits_  = nhits;
+      kmdata_->stride_ = stride_;
       allocate_memory_(ctx.stream());
-      kcdata_ = new KernelConstantData<HGChefUncalibratedRecHitConstantData>(cdata_, vdata_);
-      kmdata_ = new KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>(nhits, stride_, uncalibSoA_, d_uncalibSoA_, d_intermediateSoA_, d_calibSoA_, calibSoA_);
-
       convert_constant_data_(kcdata_);
-      convert_collection_data_to_soa_(hits_hef, uncalibSoA_, nhits);
+      convert_collection_data_to_soa_(hits_hef, kmdata_);
 
       KernelManagerHGCalRecHit kernel_manager(kmdata_);
       kernel_manager.run_kernels(kcdata_, ctx.stream());
 
-      KernelManagerHGCalCellPositions kernel_manager_celpos( 1 ); //test with one single item (one block of one thread)
-      kernel_manager_celpos.test_cell_positions( celpos );
-
-      convert_soa_data_to_collection_(*rechits_, calibSoA_, nhits);
-      deallocate_memory_(); //cannot be called in destructor, since pointers are created in a conditional expression
+      //KernelManagerHGCalCellPositions kernel_manager_celpos( 1 ); //test with one single item (one block of one thread)
+      //kernel_manager_celpos.test_cell_positions( celpos );
     }
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::produce(edm::Event& event, const edm::EventSetup& setup)
 {
   cms::cuda::ScopedContextProduce ctx{ctxState_}; //only for GPU to GPU producers
+
+  convert_soa_data_to_collection_(*rechits_, kmdata_);
   event.put(std::move(rechits_), collection_name_);
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::allocate_memory_(const cudaStream_t& stream)
 {
-  uncalibSoA_        = new HGCUncalibratedRecHitSoA();
-  d_uncalibSoA_      = new HGCUncalibratedRecHitSoA();
-  d_intermediateSoA_ = new HGCUncalibratedRecHitSoA();
-  d_calibSoA_        = new HGCRecHitSoA();
-  calibSoA_          = new HGCRecHitSoA();
-
   //_allocate memory for hits on the host
   memory::allocation::host(stride_, uncalibSoA_, mem_in_, stream);
   //_allocate memory for hits on the device
   memory::allocation::device(stride_, d_uncalibSoA_, d_intermediateSoA_, d_calibSoA_, d_mem_, stream);
   //_allocate memory for hits on the host
   memory::allocation::host(stride_, calibSoA_, mem_out_, stream);
-}
-
-void HeterogeneousHGCalHEFRecHitProducer::deallocate_memory_()
-{
-  delete kmdata_;
-  delete kcdata_;
-  delete uncalibSoA_;
-  delete d_uncalibSoA_;
-  delete d_intermediateSoA_;
-  delete d_calibSoA_;
-  delete calibSoA_;
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::convert_constant_data_(KernelConstantData<HGChefUncalibratedRecHitConstantData> *kcdata)
@@ -159,29 +153,29 @@ void HeterogeneousHGCalHEFRecHitProducer::convert_constant_data_(KernelConstantD
     kcdata->data_.weights_[i] = kcdata->vdata_.weights_[i];
 }
 
-void HeterogeneousHGCalHEFRecHitProducer::convert_collection_data_to_soa_(const HGChefUncalibratedRecHitCollection& hits, HGCUncalibratedRecHitSoA* d, const unsigned int& nhits)
+void HeterogeneousHGCalHEFRecHitProducer::convert_collection_data_to_soa_(const HGChefUncalibratedRecHitCollection& hits, KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>* kmdata)
 {
-  for(unsigned int i=0; i<nhits; ++i)
+  for(unsigned int i=0; i<kmdata->nhits_; ++i)
     {
-      d->amplitude_[i] = hits[i].amplitude();
-      d->pedestal_[i] = hits[i].pedestal();
-      d->jitter_[i] = hits[i].jitter();
-      d->chi2_[i] = hits[i].chi2();
-      d->OOTamplitude_[i] = hits[i].outOfTimeEnergy();
-      d->OOTchi2_[i] = hits[i].outOfTimeChi2();
-      d->flags_[i] = hits[i].flags();
-      d->aux_[i] = 0;
-      d->id_[i] = hits[i].id().rawId();
+      kmdata->h_in_->amplitude_[i]    = hits[i].amplitude();
+      kmdata->h_in_->pedestal_[i]     = hits[i].pedestal();
+      kmdata->h_in_->jitter_[i]       = hits[i].jitter();
+      kmdata->h_in_->chi2_[i]         = hits[i].chi2();
+      kmdata->h_in_->OOTamplitude_[i] = hits[i].outOfTimeEnergy();
+      kmdata->h_in_->OOTchi2_[i]      = hits[i].outOfTimeChi2();
+      kmdata->h_in_->flags_[i]        = hits[i].flags();
+      kmdata->h_in_->aux_[i]          = 0;
+      kmdata->h_in_->id_[i]           = hits[i].id().rawId();
     }
 }
 
-void HeterogeneousHGCalHEFRecHitProducer::convert_soa_data_to_collection_(HGCRecHitCollection& rechits, HGCRecHitSoA *d, const unsigned int& nhits)
+void HeterogeneousHGCalHEFRecHitProducer::convert_soa_data_to_collection_(HGCRecHitCollection& rechits, KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA>* kmdata)
 {
-  rechits.reserve(nhits);
-  for(uint i=0; i<nhits; ++i)
+  rechits.reserve(kmdata->nhits_);
+  for(uint i=0; i<kmdata->nhits_; ++i)
     {
-      DetId id_converted( d->id_[i] );
-      rechits.emplace_back( HGCRecHit(id_converted, d->energy_[i], d->time_[i], 0, d->flagBits_[i], d->son_[i], d->timeError_[i]) );
+      DetId id_converted( kmdata->h_out_->id_[i] );
+      rechits.emplace_back( HGCRecHit(id_converted, kmdata->h_out_->energy_[i], kmdata->h_out_->time_[i], 0, kmdata->h_out_->flagBits_[i], kmdata->h_out_->son_[i], kmdata->h_out_->timeError_[i]) );
     }
 }
 

@@ -88,13 +88,14 @@ process.HGCalRecHits = HGCalRecHit.clone()
 process.valid = cms.EDAnalyzer( "HeterogeneousHGCalRecHitsValidator",
                                 cpuRecHitsEEToken = cms.InputTag('HGCalRecHits', 'HGCEERecHits'),
                                 gpuRecHitsEEToken = cms.InputTag('HeterogeneousHGCalEERecHits','HeterogeneousHGCalEERecHits'),
-                                cpuRecHitsHSiToken = cms.InputTag('HGCalRecHits', 'HGCHEFRecHits'),
-                                gpuRecHitsHSiToken = cms.InputTag('HeterogeneousHGCalHEFRecHits','HeterogeneousHGCalHEFRecHits'),
-                                cpuRecHitsHSciToken = cms.InputTag('HGCalRecHits', 'HGCHEBRecHits'),
-                                gpuRecHitsHSciToken = cms.InputTag('HeterogeneousHGCalHEBRecHits','HeterogeneousHGCalHEBRecHits')
+                                cpuRecHitsHSiToken = cms.InputTag('HGCalRecHits', 'HGCEERecHits'),
+                                gpuRecHitsHSiToken = cms.InputTag('HeterogeneousHGCalEERecHits','HeterogeneousHGCalEERecHits'),
+                                cpuRecHitsHSciToken = cms.InputTag('HGCalRecHits', 'HGCEERecHits'),
+                                gpuRecHitsHSciToken = cms.InputTag('HeterogeneousHGCalEERecHits','HeterogeneousHGCalEERecHits')
 )
 
-process.recHitsTask = cms.Task( process.HGCalRecHits, process.HeterogeneousHGCalEERecHits, process.HeterogeneousHGCalHEFRecHits, process.HeterogeneousHGCalHEBRecHits )
+#process.recHitsTask = cms.Task( process.HGCalRecHits, process.HeterogeneousHGCalEERecHits, process.HeterogeneousHGCalHEFRecHits, process.HeterogeneousHGCalHEBRecHits )
+process.recHitsTask = cms.Task( process.HGCalRecHits, process.HeterogeneousHGCalEERecHits )
 process.path = cms.Path( process.valid, process.recHitsTask )
 
 process.out = cms.OutputModule( "PoolOutputModule", 
