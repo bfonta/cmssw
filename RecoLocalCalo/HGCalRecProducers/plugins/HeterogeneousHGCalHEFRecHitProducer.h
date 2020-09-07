@@ -7,6 +7,7 @@
 #include <chrono>
 #include <cuda_runtime.h>
 
+#include "FWCore/Framework/interface/ESProducer.h"
 #include "FWCore/Framework/interface/stream/EDProducer.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/Exception.h"
@@ -29,13 +30,13 @@
 #include "HeterogeneousCore/CUDAUtilities/interface/cudaCheck.h"
 
 #include "HeterogeneousHGCalProducerMemoryWrapper.h"
-#include "KernelManagerHGCalRecHit.h"
-
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
 #include "CondFormats/HGCalObjects/interface/HeterogeneousHGCalHEFCellPositionsConditions.h"
 #include "CondFormats/DataRecord/interface/HeterogeneousHGCalHEFCellPositionsConditionsRecord.h"
+#include "RecoLocalCalo/HGCalRecProducers/plugins/KernelManagerHGCalRecHit.h"
+#include "RecoLocalCalo/HGCalESProducers/plugins/KernelManagerHGCalCellPositions.h"
 
 class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::ExternalWork> 
 {

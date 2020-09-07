@@ -2,17 +2,17 @@
 #include <cuda_runtime.h>
 #include <inttypes.h>
 #include "RecoLocalCalo/HGCalRecProducers/plugins/KernelManagerHGCalRecHit.h"
-#include "HGCalRecHitKernelImpl.cuh"
+#include "RecoLocalCalo/HGCalRecProducers/plugins/HGCalRecHitKernelImpl.cuh"
 
 KernelManagerHGCalRecHit::KernelManagerHGCalRecHit()
 {
-  ::nblocks_ = (data_->nhits_ + ::nthreads_.x - 1) / ::nthreads_.x;
+  ::nb_rechits_ = (data_->nhits_ + ::nt_rechits_.x - 1) / ::nt_rechits_.x;
 }
 
 KernelManagerHGCalRecHit::KernelManagerHGCalRecHit(KernelModifiableData<HGCUncalibratedRecHitSoA, HGCRecHitSoA> *data):
   data_(data)
 {
-  ::nblocks_ = (data_->nhits_ + ::nthreads_.x - 1) / ::nthreads_.x;
+  ::nb_rechits_ = (data_->nhits_ + ::nt_rechits_.x - 1) / ::nt_rechits_.x;
   nbytes_host_ = (data_->h_out_)->nbytes_ * data_->stride_;
   nbytes_device_ = (data_->d_1_)->nbytes_ * data_->stride_;
 }
@@ -44,12 +44,12 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGCeeUncalib
   cudaCheck( cudaGetLastError() );
     
   /*
-  ee_step1<<<::nblocks_, ::nthreads_, 0, stream>>>( *(data_->d_2_), *(data_->d_1_), kcdata->data_, data_->nhits_ );
+  ee_step1<<<::nb_rechits_, ::nt_rechits_, 0, stream>>>( *(data_->d_2_), *(data_->d_1_), kcdata->data_, data_->nhits_ );
   after_();
   reuse_device_pointers_();
   */
 
-  ee_to_rechit<<<::nblocks_, ::nthreads_, 0, stream>>>( *(data_->d_out_), *(data_->d_1_), kcdata->data_, data_->nhits_ );
+  ee_to_rechit<<<::nb_rechits_, ::nt_rechits_, 0, stream>>>( *(data_->d_out_), *(data_->d_1_), kcdata->data_, data_->nhits_ );
   cudaCheck( cudaGetLastError() );
 
   transfer_soa_to_host_and_synchronize_( stream );
@@ -63,12 +63,12 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChefUncali
   cudaCheck( cudaGetLastError() );
 
   /*
-  hef_step1<<<::nblocks_,::nthreads_>>>( *(data_->d_2), *(data_->d_1_), d_kcdata->data, data_->nhits_);
+  hef_step1<<<::nb_rechits_, ::nt_rechits_>>>( *(data_->d_2), *(data_->d_1_), d_kcdata->data, data_->nhits_);
   cudaCheck( cudaGetLastError() );
   reuse_device_pointers_();
   */
 
-  hef_to_rechit<<<::nblocks_, ::nthreads_, 0, stream>>>( *(data_->d_out_), *(data_->d_1_), kcdata->data_, data_->nhits_ );
+  hef_to_rechit<<<::nb_rechits_, ::nt_rechits_, 0, stream>>>( *(data_->d_out_), *(data_->d_1_), kcdata->data_, data_->nhits_ );
   cudaCheck( cudaGetLastError() );
 
   transfer_soa_to_host_and_synchronize_( stream );
@@ -82,25 +82,17 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChebUncali
   cudaCheck( cudaGetLastError() );
 
   /*
-  heb_step1<<<::nblocks_, ::nthreads_>>>( *(data_->d_2_), *(data_->d_1_), d_kcdata->data_, data_->nhits_);
+  heb_step1<<<::nb_rechits_, nt_rechits_>>>( *(data_->d_2_), *(data_->d_1_), d_kcdata->data_, data_->nhits_);
   cudaCheck( cudaGetLastError() );
   reuse_device_pointers_();
   */
 
-  heb_to_rechit<<<::nblocks_, ::nthreads_, 0, stream>>>( *(data_->d_out_), *(data_->d_1_), kcdata->data_, data_->nhits_ );
+  heb_to_rechit<<<::nb_rechits_, ::nt_rechits_, 0, stream>>>( *(data_->d_out_), *(data_->d_1_), kcdata->data_, data_->nhits_ );
   cudaCheck( cudaGetLastError() );
 
   transfer_soa_to_host_and_synchronize_( stream );
   cudaCheck( cudaGetLastError() );
   cudaCheck( cudaStreamSynchronize(stream) );
-}
-
-void KernelManagerHGCalRecHit::fill_positions(const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct* d_conds)
-{
-  fill_positions_from_detids<<<::nblocks_,::nthreads_>>>(d_conds);
-  cudaCheck( cudaGetLastError() );
-  
-  //print_positions_from_detids<<<::nblocks_,::nthreads_>>>(d_conds);
 }
 
 HGCRecHitSoA* KernelManagerHGCalRecHit::get_output()

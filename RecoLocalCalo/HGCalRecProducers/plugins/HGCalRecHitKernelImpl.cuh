@@ -7,7 +7,6 @@
 #include "CUDADataFormats/HGCal/interface/HGCUncalibratedRecHitSoA.h"
 #include "CUDADataFormats/HGCal/interface/HGCRecHitSoA.h"
 #include "CUDADataFormats/HGCal/interface/HGCUncalibratedRecHitsToRecHitsConstants.h"
-#include "CUDADataFormats/HGCal/interface/HGCConditions.h"
 
 #include "RecoLocalCalo/HGCalRecProducers/plugins/KernelManagerHGCalRecHit.h"
 
@@ -28,11 +27,5 @@ void hef_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, HGChe
 
 __global__
 void heb_to_rechit(HGCRecHitSoA dst_soa, HGCUncalibratedRecHitSoA src_soa, HGChebUncalibratedRecHitConstantData cdata, int length);
-
-__global__
-void fill_positions_from_detids(const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct*);
-  
-__global__
-void print_positions_from_detids(const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct*);
   
 #endif //RecoLocalCalo_HGCalRecProducers_HGCalRecHitKernelImpl_cuh
