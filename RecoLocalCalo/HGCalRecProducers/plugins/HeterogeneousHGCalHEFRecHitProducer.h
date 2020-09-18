@@ -36,7 +36,7 @@
 #include "CondFormats/HGCalObjects/interface/HeterogeneousHGCalHEFCellPositionsConditions.h"
 #include "CondFormats/DataRecord/interface/HeterogeneousHGCalHEFCellPositionsConditionsRecord.h"
 #include "RecoLocalCalo/HGCalRecProducers/plugins/KernelManagerHGCalRecHit.h"
-#include "RecoLocalCalo/HGCalESProducers/plugins/KernelManagerHGCalCellPositions.h"
+#include "RecoLocalCalo/HGCalRecProducers/plugins/KernelManagerHGCalCellPositions.h"
 
 class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::ExternalWork> 
 {
