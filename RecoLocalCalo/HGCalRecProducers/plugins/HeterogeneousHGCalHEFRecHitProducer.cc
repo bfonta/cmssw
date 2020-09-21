@@ -116,8 +116,14 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
       KernelManagerHGCalRecHit kernel_manager(kmdata_);
       kernel_manager.run_kernels(kcdata_, ctx.stream());
 
-      //KernelManagerHGCalCellPositions kernel_manager_celpos( 1 ); //test with one single item (one block of one thread)
-      //kernel_manager_celpos.test_cell_positions( celpos );
+      //this should be done in the filler...
+      KernelManagerHGCalCellPositions kernel_manager_celpos_1( 2974224 );
+      kernel_manager_celpos_1.fill_positions( celpos );
+
+      unsigned testId = hits_hef[0].id().rawId();
+      std::cout << "Testing Id " << testId << std::endl;
+      KernelManagerHGCalCellPositions kernel_manager_celpos_2( 1 ); //test with one single item (one block of one thread)
+      kernel_manager_celpos_2.test_cell_positions( testId, celpos );
     }
 }
 

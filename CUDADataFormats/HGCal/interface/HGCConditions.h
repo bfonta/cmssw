@@ -124,11 +124,15 @@ namespace hgcal_conditions {
 								 HeterogeneousHGCalPositionsType::Float,
 								 HeterogeneousHGCalPositionsType::Float,
 								 HeterogeneousHGCalPositionsType::Int32_t,
+								 HeterogeneousHGCalPositionsType::Int32_t,
+								 HeterogeneousHGCalPositionsType::Int32_t,
 								 HeterogeneousHGCalPositionsType::Uint32_t };
     
     struct HGCalPositionsMapping {
-      std::vector<float> z_per_layer;
-      std::vector<int32_t> numberCellsHexagon;
+      std::vector<float> zLayer; //z position per layer
+      std::vector<int32_t> nCellsLayer; //#cells per layer
+      std::vector<int32_t> nCellsWaferUChunk; //#cells per U wafer (each in turn including all V wafers)
+      std::vector<int32_t> nCellsHexagon; //#cells per V wafer
       std::vector<uint32_t> detid;
       //variables required for calculating the positions (x,y) from the detid in the GPU
       float waferSize;
@@ -142,10 +146,12 @@ namespace hgcal_conditions {
 
     struct HeterogeneousHGCalPositionsMapping {
       //the x, y and z positions will not be filled in the CPU
-      float* x;
-      float* y;
-      float* z_per_layer;
-      int32_t *numberCellsHexagon;
+      float *x;
+      float *y;
+      float *zLayer;
+      int32_t *nCellsLayer;
+      int32_t *nCellsWaferUChunk;
+      int32_t *nCellsHexagon;
       uint32_t *detid;
       //variables required for calculating the positions (x,y) from the detid in the GPU
       float waferSize;
