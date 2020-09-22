@@ -33,7 +33,7 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
-#include "CondFormats/HGCalObjects/interface/HeterogeneousHGCalHEFCellPositionsConditions.h"
+#include "RecoLocalCalo/HGCalRecProducers/plugins/HeterogeneousHGCalHEFCellPositionsConditions.h"
 #include "CondFormats/DataRecord/interface/HeterogeneousHGCalHEFCellPositionsConditionsRecord.h"
 #include "RecoLocalCalo/HGCalRecProducers/plugins/KernelManagerHGCalRecHit.h"
 #include "RecoLocalCalo/HGCalRecProducers/plugins/KernelManagerHGCalCellPositions.h"
@@ -72,6 +72,7 @@ class HeterogeneousHGCalHEFRecHitProducer: public edm::stream::EDProducer<edm::E
 
   //conditions (geometry, topology, ...)
   std::unique_ptr<hgcal::RecHitTools> tools_;
+  hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct const *celpos;
   /*
   const hgcal_conditions::HeterogeneousHEFConditionsESProduct* d_conds = nullptr;
   hgcal_conditions::positions::HGCalPositionsMapping* posmap_;

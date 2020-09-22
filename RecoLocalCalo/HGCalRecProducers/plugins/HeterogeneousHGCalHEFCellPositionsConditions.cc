@@ -1,4 +1,4 @@
-#include "CondFormats/HGCalObjects/interface/HeterogeneousHGCalHEFCellPositionsConditions.h"
+#include "RecoLocalCalo/HGCalRecProducers/plugins/HeterogeneousHGCalHEFCellPositionsConditions.h"
 
 HeterogeneousHGCalHEFCellPositionsConditions::HeterogeneousHGCalHEFCellPositionsConditions(cpos::HGCalPositionsMapping* cpuPos)
 {
@@ -260,6 +260,11 @@ hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct const *Hetero
 	    
 	    // ... and then the payload object
 	    cudaCheck(cudaMemcpyAsync(data.device, data.host, sizeof(hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct), cudaMemcpyHostToDevice, stream));
+
+	    //Fill x and y positions in the GPU
+	    KernelManagerHGCalCellPositions km( this->nelems_posmap_ );
+	    km.fill_positions( data.device );
+
 	  }); //gpuData_.dataForCurrentDeviceAsync
 
   // Returns the payload object on the memory of the current device
