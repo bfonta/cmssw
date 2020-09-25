@@ -45,9 +45,10 @@ void HeterogeneousHGCalHEFCellPositionsConditions::transfer_data_to_heterogeneou
 	if( cpos::types[jm1] == cpos::HeterogeneousHGCalPositionsType::Float and 
 	    cpos::types[j] == cpos::HeterogeneousHGCalPositionsType::Float )
 	  select_pointer_f_(&this->posmap_, j) = select_pointer_f_(&this->posmap_, jm1) + shift;
-	else if( (cpos::types[jm1] == cpos::HeterogeneousHGCalPositionsType::Float or cpos::types[jm1] == cpos::HeterogeneousHGCalPositionsType::Int32_t)
-		  and cpos::types[j] == cpos::HeterogeneousHGCalPositionsType::Int32_t )
+	else if( cpos::types[jm1] == cpos::HeterogeneousHGCalPositionsType::Float and cpos::types[j] == cpos::HeterogeneousHGCalPositionsType::Int32_t )
 	  select_pointer_i_(&this->posmap_, j) = reinterpret_cast<int32_t*>( select_pointer_f_(&this->posmap_, jm1) + shift );
+	else if( cpos::types[jm1] == cpos::HeterogeneousHGCalPositionsType::Int32_t and cpos::types[j] == cpos::HeterogeneousHGCalPositionsType::Int32_t )
+	  select_pointer_i_(&this->posmap_, j) = select_pointer_i_(&this->posmap_, jm1) + shift;
 	else if( cpos::types[jm1] == cpos::HeterogeneousHGCalPositionsType::Int32_t and 
 	    cpos::types[j] == cpos::HeterogeneousHGCalPositionsType::Uint32_t )
 	  select_pointer_u_(&this->posmap_, j) = reinterpret_cast<uint32_t*>( select_pointer_i_(&this->posmap_, jm1) + shift );
@@ -94,10 +95,11 @@ std::vector<size_t> HeterogeneousHGCalHEFCellPositionsConditions::calculate_memo
   for(unsigned int i=0; i<npointers; ++i)
     {
       const unsigned detid_index = 4;
+      const unsigned nlayers_index = 3;
       if(cpos::types[i] == cpos::HeterogeneousHGCalPositionsType::Float and (i==0 or i==1))
 	sizes[i] = select_pointer_u_(cpuPos, detid_index).size(); //x and y position array will have the same size as the detid array
       else if(cpos::types[i] == cpos::HeterogeneousHGCalPositionsType::Float and i==2)
-	sizes[i] = select_pointer_i_(cpuPos, i-this->number_position_arrays).size(); //z position's size is equal to the #layers
+	sizes[i] = select_pointer_i_(cpuPos, nlayers_index).size(); //z position's size is equal to the #layers
       else if(cpos::types[i] == cpos::HeterogeneousHGCalPositionsType::Int32_t)
 	sizes[i] = select_pointer_i_(cpuPos, i-this->number_position_arrays).size();
       else if(cpos::types[i] == cpos::HeterogeneousHGCalPositionsType::Uint32_t)
