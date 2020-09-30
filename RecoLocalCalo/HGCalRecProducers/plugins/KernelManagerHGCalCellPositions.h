@@ -31,7 +31,7 @@ class KernelManagerHGCalCellPositions {
   KernelManagerHGCalCellPositions(const size_t&);
 
   void fill_positions(const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct*);
-  void test_cell_positions(const unsigned&, const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct*);
+  void test_cell_positions(/*const unsigned&,*/ const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct*);
 };
 
 #endif //RecoLocalCalo_HGCalESProducers_KernelManagerHGCalCellPositions_h

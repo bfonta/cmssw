@@ -25,7 +25,7 @@ void HeterogeneousHGCalHEFCellPositionsFiller::set_conditions_()
   int nlayers = ddd_->lastLayer(true) - ddd_->firstLayer() + 1;
   int upper_estimate_wafer_number_1D  = 2 * nlayers * (ddd_->waferMax() - ddd_->waferMin());
   int upper_estimate_wafer_number_2D  = upper_estimate_wafer_number_1D * (ddd_->waferMax() - ddd_->waferMin());
-  int upper_estimate_cell_number = upper_estimate_wafer_number_2D * 24 * 24; 
+  int upper_estimate_cell_number = upper_estimate_wafer_number_2D * 3 * 12 * 12; 
   posmap_->zLayer.resize( nlayers * 2 );
   posmap_->nCellsLayer.reserve( nlayers * 2 );
   posmap_->nCellsWaferUChunk.reserve( upper_estimate_wafer_number_1D  );
@@ -54,13 +54,14 @@ void HeterogeneousHGCalHEFCellPositionsFiller::set_conditions_()
       for(int iwaferV=posmap_->waferMin; iwaferV<posmap_->waferMax; ++iwaferV) {
 	int type_ = ddd_->waferType(ilayer, iwaferU, iwaferV); //0: fine; 1: coarseThin; 2: coarseThick (as defined in DataFormats/ForwardDetId/interface/HGCSiliconDetId.h)
 
-	int nCellsHex = ddd_->numberCellsHexagon(ilayer, iwaferU, iwaferV, false);
-	sumCellsLayer += nCellsHex;
-	sumCellsWaferUChunk += nCellsHex;
-	posmap_->nCellsHexagon.push_back( nCellsHex );
+	int nCellsHexSide = ddd_->numberCellsHexagon(ilayer, iwaferU, iwaferV, false);
+	int nCellsHexTotal = ddd_->numberCellsHexagon(ilayer, iwaferU, iwaferV, true);
+	sumCellsLayer += nCellsHexTotal;
+	sumCellsWaferUChunk += nCellsHexTotal;
+	posmap_->nCellsHexagon.push_back( nCellsHexTotal );
 
 	//left side of wafer
-	for(int cellUmax=nCellsHex, icellV=0; cellUmax<2*nCellsHex && icellV<nCellsHex; ++cellUmax, ++icellV)
+	for(int cellUmax=nCellsHexSide, icellV=0; cellUmax<2*nCellsHexSide and icellV<nCellsHexSide; ++cellUmax, ++icellV)
 	  {
 	    for(int icellU=0; icellU<=cellUmax; ++icellU)
 	      {
@@ -69,9 +70,9 @@ void HeterogeneousHGCalHEFCellPositionsFiller::set_conditions_()
 	      }
 	  }
 	//right side of wafer
-	for(int cellUmin=1, icellV=nCellsHex; cellUmin<=nCellsHex && icellV<2*nCellsHex; ++cellUmin, ++icellV)
+	for(int cellUmin=1, icellV=nCellsHexSide; cellUmin<=nCellsHexSide and icellV<2*nCellsHexSide; ++cellUmin, ++icellV)
 	  {
-	    for(int icellU=cellUmin; icellU<2*nCellsHex; ++icellU)
+	    for(int icellU=cellUmin; icellU<2*nCellsHexSide; ++icellU)
 	      {
 		HGCSiliconDetId detid_(DetId::HGCalHSi, 1, type_, ilayer, iwaferU, iwaferV, icellU, icellV);
 		posmap_->detid.push_back( detid_.rawId() );
@@ -94,8 +95,10 @@ std::unique_ptr<HeterogeneousHGCalHEFCellPositionsConditions> HeterogeneousHGCal
   
   set_conditions_();
 
+  /*
   HeterogeneousHGCalHEFCellPositionsConditions esproduct(posmap_);
   d_conds = esproduct.getHeterogeneousConditionsESProductAsync( 0 ); //could use ctx.stream()?
+  */
 
   //KernelManagerHGCalCellPositions kernel_manager( posmap_->detid.size() );
   //kernel_manager.fill_positions(d_conds);

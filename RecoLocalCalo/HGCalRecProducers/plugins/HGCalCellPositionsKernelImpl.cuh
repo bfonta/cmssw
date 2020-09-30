@@ -14,6 +14,6 @@ __global__
 void print_positions_from_detids(const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct* conds);
 
 __global__
-void test(const unsigned& detid, const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct* conds);
+void test(/*const uint32_t& detid, */const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct* conds);
 
 #endif //RecoLocalCalo_HGCalESProducers_HGCalCellPositionsKernelImpl_cuh

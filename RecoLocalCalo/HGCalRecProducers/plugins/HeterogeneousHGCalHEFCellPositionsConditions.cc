@@ -3,20 +3,20 @@
 HeterogeneousHGCalHEFCellPositionsConditions::HeterogeneousHGCalHEFCellPositionsConditions(cpos::HGCalPositionsMapping* cpuPos)
 {
   //HGCalPositions as defined in hgcal_conditions::positions
-  this->sizes_pos_ = calculate_memory_bytes_pos_(cpuPos);
-  this->chunk_pos_ = allocate_memory_pos_(this->sizes_pos_);
-  transfer_data_to_heterogeneous_pointers_pos_(this->sizes_pos_, cpuPos);
-  transfer_data_to_heterogeneous_vars_pos_(cpuPos);
+  this->sizes_ = calculate_memory_bytes_(cpuPos);
+  this->chunk_ = allocate_memory_(this->sizes_);
+  transfer_data_to_heterogeneous_pointers_(this->sizes_, cpuPos);
+  transfer_data_to_heterogeneous_vars_(cpuPos);
 }
 
-size_t HeterogeneousHGCalHEFCellPositionsConditions::allocate_memory_pos_(const std::vector<size_t>& sz)
+size_t HeterogeneousHGCalHEFCellPositionsConditions::allocate_memory_(const std::vector<size_t>& sz)
 {
-  size_t chunk_ = std::accumulate(sz.begin(), sz.end(), 0); //total memory required in bytes
-  cudaCheck(cudaMallocHost(&this->posmap_.x, chunk_));
-  return chunk_;
+  size_t chunk = std::accumulate(sz.begin(), sz.end(), 0); //total memory required in bytes
+  cudaCheck(cudaMallocHost(&this->posmap_.x, chunk));
+  return chunk;
 }
 
-void HeterogeneousHGCalHEFCellPositionsConditions::transfer_data_to_heterogeneous_pointers_pos_(const std::vector<size_t>& sz, cpos::HGCalPositionsMapping* cpuPos)
+void HeterogeneousHGCalHEFCellPositionsConditions::transfer_data_to_heterogeneous_pointers_(const std::vector<size_t>& sz, cpos::HGCalPositionsMapping* cpuPos)
 {
   //store cumulative sum in bytes and convert it to sizes in units of C++ typesHEF, i.e., number if items to be transferred to GPU
   std::vector<size_t> cumsum_sizes( sz.size()+1, 0 ); //starting with zero
@@ -79,7 +79,7 @@ void HeterogeneousHGCalHEFCellPositionsConditions::transfer_data_to_heterogeneou
   }
 }
 
-void HeterogeneousHGCalHEFCellPositionsConditions::transfer_data_to_heterogeneous_vars_pos_(const cpos::HGCalPositionsMapping* cpuPos) {
+void HeterogeneousHGCalHEFCellPositionsConditions::transfer_data_to_heterogeneous_vars_(const cpos::HGCalPositionsMapping* cpuPos) {
   this->posmap_.waferSize        = cpuPos->waferSize;
   this->posmap_.sensorSeparation = cpuPos->sensorSeparation;
   this->posmap_.firstLayer       = cpuPos->firstLayer;
@@ -89,7 +89,7 @@ void HeterogeneousHGCalHEFCellPositionsConditions::transfer_data_to_heterogeneou
   this->nelems_posmap_           = cpuPos->detid.size();
 }
 
-std::vector<size_t> HeterogeneousHGCalHEFCellPositionsConditions::calculate_memory_bytes_pos_(cpos::HGCalPositionsMapping* cpuPos) {
+std::vector<size_t> HeterogeneousHGCalHEFCellPositionsConditions::calculate_memory_bytes_(cpos::HGCalPositionsMapping* cpuPos) {
   size_t npointers = cpos::types.size();
   std::vector<size_t> sizes(npointers);
   for(unsigned int i=0; i<npointers; ++i)
@@ -100,6 +100,8 @@ std::vector<size_t> HeterogeneousHGCalHEFCellPositionsConditions::calculate_memo
 	sizes[i] = select_pointer_u_(cpuPos, detid_index).size(); //x and y position array will have the same size as the detid array
       else if(cpos::types[i] == cpos::HeterogeneousHGCalPositionsType::Float and i==2)
 	sizes[i] = select_pointer_i_(cpuPos, nlayers_index).size(); //z position's size is equal to the #layers
+      else if(cpos::types[i] == cpos::HeterogeneousHGCalPositionsType::Float and i>2)
+	edm::LogError("HeterogeneousHGCalHEFCellPositionsConditions") << "Wrong HeterogeneousHGCalPositions type (Float)";
       else if(cpos::types[i] == cpos::HeterogeneousHGCalPositionsType::Int32_t)
 	sizes[i] = select_pointer_i_(cpuPos, i-this->number_position_arrays).size();
       else if(cpos::types[i] == cpos::HeterogeneousHGCalPositionsType::Uint32_t)
@@ -118,13 +120,13 @@ std::vector<size_t> HeterogeneousHGCalHEFCellPositionsConditions::calculate_memo
     }
   
   //element by element multiplication
-  this->sizes_pos_.resize(npointers);
-  std::transform( sizes.begin(), sizes.end(), sizes_units.begin(), this->sizes_pos_.begin(), std::multiplies<size_t>() );
-  return this->sizes_pos_;
+  this->sizes_.resize(npointers);
+  std::transform( sizes.begin(), sizes.end(), sizes_units.begin(), this->sizes_.begin(), std::multiplies<size_t>() );
+  return this->sizes_;
 }
 
 HeterogeneousHGCalHEFCellPositionsConditions::~HeterogeneousHGCalHEFCellPositionsConditions() {
-  cudaCheck(cudaFreeHost(this->posmap_.x));
+  //cudaCheck(cudaFreeHost(this->posmap_.x));
 }
 
 //I could use template specializations
@@ -226,7 +228,7 @@ hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct const *Hetero
 	    // Allocate the payload object on pinned host memory.
 	    cudaCheck(cudaMallocHost(&data.host, sizeof(hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct)));
 	    // Allocate the payload array(s) on device memory.
-	    cudaCheck(cudaMalloc(&(data.host->posmap.x), chunk_pos_));
+	    cudaCheck(cudaMalloc(&(data.host->posmap.x), this->chunk_));
 	    // Complete the host-side information on the payload
 	    data.host->posmap.waferSize        = this->posmap_.waferSize;
 	    data.host->posmap.sensorSeparation = this->posmap_.sensorSeparation;
@@ -239,17 +241,20 @@ hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct const *Hetero
 	    //(set the pointers of the positions' mapping)
 	    size_t sfloat = sizeof(float);
 	    size_t sint32 = sizeof(int32_t);
-	    for(unsigned int j=0; j<this->sizes_pos_.size()-1; ++j)
+	    for(unsigned int j=0; j<this->sizes_.size()-1; ++j)
 	      {
 		if( cpos::types[j] == cpos::HeterogeneousHGCalPositionsType::Float and 
 		    cpos::types[j+1] == cpos::HeterogeneousHGCalPositionsType::Float )
-		  select_pointer_f_(&(data.host->posmap), j+1) = select_pointer_f_(&(data.host->posmap), j) + (this->sizes_pos_[j]/sfloat);
+		  select_pointer_f_(&(data.host->posmap), j+1) = select_pointer_f_(&(data.host->posmap), j) + (this->sizes_[j]/sfloat);
 		else if( cpos::types[j] == cpos::HeterogeneousHGCalPositionsType::Float and 
 			 cpos::types[j+1] == cpos::HeterogeneousHGCalPositionsType::Int32_t )
-		  select_pointer_i_(&(data.host->posmap), j+1) = reinterpret_cast<int32_t*>( select_pointer_f_(&(data.host->posmap), j) + (this->sizes_pos_[j]/sfloat) );
+		  select_pointer_i_(&(data.host->posmap), j+1) = reinterpret_cast<int32_t*>( select_pointer_f_(&(data.host->posmap), j) + (this->sizes_[j]/sfloat) );
+		else if( cpos::types[j] == cpos::HeterogeneousHGCalPositionsType::Int32_t and 
+			 cpos::types[j+1] == cpos::HeterogeneousHGCalPositionsType::Int32_t )
+		  select_pointer_i_(&(data.host->posmap), j+1) = select_pointer_i_(&(data.host->posmap), j) + (this->sizes_[j]/sint32);
 		else if( cpos::types[j] == cpos::HeterogeneousHGCalPositionsType::Int32_t and 
 			 cpos::types[j+1] == cpos::HeterogeneousHGCalPositionsType::Uint32_t )
-		  select_pointer_u_(&(data.host->posmap), j+1) = reinterpret_cast<uint32_t*>( select_pointer_i_(&(data.host->posmap), j) + (this->sizes_pos_[j]/sint32) );
+		  select_pointer_u_(&(data.host->posmap), j+1) = reinterpret_cast<uint32_t*>( select_pointer_i_(&(data.host->posmap), j) + (this->sizes_[j]/sint32) );
 	      }
 
 	    // Allocate the payload object on the device memory.
@@ -257,7 +262,7 @@ hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct const *Hetero
 
 	    // Transfer the payload, first the array(s) ...
 	    //Important: The transfer does *not* start at posmap.x because the positions are not known in the CPU side!
-	    size_t non_position_memory_size_to_transfer = chunk_pos_ -  this->number_position_arrays*this->nelems_posmap_*sfloat; //size in bytes occupied by the non-position information
+	    size_t non_position_memory_size_to_transfer = this->chunk_ -  this->number_position_arrays*this->nelems_posmap_*sfloat; //size in bytes occupied by the non-position information
 	    cudaCheck(cudaMemcpyAsync(data.host->posmap.zLayer, this->posmap_.zLayer, non_position_memory_size_to_transfer, cudaMemcpyHostToDevice, stream));
 	    
 	    // ... and then the payload object
@@ -266,10 +271,10 @@ hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct const *Hetero
 	    //Fill x and y positions in the GPU
 	    KernelManagerHGCalCellPositions km( this->nelems_posmap_ );
 	    km.fill_positions( data.device );
-
 	  }); //gpuData_.dataForCurrentDeviceAsync
 
   // Returns the payload object on the memory of the current device
+  std::cout << "before returning" << std::endl;
   return data.device;
 }
 

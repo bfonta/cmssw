@@ -4,20 +4,20 @@
 class HeterogeneousHGCSiliconDetId {
  public:
   constexpr HeterogeneousHGCSiliconDetId(uint32_t id): id_(id) {}
-  constexpr uint32_t type()     { return (id_ >> kHGCalTypeOffset) & kHGCalTypeMask; }
+  constexpr int32_t type()      { return (id_ >> kHGCalTypeOffset) & kHGCalTypeMask; }
   constexpr int32_t zside()     { return (((id_ >> kHGCalZsideOffset) & kHGCalZsideMask) ? -1 : 1); }
-  constexpr uint32_t layer()    { return (id_ >> kHGCalLayerOffset) & kHGCalLayerMask; }
+  constexpr int32_t layer()     { return (id_ >> kHGCalLayerOffset) & kHGCalLayerMask; }
   constexpr int32_t waferUAbs() { return (id_ >> kHGCalWaferUOffset) & kHGCalWaferUMask; }
   constexpr int32_t waferVAbs() { return (id_ >> kHGCalWaferVOffset) & kHGCalWaferVMask; }
   constexpr int32_t waferU()    { return (((id_ >> kHGCalWaferUSignOffset) & kHGCalWaferUSignMask) ? -waferUAbs() : waferUAbs()); }
   constexpr int32_t waferV()    { return (((id_ >> kHGCalWaferVSignOffset) & kHGCalWaferVSignMask) ? -waferVAbs() : waferVAbs()); }
   constexpr int32_t waferX()    { return (-2 * waferU() + waferV()); }
   constexpr int32_t waferY()    { return (2 * waferV()); }
-  constexpr uint32_t cellU()    { return (id_ >> kHGCalCellUOffset) & kHGCalCellUMask; }
-  constexpr uint32_t cellV()    { return (id_ >> kHGCalCellVOffset) & kHGCalCellVMask; }
-  constexpr uint32_t nCells()   { return (type() == HGCalFine) ? HGCalFineN : HGCalCoarseN; }
-  constexpr int32_t cellX()     { const uint32_t N = nCells(); return (3 * (cellV() - N) + 2); }
-  constexpr int32_t cellY()     { const uint32_t N = nCells(); return (2 * cellU() - (N + cellV())); }
+  constexpr int32_t cellU()     { return (id_ >> kHGCalCellUOffset) & kHGCalCellUMask; }
+  constexpr int32_t cellV()     { return (id_ >> kHGCalCellVOffset) & kHGCalCellVMask; }
+  constexpr int32_t nCellsSide(){ return (type() == HGCalFine) ? HGCalFineN : HGCalCoarseN; }
+  constexpr int32_t cellX()     { const int32_t N = nCellsSide(); return (3 * (cellV() - N) + 2); }
+  constexpr int32_t cellY()     { const int32_t N = nCellsSide(); return (2 * cellU() - (N + cellV())); }
 
  private:
   uint32_t id_;

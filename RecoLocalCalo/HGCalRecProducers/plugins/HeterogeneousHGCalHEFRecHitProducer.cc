@@ -82,11 +82,6 @@ void HeterogeneousHGCalHEFRecHitProducer::beginRun(edm::Run const&, edm::EventSe
   ddd_ = &( handle->topology().dddConstants() );
   params_ = ddd_->getParameter();
   cdata_.layerOffset_ = params_->layerOffset_; //=28 (6-07-2020)
-
-  edm::ESHandle<HeterogeneousHGCalHEFCellPositionsConditions> celpos_handle;
-  setup.get<HeterogeneousHGCalHEFCellPositionsConditionsRecord>().get(celpos_handle);
-  //chosen CUDA stream does not matter as beginRuns provides a sync point
-  celpos = celpos_handle->getHeterogeneousConditionsESProductAsync( 0 );
 }
 
 void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::EventSetup const& setup, edm::WaitingTaskWithArenaHolder w) {
@@ -94,6 +89,11 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
   
   event.getByToken(token_, handle_hef_);
   const auto &hits_hef = *handle_hef_;
+
+  edm::ESHandle<HeterogeneousHGCalHEFCellPositionsConditions> celpos_handle;
+  setup.get<HeterogeneousHGCalHEFCellPositionsConditionsRecord>().get(celpos_handle);
+  //chosen CUDA stream does not matter as beginRuns provides a sync point
+  celpos = celpos_handle->getHeterogeneousConditionsESProductAsync( 0 );
 
   unsigned int nhits = hits_hef.size();
   stride_ = ( (nhits-1)/32 + 1 ) * 32; //align to warp boundary
@@ -110,10 +110,15 @@ void HeterogeneousHGCalHEFRecHitProducer::acquire(edm::Event const& event, edm::
       KernelManagerHGCalRecHit km(kmdata_);
       km.run_kernels(kcdata_, ctx.stream());
 
-      unsigned testId = hits_hef[0].id().rawId();
+      //unsigned testId = hits_hef[0].id().rawId();
+      unsigned testId = 2551379147;
       std::cout << "Testing Id " << testId << std::endl;
-      KernelManagerHGCalCellPositions km2( 1 ); //test with one single item (one block of one thread)
-      km2.test_cell_positions( testId, celpos );
+
+      HGCSiliconDetId testIdObj(testId);
+      std::pair<double, double> testPos = ddd_->locateCell(testIdObj.layer(), testIdObj.waferU(), testIdObj.waferV(), testIdObj.cellU(), testIdObj.cellV(), true, true, false);
+      std::cout << "Real positions: " << testPos.first << ", " << testPos.second << std::endl;
+      KernelManagerHGCalCellPositions km2( 1 ); //test with one single item (one block with some threads)
+      km2.test_cell_positions( celpos );
     }
 }
 
