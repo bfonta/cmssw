@@ -11,7 +11,6 @@
 <use name="Geometry/HGCalGeometry"/>
 <use name="Geometry/HGCalCommonData"/>
 <use name="RecoLocalCalo/HGCalRecAlgos"/>
-<use name="RecoLocalCalo/HGCalESProducers"/>
 <use name="FWCore/MessageLogger"/>
 <use name="CondFormats/DataRecord"/>
 <use name="CondFormats/HGCalObjects"/>
