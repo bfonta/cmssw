@@ -25,7 +25,7 @@ process.TFileService = cms.Service("TFileService",
                                )
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32( 2 ))
+    input = cms.untracked.int32( 1 ))
 
 indir = '/afs/cern.ch/user/b/bfontana/CMSSW_11_2_0_pre5/src/23234.0_TTbar_14TeV+2026D49+TTbar_14TeV_TuneCP5_GenSimHLBeamSpot14+DigiTrigger+RecoGlobal+HARVESTGlobal'
 file_wildcard = 'step3.root'

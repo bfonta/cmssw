@@ -103,7 +103,6 @@ unsigned hash_function(const int32_t& l, const int32_t& wU, const int32_t& wV, c
   const unsigned thisUwafer = wU - conds->posmap.waferMin;
   const unsigned thisVwafer = wV - conds->posmap.waferMin;
   const unsigned nwafers1D = conds->posmap.waferMax - conds->posmap.waferMin;
-  printf("=== entered hash === tLayer: %u, tUWaf: %u, tVwaf: %u, nwafers: %u - wu: %d, wv: %d, cu: %d, cv: %d\n", thislayer, thisUwafer, thisVwafer, nwafers1D, wU, wV, cu, cv);
 	 
   //layer shift in terms of cell number
   unsigned ncells_up_to_thislayer = 0;
@@ -130,16 +129,16 @@ unsigned hash_function(const int32_t& l, const int32_t& wU, const int32_t& wV, c
 }
 
 __global__
-void test(/*const uint32_t& detid,*/ const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct* conds)
+void test(uint32_t detid_test, const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct* conds)
 {
   unsigned int tid = blockDim.x * blockIdx.x + threadIdx.x;
 
   if(tid == 0)
     {
       //printf("Nelems: %u\n", static_cast<unsigned>(conds->nelems_posmap));
-      for(unsigned i=0; i<4; ++i)
+      for(unsigned i=0; i<1; ++i)
 	{
-	  HeterogeneousHGCSiliconDetId did(/*detid 2416969935*/2551379147);
+	  HeterogeneousHGCSiliconDetId did(detid_test); // 2416969935, 2552165379, ...
 	  const int32_t cU     = did.cellU();
 	  const int32_t cV     = did.cellV();
 	  const int32_t wU     = did.waferU();
@@ -148,8 +147,7 @@ void test(/*const uint32_t& detid,*/ const hgcal_conditions::HeterogeneousHEFCel
 	  
 	  const int32_t layer  = abs(did.layer()); //remove abs in case both endcaps are considered for x and y
 	  const unsigned shift = hash_function(layer, wU, wV, cU, cV, ncs, conds);
-	  printf("id: %u\n", conds->posmap.detid[i]);
-	  printf("id: cu: %d, cv: %d, wu: %d, wv: %d, ncells: %d, layer: %d\n", cU, cV, wU, wV, ncs, layer);
+	  //printf("id: cu: %d, cv: %d, wu: %d, wv: %d, ncells: %d, layer: %d\n", cU, cV, wU, wV, ncs, layer);
 	  printf("id: %u | shift: %u | x: %lf y: %lf\n", conds->posmap.detid[shift], shift, conds->posmap.x[shift], conds->posmap.y[shift]);
 	}
     }

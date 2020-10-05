@@ -16,8 +16,9 @@ void KernelManagerHGCalCellPositions::fill_positions(const hgcal_conditions::Het
   cudaCheck( cudaGetLastError() );
 }
 
-void KernelManagerHGCalCellPositions::test_cell_positions(/*const unsigned& id,*/ const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct* d_conds)
+void KernelManagerHGCalCellPositions::test_cell_positions(unsigned id, const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct* d_conds)
 {
-  test<<<::nb_celpos_,::nt_celpos_>>>(/*id,*/ d_conds);
+  test<<<::nb_celpos_,::nt_celpos_>>>(id, d_conds);
+  cudaCheck( cudaDeviceSynchronize() );
   cudaCheck( cudaGetLastError() );
 }
