@@ -34,7 +34,7 @@
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "RecoLocalCalo/HGCalRecProducers/plugins/KernelManagerHGCalRecHit.h"
 
-#include "CUDADataFormats/HGCal/interface/RecHitGPUProduct.h"
+#include "CUDADataFormats/HGCal/interface/HGCRecHitGPUProduct.h"
 
 class HEFRecHitGPUtoSoA : public edm::stream::EDProducer<edm::ExternalWork> {
 public:
@@ -46,7 +46,7 @@ public:
 
 private:
   cms::cuda::ContextState ctxState_;
-  edm::EDGetTokenT<cms::cuda::Product<RecHitGPUProduct>> recHitGPUToken_;
+  edm::EDGetTokenT<cms::cuda::Product<HGCRecHitGPUProduct>> recHitGPUToken_;
   edm::EDPutTokenT<HGCRecHitSoA> recHitCPUSoAToken_;
 
   void allocate_memory_(const uint32_t&, const uint32_t&, const uint32_t&, const cudaStream_t&);

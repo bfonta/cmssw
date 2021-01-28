@@ -61,7 +61,7 @@ class HGChebUncalibratedRecHitConstantData {
 public:
   static constexpr size_t heb_weights = 51;  //number of elements pointed by weights_
   
-  double weights_[maxsizes_constants::heb_weights];  //energy weights to recover rechit energy deposited in the absorber
+  double weights_[heb_weights];  //energy weights to recover rechit energy deposited in the absorber
 
   double keV2DIGI_;       //energy to femto coloumb conversion: 1000 eV/3.62 (eV per e) / 6.24150934e3 (e per fC)
   double uncalib2GeV_;    //sets the ADC; obtained by dividing 1e-6 by hgcHEB_keV2DIGI_
