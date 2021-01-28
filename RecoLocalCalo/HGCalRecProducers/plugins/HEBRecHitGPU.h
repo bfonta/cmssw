@@ -35,7 +35,7 @@
 
 #include "RecoLocalCalo/HGCalRecProducers/plugins/KernelManagerHGCalRecHit.h"
 
-#include "CUDADataFormats/HGCal/interface/RecHitGPUProduct.h"
+#include "CUDADataFormats/HGCal/interface/HGCRecHitGPUProduct.h"
 
 class HEBRecHitGPU : public edm::stream::EDProducer<edm::ExternalWork> {
 public:
@@ -48,7 +48,7 @@ public:
 
 private:
   edm::EDGetTokenT<HGChebUncalibratedRecHitCollection> uncalibRecHitCPUToken_;
-  edm::EDPutTokenT<cms::cuda::Product<RecHitGPUProduct>> recHitGPUToken_;
+  edm::EDPutTokenT<cms::cuda::Product<HGCRecHitGPUProduct>> recHitGPUToken_;
 
   edm::Handle<HGChebUncalibratedRecHitCollection> handle_;
   std::unique_ptr<HGChebRecHitCollection> rechits_;
@@ -72,7 +72,7 @@ private:
                                        HGCUncalibratedRecHitSoA *);
   void convert_constant_data_(KernelConstantData<HGChebUncalibratedRecHitConstantData> *);
 
-  RecHitGPUProduct prod_;
+  HGCRecHitGPUProduct prod_;
   HGCUncalibratedRecHitSoA *h_uncalibSoA_ = nullptr;
   HGCUncalibratedRecHitSoA *d_uncalibSoA_ = nullptr;
   HGCRecHitSoA *d_calibSoA_ = nullptr;
