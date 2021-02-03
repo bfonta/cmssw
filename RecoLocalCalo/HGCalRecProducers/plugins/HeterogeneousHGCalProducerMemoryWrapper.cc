@@ -32,7 +32,6 @@ namespace memory {
       return mem;
     }
 
-    //allocates page-locked (pinned) and non cached (write-combining) memory for UncalibratedRecHits SoAs on the host
     cms::cuda::host::unique_ptr<std::byte[]> uncalibRecHitHost(const uint32_t& nhits,
 							       const uint32_t& stride,
                                                                HGCUncalibratedRecHitSoA& soa,
