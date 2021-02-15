@@ -1,8 +1,7 @@
-#include "HeterogeneousHGCalProducerMemoryWrapper.h"
+#include "HeterogeneousHGCRecHitMemAllocations.h"
 
 namespace memory {
   namespace allocation {
-
     cms::cuda::device::unique_ptr<std::byte[]> uncalibRecHitDevice(const uint32_t& nhits,
                                                                    const uint32_t& stride,
                                                                    HGCUncalibratedRecHitSoA& soa,

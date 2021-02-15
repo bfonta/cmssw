@@ -1,5 +1,5 @@
-#ifndef RecoLocalCalo_HGCalRecProducers_HeterogeneousHGCalProducerMemoryWrapper_h
-#define RecoLocalCalo_HGCalRecProducers_HeterogeneousHGCalProducerMemoryWrapper_h
+#ifndef RecoLocalCalo_HGCalRecProducers_HeterogeneousHGCRecHitMemAllocations_h
+#define RecoLocalCalo_HGCalRecProducers_HeterogeneousHGCRecHitMemAllocations_h
 
 #include <cstdio>
 #include <iostream>
@@ -42,4 +42,4 @@ namespace memory {
   }  // namespace allocation
 }  // namespace memory
 
-#endif  //RecoLocalCalo_HGCalRecProducers_HeterogeneousHGCalProducerMemoryWrapper_h
+#endif  //RecoLocalCalo_HGCalRecProducers_HeterogeneousHGCRecHitMemAllocations_h
