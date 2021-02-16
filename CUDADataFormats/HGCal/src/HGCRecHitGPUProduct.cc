@@ -1,13 +1,12 @@
 #include "CUDADataFormats/HGCal/interface/HGCRecHitGPUProduct.h"
 
 HGCRecHitGPUProduct::HGCRecHitGPUProduct(uint32_t nhits, const cudaStream_t& stream) : nhits_(nhits) {
-  constexpr std::array<int,3> sizes = {{ memory::npointers::float_hgcrechits_soa  * sizeof(float),
+  constexpr std::array<int,memory::npointers::ntypes_hgcrechits_soa> sizes = {{ memory::npointers::float_hgcrechits_soa  * sizeof(float),
 					 memory::npointers::uint32_hgcrechits_soa * sizeof(uint32_t),
 					 memory::npointers::uint8_hgcrechits_soa  * sizeof(uint8_t) }};
   size_tot_ = std::accumulate(sizes.begin(), sizes.end(), 0);
   pad_ = ((nhits - 1) / 32 + 1) * 32;  //align to warp boundary (assumption: warpSize = 32)
   ptr_ = cms::cuda::make_device_unique<std::byte[]>(pad_ * size_tot_, stream);
-  static_assert(sizes.begin() + memory::npointers::ntypes_hgcrechits_soa == sizes.end());
 
   defineSoAMemoryLayout_();
 }

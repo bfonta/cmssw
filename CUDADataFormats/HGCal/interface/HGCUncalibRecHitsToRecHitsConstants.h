@@ -1,5 +1,5 @@
-#ifndef CUDADataFormats_HGCal_HGCUncalibratedRecHitsToRecHitsConstants_h
-#define CUDADataFormats_HGCal_HGCUncalibratedRecHitsToRecHitsConstants_h
+#ifndef CUDADataFormats_HGCal_HGCUncalibRecHitsToRecHitsConstants_h
+#define CUDADataFormats_HGCal_HGCUncalibRecHitsToRecHitsConstants_h
 
 #include <vector>
 
@@ -12,7 +12,7 @@ public:
   std::vector<double> weights_;
 };
 
-class HGCeeUncalibratedRecHitConstantData {
+class HGCeeUncalibRecHitConstantData {
 public:
   static constexpr size_t ee_fCPerMIP = 3;  //number of elements pointed by hgcEE_fCPerMIP_
   static constexpr size_t ee_cce = 3;       //number of elements pointed by hgcEE_cce_
@@ -34,7 +34,7 @@ public:
   float cterm_;         //used for computing the time resolution error
 };
 
-class HGChefUncalibratedRecHitConstantData {
+class HGChefUncalibRecHitConstantData {
 public:
   static constexpr size_t hef_fCPerMIP = 3;  //number of elements pointed by hgcEE_fCPerMIP_
   static constexpr size_t hef_cce = 3;       //number of elements pointed by hgcEE_cce_
@@ -57,7 +57,7 @@ public:
   int32_t layerOffset_;  //layer offset relative to layer#1 of the EE subsetector
 };
 
-class HGChebUncalibratedRecHitConstantData {
+class HGChebUncalibRecHitConstantData {
 public:
   static constexpr size_t heb_weights = 51;  //number of elements pointed by weights_
   

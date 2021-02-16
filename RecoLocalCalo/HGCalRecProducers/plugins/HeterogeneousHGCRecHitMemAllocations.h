@@ -16,8 +16,8 @@
 #include "DataFormats/HGCRecHit/interface/HGCRecHit.h"
 #include "DataFormats/HGCRecHit/interface/HGCRecHitCollections.h"
 #include "CUDADataFormats/HGCal/interface/HGCRecHitSoA.h"
-#include "CUDADataFormats/HGCal/interface/HGCUncalibratedRecHitSoA.h"
-#include "CUDADataFormats/HGCal/interface/HGCUncalibratedRecHitsToRecHitsConstants.h"
+#include "CUDADataFormats/HGCal/interface/HGCUncalibRecHitSoA.h"
+#include "CUDADataFormats/HGCal/interface/HGCUncalibRecHitsToRecHitsConstants.h"
 
 #include "HeterogeneousCore/CUDACore/interface/ScopedContext.h"
 #include "HeterogeneousCore/CUDACore/interface/ContextState.h"
@@ -31,10 +31,10 @@
 namespace memory {
   namespace allocation {
     cms::cuda::device::unique_ptr<std::byte[]> uncalibRecHitDevice(const uint32_t&, const uint32_t&,
-                                                                   HGCUncalibratedRecHitSoA&,
+                                                                   HGCUncalibRecHitSoA&,
                                                                    const cudaStream_t&);
     cms::cuda::host::unique_ptr<std::byte[]> uncalibRecHitHost(const uint32_t&, const uint32_t&,
-                                                               HGCUncalibratedRecHitSoA&,
+                                                               HGCUncalibRecHitSoA&,
                                                                const cudaStream_t&);
     cms::cuda::host::unique_ptr<std::byte[]> calibRecHitHost(const uint32_t&, const uint32_t&,
                                                              HGCRecHitSoA&, const cudaStream_t&);

@@ -1,9 +1,9 @@
-#ifndef CUDADataFormats_HGCal_HGCUncalibratedRecHitSoA_h
-#define CUDADataFormats_HGCal_HGCUncalibratedRecHitSoA_h
+#ifndef CUDADataFormats_HGCal_HGCUncalibRecHitSoA_h
+#define CUDADataFormats_HGCal_HGCUncalibRecHitSoA_h
 
 #include <cstdint>
 
-class HGCUncalibratedRecHitSoA {
+class HGCUncalibRecHitSoA {
 public:
   float *amplitude_;     //uncalib rechit amplitude, i.e., the average number of MIPs
   float *pedestal_;      //reconstructed pedestal
@@ -11,7 +11,7 @@ public:
   float *chi2_;          //chi2 of the pulse
   float *OOTamplitude_;  //out-of-time reconstructed amplitude
   float *OOTchi2_;       //out-of-time chi2
-  std::uint32_t * flags_;  //uncalibrechit flags describing its status (DataFormats/HGCRecHit/interface/HGCUncalibratedRecHit.h); to be propagated to the rechits
+  std::uint32_t * flags_;  //uncalibrechit flags describing its status (DataFormats/HGCRecHit/interface/HGCUncalibRecHit.h); to be propagated to the rechits
   std::uint32_t *aux_;  //aux word; first 8 bits contain time (jitter) error
   std::uint32_t *id_;   //uncalibrechit detector id
 
