@@ -1,17 +1,20 @@
-#include "CUDADataFormats/HGCal/interface/HGCRecHitGPUProduct.h"
+#include "CUDADataFormats/HGCal/interface/HGCRecHitCPUProduct.h"
 
-HGCRecHitGPUProduct::HGCRecHitGPUProduct(uint32_t nhits, const cudaStream_t& stream) : nhits_(nhits) {
-  constexpr std::array<int,memory::npointers::ntypes_hgcrechits_soa> sizes = {{ memory::npointers::float_hgcrechits_soa  * sizeof(float),
-					 memory::npointers::uint32_hgcrechits_soa * sizeof(uint32_t),
-					 memory::npointers::uint8_hgcrechits_soa  * sizeof(uint8_t) }};
+HGCRecHitCPUProduct::HGCRecHitCPUProduct(uint32_t nhits, const cudaStream_t& stream) : nhits_(nhits) {
+  constexpr std::array<int,memory::npointers::ntypes_hgcrechits_soa> sizes = {{
+				memory::npointers::float_hgcrechits_soa * sizeof(float),
+				memory::npointers::uint32_hgcrechits_soa * sizeof(uint32_t),
+				memory::npointers::uint8_hgcrechits_soa * sizeof(uint8_t) }};
   size_tot_ = std::accumulate(sizes.begin(), sizes.end(), 0);
   pad_ = ((nhits - 1) / 32 + 1) * 32;  //align to warp boundary (assumption: warpSize = 32)
-  mem_ = cms::cuda::make_device_unique<std::byte[]>(pad_ * size_tot_, stream);
+  //mem_ = cms::cuda::make_host_unique<std::byte[]>(pad_ * size_tot_, stream);
+  mem_ = std::make_unique<std::byte[]>(pad_ * size_tot_);
 
   defineSoAMemoryLayout_();
+  copySoAMemoryLayoutToConst_();
 }
 
-void HGCRecHitGPUProduct::defineSoAMemoryLayout_() {
+void HGCRecHitCPUProduct::defineSoAMemoryLayout_() {
   soa_.energy_    = reinterpret_cast<float*>(mem_.get());
   soa_.time_      = soa_.energy_ + pad_;
   soa_.timeError_ = soa_.time_ + pad_;
@@ -24,7 +27,7 @@ void HGCRecHitGPUProduct::defineSoAMemoryLayout_() {
   soa_.pad_    = pad_;
 }
 
-void HGCRecHitGPUProduct::copySoAMemoryLayoutToConst_() {
+void HGCRecHitCPUProduct::copySoAMemoryLayoutToConst_() {
   constSoa_.energy_    = soa_.energy_;
   constSoa_.time_      = soa_.time_;
   constSoa_.timeError_ = soa_.timeError_;
