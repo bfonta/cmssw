@@ -186,6 +186,7 @@ void EERecHitFull::produce(edm::Event& event, const edm::EventSetup& setup) {
   const auto& hits = event.get(uncalibRecHitCPUToken_);
   const unsigned nhits(hits.size());
 
+  std::cout << "CHECK!!!!!!!! "  << std::endl;
   if (nhits == 0)
     cms::cuda::LogError("EERecHitFull") << "WARNING: no input hits!";
 

@@ -10,7 +10,7 @@ HeterogeneousHGCalRecHitsValidator::HeterogeneousHGCalRecHitsValidator(const edm
       treenames_({{"CEE", "CHSi", "CHSci"}}) {
   usesResource(TFileService::kSharedResource);
   edm::Service<TFileService> fs;
-  for (unsigned i(0); i < nsubdetectors; ++i) {
+  for (unsigned i(0); i < 1/*nsubdetectors*/; ++i) {
     trees_[i] = fs->make<TTree>(treenames_[i].c_str(), treenames_[i].c_str());
     trees_[i]->Branch("cpu", "ValidHitCollection", &cpuValidRecHits[i]);
     trees_[i]->Branch("gpu", "ValidHitCollection", &gpuValidRecHits[i]);
@@ -33,7 +33,7 @@ void HeterogeneousHGCalRecHitsValidator::analyze(const edm::Event &event, const 
   recHitTools_.setGeometry(*baseGeom);
 
   //future subdetector loop
-  for (size_t idet = 0; idet < nsubdetectors; ++idet) {
+  for (size_t idet = 0; idet < 1/*nsubdetectors*/; ++idet) {
     set_geometry_(setup, idet);
 
     //get hits produced with the CPU
@@ -43,6 +43,7 @@ void HeterogeneousHGCalRecHitsValidator::analyze(const edm::Event &event, const 
     const auto &gpuhits = event.get(tokens_[idet][1]);
 
     size_t nhits = cpuhits.size();
+    std::cout << nhits  << ", " << gpuhits.size() << std::endl;
     assert(nhits == gpuhits.size());
     //float sum_cpu = 0.f, sum_gpu = 0.f, sum_son_cpu = 0.f, sum_son_gpu = 0.f;
     for (unsigned i(0); i < nhits; i++) {
