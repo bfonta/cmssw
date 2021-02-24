@@ -24,7 +24,7 @@ public:
   void copySoAMemoryLayoutToConst_();
   HGCRecHitSoA get() { return soa_; }
   //copy at request time prevents users from modifying the original pointers in `constSoa`
-  ConstHGCRecHitSoA get() const { return constSoa_; }
+  ConstHGCRecHitSoA getConst() const { return constSoa_; }
   uint32_t nHits() const { return nhits_; }
   uint32_t pad() const { return pad_; }
   uint32_t nBytes() const { return size_tot_; }

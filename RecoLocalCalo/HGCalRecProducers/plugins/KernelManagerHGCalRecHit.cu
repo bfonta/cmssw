@@ -36,6 +36,7 @@ void KernelManagerHGCalRecHit::transfer_soa_to_device_(const cudaStream_t& strea
 
 void KernelManagerHGCalRecHit::transfer_soa_to_host(const cudaStream_t& stream) {
   cudaCheck(cudaMemcpyAsync(h_calibSoA_.energy_, d_calibSoA_.energy_, nbytes_host_, cudaMemcpyDeviceToHost, stream));
+  cudaCheck(cudaDeviceSynchronize());
 }
 
 void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGCeeUncalibRecHitConstantData>* kcdata,
@@ -43,6 +44,7 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGCeeUncalib
   transfer_soa_to_device_(stream);
   ee_to_rechit<<<::nb_rechits_, ::nt_rechits_, 0, stream>>>(d_calibSoA_, d_uncalibSoA_, kcdata->data_, nhits_);
   cudaCheck(cudaGetLastError());
+  cudaCheck(cudaDeviceSynchronize());
 }
 
 void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChefUncalibRecHitConstantData>* kcdata,
@@ -50,6 +52,7 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChefUncali
   transfer_soa_to_device_(stream);
   hef_to_rechit<<<::nb_rechits_, ::nt_rechits_, 0, stream>>>(d_calibSoA_, d_uncalibSoA_, kcdata->data_, nhits_);
   cudaCheck(cudaGetLastError());
+  cudaCheck(cudaDeviceSynchronize());
 }
 
 void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChebUncalibRecHitConstantData>* kcdata,
@@ -57,4 +60,5 @@ void KernelManagerHGCalRecHit::run_kernels(const KernelConstantData<HGChebUncali
   transfer_soa_to_device_(stream);
   heb_to_rechit<<<::nb_rechits_, ::nt_rechits_, 0, stream>>>(d_calibSoA_, d_uncalibSoA_, kcdata->data_, nhits_);
   cudaCheck(cudaGetLastError());
+  cudaCheck(cudaDeviceSynchronize());
 }

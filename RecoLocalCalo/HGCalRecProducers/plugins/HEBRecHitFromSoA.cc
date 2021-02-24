@@ -33,7 +33,7 @@ HEBRecHitFromSoA::HEBRecHitFromSoA(const edm::ParameterSet& ps) {
 HEBRecHitFromSoA::~HEBRecHitFromSoA() {}
 
 void HEBRecHitFromSoA::produce(edm::Event& event, const edm::EventSetup& setup) {
-  ConstHGCRecHitSoA recHitsSoA = event.get(recHitSoAToken_).get();
+  ConstHGCRecHitSoA recHitsSoA = event.get(recHitSoAToken_).getConst();
   rechits_ = std::make_unique<HGCRecHitCollection>();
   convert_soa_data_to_collection_(recHitsSoA.nhits_, *rechits_, &recHitsSoA);
   event.put(std::move(rechits_));
