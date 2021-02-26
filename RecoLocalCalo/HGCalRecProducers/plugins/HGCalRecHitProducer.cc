@@ -69,8 +69,15 @@ HGCalRecHitProducer::HGCalRecHitProducer(const edm::ParameterSet& ps)
 
 HGCalRecHitProducer::~HGCalRecHitProducer() {
   for(unsigned i(0); i<totaltime.size(); ++i)
-    std::cout << totaltime[i] << ", ";
-  std::cout << "TOTAL CPU " << std::accumulate(totaltime.begin(), totaltime.end(), 0.) << std::endl;
+      std::cout << totaltime[i] << ", ";
+  double sum = std::accumulate(totaltime.begin(), totaltime.end(), 0.);
+  unsigned tsize = totaltime.size();
+  double mean = sum / static_cast<double>(tsize);
+  double sq_sum = std::inner_product(totaltime.begin(), totaltime.end(), totaltime.begin(), 0.0);
+  double stdev = std::sqrt(sq_sum/tsize - mean*mean);
+  std::cout << "TOTAL CPU " <<  sum << std::endl;
+  std::cout << "mean " << mean << std::endl;
+  std::cout << "std " << stdev << std::endl;
 }
 
 void HGCalRecHitProducer::produce(edm::Event& evt, const edm::EventSetup& es) {
@@ -102,11 +109,8 @@ void HGCalRecHitProducer::produce(edm::Event& evt, const edm::EventSetup& es) {
 
   // collection of rechits to put in the event
   auto eeRecHits = std::make_unique<HGCeeRecHitCollection>();
-  std::cout << eeUncalibRecHits->size() << ", SIZE" << std::endl;
   auto hefRecHits = std::make_unique<HGChefRecHitCollection>();
-  std::cout << hefUncalibRecHits->size() << ", SIZE" << std::endl;
   auto hebRecHits = std::make_unique<HGChebRecHitCollection>();
-  std::cout << hebUncalibRecHits->size() << ", SIZE" << std::endl;
   worker_->set(es);
 
   auto start = std::chrono::high_resolution_clock::now();

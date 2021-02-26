@@ -150,7 +150,8 @@ EERecHitFull::EERecHitFull(const edm::ParameterSet& ps):
   assert_sizes_constants_(vdata_);
 
   kcdata_ = new KernelConstantData<HGCeeUncalibRecHitConstantData>(cdata_, vdata_);
-
+  convert_constant_data_(kcdata_);
+  
   tools_ = std::make_unique<hgcal::RecHitTools>();
 }
 
@@ -158,7 +159,14 @@ EERecHitFull::~EERecHitFull() {
   delete kcdata_;
   for(unsigned i(0); i<totaltime.size(); ++i)
     std::cout << totaltime[i] << ", ";
-  std::cout << "TOTAL GPU " << std::accumulate(totaltime.begin(), totaltime.end(), 0.) << std::endl;
+  double sum = std::accumulate(totaltime.begin(), totaltime.end(), 0.);
+  unsigned tsize = totaltime.size();
+  double mean = sum / static_cast<double>(tsize);
+  double sq_sum = std::inner_product(totaltime.begin(), totaltime.end(), totaltime.begin(), 0.0);
+  double stdev = std::sqrt(sq_sum/tsize - mean*mean);
+  std::cout << "TOTAL GPU " <<  sum << std::endl;
+  std::cout << "mean " << mean << std::endl;
+  std::cout << "std " << stdev << std::endl;
 }
 
 std::string EERecHitFull::assert_error_message_(std::string var, const size_t& s1, const size_t& s2) {
@@ -200,8 +208,6 @@ void EERecHitFull::produce(edm::Event& event, const edm::EventSetup& setup) {
   prodGPU_   = HGCRecHitGPUProduct(nhits, ctx.stream());
   d_uncalib_ = HGCUncalibRecHitDevice(nhits, ctx.stream());
   h_uncalib_ = HGCUncalibRecHitHost<HGCeeUncalibratedRecHitCollection>(nhits, hits, ctx.stream());
-  
-  convert_constant_data_(kcdata_);
 
   KernelManagerHGCalRecHit km1(h_uncalib_.get(), d_uncalib_.get(), prodGPU_.get());
   km1.run_kernels(kcdata_, ctx.stream());
@@ -213,7 +219,7 @@ void EERecHitFull::produce(edm::Event& event, const edm::EventSetup& setup) {
   KernelManagerHGCalRecHit km2(prodCPU_.get(), prodGPU_.get());
   km2.transfer_soa_to_host(ctx.stream());
   //add CUDA device synchronize
-  
+    
   rechits_ = std::make_unique<HGCRecHitCollection>();
   ConstHGCRecHitSoA tmpSoA = prodCPU_.getConst();
   convert_soa_data_to_collection_(prodCPU_.getConst().nhits_, *rechits_, &tmpSoA);
