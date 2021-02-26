@@ -23,16 +23,3 @@ void HGCRecHitGPUProduct::defineSoAMemoryLayout_() {
   soa_.nhits_  = nhits_;
   soa_.pad_    = pad_;
 }
-
-void HGCRecHitGPUProduct::copySoAMemoryLayoutToConst_() {
-  constSoa_.energy_    = soa_.energy_;
-  constSoa_.time_      = soa_.time_;
-  constSoa_.timeError_ = soa_.timeError_;
-  constSoa_.id_        = soa_.id_;
-  constSoa_.flagBits_  = soa_.flagBits_;
-  constSoa_.son_       = soa_.son_;
-
-  constSoa_.nbytes_ = soa_.nbytes_;
-  constSoa_.nhits_  = soa_.nhits_;
-  constSoa_.pad_    = soa_.pad_;
-}

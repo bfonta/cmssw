@@ -11,7 +11,6 @@ HGCRecHitCPUProduct::HGCRecHitCPUProduct(uint32_t nhits, const cudaStream_t& str
   mem_ = std::make_unique<std::byte[]>(pad_ * size_tot_);
 
   defineSoAMemoryLayout_();
-  copySoAMemoryLayoutToConst_();
 }
 
 void HGCRecHitCPUProduct::defineSoAMemoryLayout_() {
@@ -25,17 +24,4 @@ void HGCRecHitCPUProduct::defineSoAMemoryLayout_() {
   soa_.nbytes_ = size_tot_;
   soa_.nhits_  = nhits_;
   soa_.pad_    = pad_;
-}
-
-void HGCRecHitCPUProduct::copySoAMemoryLayoutToConst_() {
-  constSoa_.energy_    = soa_.energy_;
-  constSoa_.time_      = soa_.time_;
-  constSoa_.timeError_ = soa_.timeError_;
-  constSoa_.id_        = soa_.id_;
-  constSoa_.flagBits_  = soa_.flagBits_;
-  constSoa_.son_       = soa_.son_;
-
-  constSoa_.nbytes_ = soa_.nbytes_;
-  constSoa_.nhits_  = soa_.nhits_;
-  constSoa_.pad_    = soa_.pad_;
 }
