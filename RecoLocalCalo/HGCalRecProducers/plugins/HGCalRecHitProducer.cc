@@ -23,6 +23,9 @@
 
 #include "RecoLocalCalo/HGCalRecProducers/interface/HGCalRecHitWorkerBaseClass.h"
 
+#include <iostream>
+#include <numeric>
+
 class HGCalRecHitProducer : public edm::stream::EDProducer<> {
 public:
   explicit HGCalRecHitProducer(const edm::ParameterSet& ps);
@@ -30,6 +33,8 @@ public:
   void produce(edm::Event& evt, const edm::EventSetup& es) override;
 
 private:
+  std::vector<double> totaltime;
+  
   const edm::EDGetTokenT<HGCeeUncalibratedRecHitCollection> eeUncalibRecHitCollection_;
   const edm::EDGetTokenT<HGChefUncalibratedRecHitCollection> hefUncalibRecHitCollection_;
   const edm::EDGetTokenT<HGChebUncalibratedRecHitCollection> hebUncalibRecHitCollection_;
@@ -62,7 +67,11 @@ HGCalRecHitProducer::HGCalRecHitProducer(const edm::ParameterSet& ps)
   produces<HGChfnoseRecHitCollection>(hfnoseRechitCollection_);
 }
 
-HGCalRecHitProducer::~HGCalRecHitProducer() {}
+HGCalRecHitProducer::~HGCalRecHitProducer() {
+  for(unsigned i(0); i<totaltime.size(); ++i)
+    std::cout << totaltime[i] << ", ";
+  std::cout << "TOTAL CPU " << std::accumulate(totaltime.begin(), totaltime.end(), 0.) << std::endl;
+}
 
 void HGCalRecHitProducer::produce(edm::Event& evt, const edm::EventSetup& es) {
   using namespace edm;
@@ -93,16 +102,22 @@ void HGCalRecHitProducer::produce(edm::Event& evt, const edm::EventSetup& es) {
 
   // collection of rechits to put in the event
   auto eeRecHits = std::make_unique<HGCeeRecHitCollection>();
+  std::cout << eeUncalibRecHits->size() << ", SIZE" << std::endl;
   auto hefRecHits = std::make_unique<HGChefRecHitCollection>();
+  std::cout << hefUncalibRecHits->size() << ", SIZE" << std::endl;
   auto hebRecHits = std::make_unique<HGChebRecHitCollection>();
-
+  std::cout << hebUncalibRecHits->size() << ", SIZE" << std::endl;
   worker_->set(es);
 
+  auto start = std::chrono::high_resolution_clock::now();
   // loop over uncalibrated rechits to make calibrated ones
   for (auto it = eeUncalibRecHits->begin(); it != eeUncalibRecHits->end(); ++it) {
     worker_->run(evt, *it, *eeRecHits);
   }
-
+  auto finish = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> elapsed = finish - start;
+  totaltime.push_back( elapsed.count()*1000 );
+  
   // loop over uncalibrated rechits to make calibrated ones
   for (auto it = hefUncalibRecHits->begin(); it != hefUncalibRecHits->end(); ++it) {
     worker_->run(evt, *it, *hefRecHits);

@@ -93,7 +93,6 @@ process.gpu_t = cms.Task( process.ee_t )
 process.cpu_t = cms.Task( process.HGCalRecHits )
 process.path = cms.Path( process.valid, process.gpu_t, process.cpu_t )
 
-
 process.out = cms.OutputModule( "PoolOutputModule", 
                                 fileName = cms.untracked.string( os.path.join(dirName, 'out.root') ),
                                 outputCommands = cms.untracked.vstring('drop *') )

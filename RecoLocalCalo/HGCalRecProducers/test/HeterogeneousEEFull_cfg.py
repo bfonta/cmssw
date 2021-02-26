@@ -4,8 +4,8 @@ from Configuration.StandardSequences.Eras import eras
 from Configuration.ProcessModifiers.gpu_cff import gpu
 from RecoLocalCalo.HGCalRecProducers.HGCalRecHit_cfi import HGCalRecHit
 
-PU=0
-withGPU=0
+PU=200
+withGPU=1
 
 #package loading
 process = cms.Process("gpuTiming", gpu) if withGPU else cms.Process("cpuTiming")
@@ -24,7 +24,8 @@ from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic', '')
 
 indir =  '/home/bfontana/' #'/eos/user/b/bfontana/Samples/'
-filename_suff = 'hadd_out_PU' + str(PU) + '_uncompressed' #'step3_ttbar_PU' + str(PU)
+#filename_suff = 'hadd_out_PU' + str(PU) + '_uncompressed' #'step3_ttbar_PU' + str(PU)
+filename_suff = 'hadd_out_PU' + str(PU) + '' #'step3_ttbar_PU' + str(PU)
 fNames = [ 'file:' + x for x in glob.glob(os.path.join(indir, filename_suff + '*.root')) ]
 if len(fNames)==0:
     print('Used globbing: ', glob.glob(os.path.join(indir, filename_suff + '*.root')))
@@ -72,23 +73,34 @@ process.FastTimerService.writeJSONSummary = True
 process.FastTimerService.jsonFileName = 'resources.json'
 ###process.MessageLogger.categories.append('ThroughputService')
 
+dirName = '/eos/user/b/bfontana/Samples/'
 if withGPU:
     process.ee_task = cms.Task( process.EEFull )
     process.recHitsTask = cms.Task( process.ee_task )
-    outkeeps = ['keep *_EERecHitFromSoAProd_*_*',
-                'keep *_HEFRecHitFromSoAProd_*_*',
-                'keep *_HEBRecHitFromSoAProd_*_*']
-    process.consumer = cms.EDAnalyzer("GenericConsumer",                     
-                                      eventProducts = cms.untracked.vstring('EEFull') )
+    outkeeps = ['keep *_EEFull_*_*' ]
+                #'keep *_HEFRecHitFromSoAProd_*_*',
+                #'keep *_HEBRecHitFromSoAProd_*_*']
+    process.out = cms.OutputModule( "PoolOutputModule", 
+                                    fileName = cms.untracked.string( os.path.join(dirName, 'out.root') ),
+                                    outputCommands = cms.untracked.vstring(outkeeps[0]) )
+
+    #process.consumer = cms.EDAnalyzer("GenericConsumer",                     
+    #                                  eventProducts = cms.untracked.vstring('EEFull') )
 
 else:
     process.recHitsClone = HGCalRecHit.clone()
     process.recHitsTask = cms.Task( process.recHitsClone ) #CPU version
     outkeeps = ['keep *_*_' + f + '*_*' for f in ['HGCEERecHits', 'HGCHEFRecHits', 'HGCHEBRecHits'] ]
-    process.consumer = cms.EDAnalyzer('GenericConsumer',
-                                      eventProducts = cms.untracked.vstring('recHitsClone') )
+    process.out = cms.OutputModule( "PoolOutputModule", 
+                                    fileName = cms.untracked.string( os.path.join(dirName, 'out.root') ),
+                                    outputCommands = cms.untracked.vstring(outkeeps[0],
+                                                                           outkeeps[1],
+                                                                           outkeeps[2]) )
+
+    #process.consumer = cms.EDAnalyzer('GenericConsumer',
+    #                                  eventProducts = cms.untracked.vstring('recHitsClone') )
     #eventProducts = cms.untracked.vstring('HGCalUncalibRecHit') ) #uncalib only (to assess reading speed)
 
 
 process.path = cms.Path( process.recHitsTask )
-
+process.outpath = cms.EndPath(process.out)

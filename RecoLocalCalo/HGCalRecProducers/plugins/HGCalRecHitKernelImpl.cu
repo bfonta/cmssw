@@ -120,8 +120,8 @@ __global__ void hef_to_rechit(HGCRecHitSoA dst_soa,
   unsigned tid = blockDim.x * blockIdx.x + threadIdx.x;
   for (unsigned i = tid; i < length; i += blockDim.x * gridDim.x) {
     /*Uncomment the lines set to 1. as soon as those factors are centrally defined for the HSi.
-	CUDADataFormats/HGCal/interface/HGCUncalibRecHitsToRecHitsConstants.h maxsizes_constanats will perhaps have to be changed (change some 3's to 6's) 
-      */
+      CUDADataFormats/HGCal/interface/HGCUncalibRecHitsToRecHitsConstants.h maxsizes_constanats will perhaps have to be changed (change some 3's to 6's) 
+    */
     HeterogeneousHGCSiliconDetId detid(src_soa.id_[i]);
     int32_t layer = detid.layer() + cdata.layerOffset_;
     float weight = get_weight_from_layer(layer, cdata.weights_);

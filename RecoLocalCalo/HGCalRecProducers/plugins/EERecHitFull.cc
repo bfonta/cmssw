@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <chrono>
+#include <numeric>
 #include <cuda_runtime.h>
 
 #include "FWCore/Framework/interface/ESProducer.h"
@@ -105,6 +106,8 @@ public:
   void convert_soa_data_to_collection_(uint32_t, HGCRecHitCollection&, ConstHGCRecHitSoA*);
 
 private:
+  std::vector<double> totaltime;
+  
   edm::EDGetTokenT<HGCeeUncalibratedRecHitCollection> uncalibRecHitCPUToken_;
   edm::EDPutTokenT<HGCeeRecHitCollection> recHitCollectionToken_;
 
@@ -153,6 +156,9 @@ EERecHitFull::EERecHitFull(const edm::ParameterSet& ps):
 
 EERecHitFull::~EERecHitFull() {
   delete kcdata_;
+  for(unsigned i(0); i<totaltime.size(); ++i)
+    std::cout << totaltime[i] << ", ";
+  std::cout << "TOTAL GPU " << std::accumulate(totaltime.begin(), totaltime.end(), 0.) << std::endl;
 }
 
 std::string EERecHitFull::assert_error_message_(std::string var, const size_t& s1, const size_t& s2) {
@@ -180,17 +186,18 @@ void EERecHitFull::assert_sizes_constants_(const HGCConstantVectorData& vd) {
         "weights", HGCeeUncalibRecHitConstantData::ee_weights, vdata_.weights_.size());
 }
 
-void EERecHitFull::produce(edm::Event& event, const edm::EventSetup& setup) {
+void EERecHitFull::produce(edm::Event& event, const edm::EventSetup& setup) {  
   cms::cuda::ScopedContextProduce ctx{event.streamID()};
 
   const auto& hits = event.get(uncalibRecHitCPUToken_);
   const unsigned nhits(hits.size());
 
-  std::cout << "CHECK!!!!!!!! "  << std::endl;
   if (nhits == 0)
     cms::cuda::LogError("EERecHitFull") << "WARNING: no input hits!";
 
-  prodGPU_      = HGCRecHitGPUProduct(nhits, ctx.stream());
+  auto start = std::chrono::high_resolution_clock::now();
+  
+  prodGPU_   = HGCRecHitGPUProduct(nhits, ctx.stream());
   d_uncalib_ = HGCUncalibRecHitDevice(nhits, ctx.stream());
   h_uncalib_ = HGCUncalibRecHitHost<HGCeeUncalibratedRecHitCollection>(nhits, hits, ctx.stream());
   
@@ -200,6 +207,8 @@ void EERecHitFull::produce(edm::Event& event, const edm::EventSetup& setup) {
   km1.run_kernels(kcdata_, ctx.stream());
   //add CUDA device synchronize
 
+  auto finish = std::chrono::high_resolution_clock::now();
+    
   prodCPU_ = HGCRecHitCPUProduct(prodGPU_.nHits(), ctx.stream());
   KernelManagerHGCalRecHit km2(prodCPU_.get(), prodGPU_.get());
   km2.transfer_soa_to_host(ctx.stream());
@@ -208,6 +217,11 @@ void EERecHitFull::produce(edm::Event& event, const edm::EventSetup& setup) {
   rechits_ = std::make_unique<HGCRecHitCollection>();
   ConstHGCRecHitSoA tmpSoA = prodCPU_.getConst();
   convert_soa_data_to_collection_(prodCPU_.getConst().nhits_, *rechits_, &tmpSoA);
+
+  std::chrono::duration<double> elapsed = finish - start;
+  //std::cout << "GPU " << elapsed.count()*1000  << std::endl;
+  totaltime.push_back( elapsed.count()*1000 );
+  
   event.put(std::move(rechits_));
 }
 
