@@ -128,7 +128,7 @@ std::vector<size_t> HeterogeneousHGCalHEFCellPositionsConditions::calculate_memo
 }
 
 HeterogeneousHGCalHEFCellPositionsConditions::~HeterogeneousHGCalHEFCellPositionsConditions() {
-  //cudaCheck(cudaFreeHost(this->posmap_.x));
+  cudaCheck(cudaFreeHost(this->posmap_.x));
 }
 
 //I could use template specializations
@@ -282,13 +282,14 @@ HeterogeneousHGCalHEFCellPositionsConditions::getHeterogeneousConditionsESProduc
                               cudaMemcpyHostToDevice,
                               stream));
 
+    std::cout << "fill positions"  << std::endl;
     //Fill x and y positions in the GPU
     KernelManagerHGCalCellPositions km(this->nelems_posmap_);
     km.fill_positions(data.device);
   });  //gpuData_.dataForCurrentDeviceAsync
 
   // Returns the payload object on the memory of the current device
-  std::cout << "before returning" << std::endl;
+  std::cout << "Get()"  << std::endl;
   return data.device;
 }
 

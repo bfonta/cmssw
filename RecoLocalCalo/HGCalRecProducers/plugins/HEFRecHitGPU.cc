@@ -60,7 +60,7 @@ private:
 
 HEFRecHitGPU::HEFRecHitGPU(const edm::ParameterSet& ps)
     : uncalibRecHitCPUToken_{consumes<HGCUncalibratedRecHitCollection>(
-          ps.getParameter<edm::InputTag>("HGCHEFUncalibRecHitsTok"))},
+	ps.getParameter<edm::InputTag>("HGCHEFUncalibRecHitsTok"))},
       recHitGPUToken_{produces<cms::cuda::Product<HGCRecHitGPUProduct>>()} {
   cdata_.keV2DIGI_ = ps.getParameter<double>("HGCHEF_keV2DIGI");
   cdata_.xmin_ = ps.getParameter<double>("minValSiPar");  //float

@@ -1,7 +1,6 @@
 #include "RecoLocalCalo/HGCalRecProducers/plugins/HeterogeneousHGCalHEFCellPositionsFiller.h"
 
 HeterogeneousHGCalHEFCellPositionsFiller::HeterogeneousHGCalHEFCellPositionsFiller(const edm::ParameterSet& ps) {
-  //setWhatProduced(this/*, dependsOn(&HeterogeneousHGCalHEFCellPositionsFiller::geometryCallback)*/).setConsumes(geometryToken_);
   geometryToken_ = setWhatProduced(this).consumesFrom<HGCalGeometry, IdealGeometryRecord>(
       edm::ESInputTag{"", "HGCalHESiliconSensitive"});
   posmap_ = new hgcal_conditions::positions::HGCalPositionsMapping();
@@ -48,10 +47,9 @@ void HeterogeneousHGCalHEFCellPositionsFiller::set_conditions_() {
       sumCellsWaferUChunk = 0;
 
       for (int iwaferV = posmap_->waferMin; iwaferV < posmap_->waferMax; ++iwaferV) {
-        int type_ = ddd_->waferType(
-            ilayer,
-            iwaferU,
-            iwaferV);  //0: fine; 1: coarseThin; 2: coarseThick (as defined in DataFormats/ForwardDetId/interface/HGCSiliconDetId.h)
+	//0: fine; 1: coarseThin; 2: coarseThick
+	//(as defined in DataFormats/ForwardDetId/interface/HGCSiliconDetId.h)
+        int type_ = ddd_->waferType(ilayer, iwaferU, iwaferV);
 
         int nCellsHexSide = ddd_->numberCellsHexagon(ilayer, iwaferU, iwaferV, false);
         int nCellsHexTotal = ddd_->numberCellsHexagon(ilayer, iwaferU, iwaferV, true);
@@ -84,6 +82,7 @@ void HeterogeneousHGCalHEFCellPositionsFiller::set_conditions_() {
 
 std::unique_ptr<HeterogeneousHGCalHEFCellPositionsConditions> HeterogeneousHGCalHEFCellPositionsFiller::produce(
     const HeterogeneousHGCalHEFCellPositionsConditionsRecord& iRecord) {
+  std::cout << "produce() 1 called" << std::endl;
   auto geom = iRecord.getTransientHandle(geometryToken_);
   ddd_ = &(geom->topology().dddConstants());
   params_ = ddd_->getParameter();
