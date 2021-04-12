@@ -8,8 +8,8 @@ ecalRecHitGPU = cms.EDProducer("EcalRecHitProducerGPU",
     uncalibrecHitsInLabelEB = cms.InputTag("ecalUncalibRecHitProducerGPU","EcalUncalibRecHitsEB"),
     uncalibrecHitsInLabelEE = cms.InputTag("ecalUncalibRecHitProducerGPU","EcalUncalibRecHitsEE"),
           
-    recHitsLabelEB = cms.string("EcalRecHitsEB"),
-    recHitsLabelEE = cms.string("EcalRecHitsEE"),
+    recHitsLabelEB = cms.string("EcalRecHitsGPUEB"),
+    recHitsLabelEE = cms.string("EcalRecHitsGPUEE"),
  
     maxNumberHitsEB = cms.uint32(61200),
     maxNumberHitsEE = cms.uint32(14648),  
