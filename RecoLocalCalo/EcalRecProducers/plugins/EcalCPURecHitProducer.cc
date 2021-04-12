@@ -44,8 +44,8 @@ private:
 void EcalCPURecHitProducer::fillDescriptions(edm::ConfigurationDescriptions& confDesc) {
   edm::ParameterSetDescription desc;
 
-  desc.add<edm::InputTag>("recHitsInLabelEB", edm::InputTag{"ecalRecHitProducerGPU", "EcalRecHitsEB"});
-  desc.add<edm::InputTag>("recHitsInLabelEE", edm::InputTag{"ecalRecHitProducerGPU", "EcalRecHitsEE"});
+  desc.add<edm::InputTag>("recHitsInLabelEB", edm::InputTag{"ecalRecHitProducerGPU", "EcalRecHitsGPUEB"});
+  desc.add<edm::InputTag>("recHitsInLabelEE", edm::InputTag{"ecalRecHitProducerGPU", "EcalRecHitsGPUEE"});
   desc.add<std::string>("recHitsOutLabelEB", "EcalRecHitsEB");
   desc.add<std::string>("recHitsOutLabelEE", "EcalRecHitsEE");
   desc.add<bool>("containsTimingInformation", false);

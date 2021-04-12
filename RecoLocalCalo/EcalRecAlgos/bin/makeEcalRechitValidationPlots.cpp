@@ -178,8 +178,10 @@ int main(int argc, char *argv[]) {
   TTree *rt = (TTree *)rf.Get("Events");
 
   // Allocating the appropriate data to their respective pointers
-  rt->SetBranchAddress("ecalTagsoaecalRecHit_ecalCPURecHitProducer_EcalRecHitsEB_RECO.", &wgpuEB);
-  rt->SetBranchAddress("ecalTagsoaecalRecHit_ecalCPURecHitProducer_EcalRecHitsEE_RECO.", &wgpuEE);
+  rt->SetBranchAddress("calocommonCUDAHostAllocatorAliascalocommonVecStoragePolicyecalRecHit_ecalCPURecHitProducer_EcalRecHitsEB_RECO.", &wgpuEB);
+  rt->SetBranchAddress("calocommonCUDAHostAllocatorAliascalocommonVecStoragePolicyecalRecHit_ecalCPURecHitProducer_EcalRecHitsEE_RECO.", &wgpuEE);
+  //rt->SetBranchAddress("ecalTagsoaecalRecHit_ecalCPURecHitProducer_EcalRecHitsEB_RECO.", &wgpuEB);
+  //rt->SetBranchAddress("ecalTagsoaecalRecHit_ecalCPURecHitProducer_EcalRecHitsEE_RECO.", &wgpuEE);
   rt->SetBranchAddress("EcalRecHitsSorted_ecalRecHit_EcalRecHitsEB_RECO.", &wcpuEB);
   rt->SetBranchAddress("EcalRecHitsSorted_ecalRecHit_EcalRecHitsEE_RECO.", &wcpuEE);
 
