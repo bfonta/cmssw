@@ -51,7 +51,19 @@ void BinaryWriter::endJob()
 }
 
 void BinaryWriter::fillEventProtocol(const HGCeeUncalibratedRecHitCollection& src, uncalibRecHitsProtocol::Event* dst) {
-  dst->set_integer(2);
+  for(unsigned i=0; i<src.size(); ++i)
+    {
+      //breaking add_* naming style!
+      dst->add_amplitude(src[i].amplitude());
+      dst->add_pedestal(src[i].pedestal());
+      dst->add_jitter(src[i].jitter());
+      dst->add_chi2(src[i].chi2());
+      dst->add_ootamplitude(src[i].outOfTimeEnergy());
+      dst->add_ootchi2(src[i].outOfTimeChi2());
+      dst->add_flags(src[i].flags());
+      dst->add_aux(0);
+      dst->add_id(src[i].id().rawId());
+    }
 }
 
 void BinaryWriter::analyze( const edm::Event &iEvent, const edm::EventSetup &iSetup)

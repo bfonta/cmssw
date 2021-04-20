@@ -183,20 +183,213 @@ class Event :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kIntegerFieldNumber = 1,
+    kAmplitudeFieldNumber = 1,
+    kPedestalFieldNumber = 2,
+    kJitterFieldNumber = 3,
+    kChi2FieldNumber = 4,
+    kOotamplitudeFieldNumber = 5,
+    kOotchi2FieldNumber = 6,
+    kFlagsFieldNumber = 7,
+    kAuxFieldNumber = 8,
+    kIdFieldNumber = 9,
   };
-  // optional int32 integer = 1;
-  bool has_integer() const;
+  // repeated float amplitude = 1;
+  int amplitude_size() const;
   private:
-  bool _internal_has_integer() const;
+  int _internal_amplitude_size() const;
   public:
-  void clear_integer();
-  ::PROTOBUF_NAMESPACE_ID::int32 integer() const;
-  void set_integer(::PROTOBUF_NAMESPACE_ID::int32 value);
+  void clear_amplitude();
   private:
-  ::PROTOBUF_NAMESPACE_ID::int32 _internal_integer() const;
-  void _internal_set_integer(::PROTOBUF_NAMESPACE_ID::int32 value);
+  float _internal_amplitude(int index) const;
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+      _internal_amplitude() const;
+  void _internal_add_amplitude(float value);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+      _internal_mutable_amplitude();
   public:
+  float amplitude(int index) const;
+  void set_amplitude(int index, float value);
+  void add_amplitude(float value);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+      amplitude() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+      mutable_amplitude();
+
+  // repeated float pedestal = 2;
+  int pedestal_size() const;
+  private:
+  int _internal_pedestal_size() const;
+  public:
+  void clear_pedestal();
+  private:
+  float _internal_pedestal(int index) const;
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+      _internal_pedestal() const;
+  void _internal_add_pedestal(float value);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+      _internal_mutable_pedestal();
+  public:
+  float pedestal(int index) const;
+  void set_pedestal(int index, float value);
+  void add_pedestal(float value);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+      pedestal() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+      mutable_pedestal();
+
+  // repeated float jitter = 3;
+  int jitter_size() const;
+  private:
+  int _internal_jitter_size() const;
+  public:
+  void clear_jitter();
+  private:
+  float _internal_jitter(int index) const;
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+      _internal_jitter() const;
+  void _internal_add_jitter(float value);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+      _internal_mutable_jitter();
+  public:
+  float jitter(int index) const;
+  void set_jitter(int index, float value);
+  void add_jitter(float value);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+      jitter() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+      mutable_jitter();
+
+  // repeated float chi2 = 4;
+  int chi2_size() const;
+  private:
+  int _internal_chi2_size() const;
+  public:
+  void clear_chi2();
+  private:
+  float _internal_chi2(int index) const;
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+      _internal_chi2() const;
+  void _internal_add_chi2(float value);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+      _internal_mutable_chi2();
+  public:
+  float chi2(int index) const;
+  void set_chi2(int index, float value);
+  void add_chi2(float value);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+      chi2() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+      mutable_chi2();
+
+  // repeated float ootamplitude = 5;
+  int ootamplitude_size() const;
+  private:
+  int _internal_ootamplitude_size() const;
+  public:
+  void clear_ootamplitude();
+  private:
+  float _internal_ootamplitude(int index) const;
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+      _internal_ootamplitude() const;
+  void _internal_add_ootamplitude(float value);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+      _internal_mutable_ootamplitude();
+  public:
+  float ootamplitude(int index) const;
+  void set_ootamplitude(int index, float value);
+  void add_ootamplitude(float value);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+      ootamplitude() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+      mutable_ootamplitude();
+
+  // repeated float ootchi2 = 6;
+  int ootchi2_size() const;
+  private:
+  int _internal_ootchi2_size() const;
+  public:
+  void clear_ootchi2();
+  private:
+  float _internal_ootchi2(int index) const;
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+      _internal_ootchi2() const;
+  void _internal_add_ootchi2(float value);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+      _internal_mutable_ootchi2();
+  public:
+  float ootchi2(int index) const;
+  void set_ootchi2(int index, float value);
+  void add_ootchi2(float value);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+      ootchi2() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+      mutable_ootchi2();
+
+  // repeated uint32 flags = 7;
+  int flags_size() const;
+  private:
+  int _internal_flags_size() const;
+  public:
+  void clear_flags();
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint32 _internal_flags(int index) const;
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >&
+      _internal_flags() const;
+  void _internal_add_flags(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >*
+      _internal_mutable_flags();
+  public:
+  ::PROTOBUF_NAMESPACE_ID::uint32 flags(int index) const;
+  void set_flags(int index, ::PROTOBUF_NAMESPACE_ID::uint32 value);
+  void add_flags(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >&
+      flags() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >*
+      mutable_flags();
+
+  // repeated uint32 aux = 8;
+  int aux_size() const;
+  private:
+  int _internal_aux_size() const;
+  public:
+  void clear_aux();
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint32 _internal_aux(int index) const;
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >&
+      _internal_aux() const;
+  void _internal_add_aux(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >*
+      _internal_mutable_aux();
+  public:
+  ::PROTOBUF_NAMESPACE_ID::uint32 aux(int index) const;
+  void set_aux(int index, ::PROTOBUF_NAMESPACE_ID::uint32 value);
+  void add_aux(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >&
+      aux() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >*
+      mutable_aux();
+
+  // repeated uint32 id = 9;
+  int id_size() const;
+  private:
+  int _internal_id_size() const;
+  public:
+  void clear_id();
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint32 _internal_id(int index) const;
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >&
+      _internal_id() const;
+  void _internal_add_id(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >*
+      _internal_mutable_id();
+  public:
+  ::PROTOBUF_NAMESPACE_ID::uint32 id(int index) const;
+  void set_id(int index, ::PROTOBUF_NAMESPACE_ID::uint32 value);
+  void add_id(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >&
+      id() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >*
+      mutable_id();
 
   // @@protoc_insertion_point(class_scope:uncalibRecHitsProtocol.Event)
  private:
@@ -205,7 +398,15 @@ class Event :
   ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
   ::PROTOBUF_NAMESPACE_ID::internal::HasBits<1> _has_bits_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
-  ::PROTOBUF_NAMESPACE_ID::int32 integer_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< float > amplitude_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< float > pedestal_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< float > jitter_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< float > chi2_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< float > ootamplitude_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< float > ootchi2_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 > flags_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 > aux_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 > id_;
   friend struct ::TableStruct_MessageDefinition_2eproto;
 };
 // -------------------------------------------------------------------
@@ -364,32 +565,427 @@ class Data :
 #endif  // __GNUC__
 // Event
 
-// optional int32 integer = 1;
-inline bool Event::_internal_has_integer() const {
-  bool value = (_has_bits_[0] & 0x00000001u) != 0;
-  return value;
+// repeated float amplitude = 1;
+inline int Event::_internal_amplitude_size() const {
+  return amplitude_.size();
 }
-inline bool Event::has_integer() const {
-  return _internal_has_integer();
+inline int Event::amplitude_size() const {
+  return _internal_amplitude_size();
 }
-inline void Event::clear_integer() {
-  integer_ = 0;
-  _has_bits_[0] &= ~0x00000001u;
+inline void Event::clear_amplitude() {
+  amplitude_.Clear();
 }
-inline ::PROTOBUF_NAMESPACE_ID::int32 Event::_internal_integer() const {
-  return integer_;
+inline float Event::_internal_amplitude(int index) const {
+  return amplitude_.Get(index);
 }
-inline ::PROTOBUF_NAMESPACE_ID::int32 Event::integer() const {
-  // @@protoc_insertion_point(field_get:uncalibRecHitsProtocol.Event.integer)
-  return _internal_integer();
+inline float Event::amplitude(int index) const {
+  // @@protoc_insertion_point(field_get:uncalibRecHitsProtocol.Event.amplitude)
+  return _internal_amplitude(index);
 }
-inline void Event::_internal_set_integer(::PROTOBUF_NAMESPACE_ID::int32 value) {
-  _has_bits_[0] |= 0x00000001u;
-  integer_ = value;
+inline void Event::set_amplitude(int index, float value) {
+  amplitude_.Set(index, value);
+  // @@protoc_insertion_point(field_set:uncalibRecHitsProtocol.Event.amplitude)
 }
-inline void Event::set_integer(::PROTOBUF_NAMESPACE_ID::int32 value) {
-  _internal_set_integer(value);
-  // @@protoc_insertion_point(field_set:uncalibRecHitsProtocol.Event.integer)
+inline void Event::_internal_add_amplitude(float value) {
+  amplitude_.Add(value);
+}
+inline void Event::add_amplitude(float value) {
+  _internal_add_amplitude(value);
+  // @@protoc_insertion_point(field_add:uncalibRecHitsProtocol.Event.amplitude)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+Event::_internal_amplitude() const {
+  return amplitude_;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+Event::amplitude() const {
+  // @@protoc_insertion_point(field_list:uncalibRecHitsProtocol.Event.amplitude)
+  return _internal_amplitude();
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+Event::_internal_mutable_amplitude() {
+  return &amplitude_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+Event::mutable_amplitude() {
+  // @@protoc_insertion_point(field_mutable_list:uncalibRecHitsProtocol.Event.amplitude)
+  return _internal_mutable_amplitude();
+}
+
+// repeated float pedestal = 2;
+inline int Event::_internal_pedestal_size() const {
+  return pedestal_.size();
+}
+inline int Event::pedestal_size() const {
+  return _internal_pedestal_size();
+}
+inline void Event::clear_pedestal() {
+  pedestal_.Clear();
+}
+inline float Event::_internal_pedestal(int index) const {
+  return pedestal_.Get(index);
+}
+inline float Event::pedestal(int index) const {
+  // @@protoc_insertion_point(field_get:uncalibRecHitsProtocol.Event.pedestal)
+  return _internal_pedestal(index);
+}
+inline void Event::set_pedestal(int index, float value) {
+  pedestal_.Set(index, value);
+  // @@protoc_insertion_point(field_set:uncalibRecHitsProtocol.Event.pedestal)
+}
+inline void Event::_internal_add_pedestal(float value) {
+  pedestal_.Add(value);
+}
+inline void Event::add_pedestal(float value) {
+  _internal_add_pedestal(value);
+  // @@protoc_insertion_point(field_add:uncalibRecHitsProtocol.Event.pedestal)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+Event::_internal_pedestal() const {
+  return pedestal_;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+Event::pedestal() const {
+  // @@protoc_insertion_point(field_list:uncalibRecHitsProtocol.Event.pedestal)
+  return _internal_pedestal();
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+Event::_internal_mutable_pedestal() {
+  return &pedestal_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+Event::mutable_pedestal() {
+  // @@protoc_insertion_point(field_mutable_list:uncalibRecHitsProtocol.Event.pedestal)
+  return _internal_mutable_pedestal();
+}
+
+// repeated float jitter = 3;
+inline int Event::_internal_jitter_size() const {
+  return jitter_.size();
+}
+inline int Event::jitter_size() const {
+  return _internal_jitter_size();
+}
+inline void Event::clear_jitter() {
+  jitter_.Clear();
+}
+inline float Event::_internal_jitter(int index) const {
+  return jitter_.Get(index);
+}
+inline float Event::jitter(int index) const {
+  // @@protoc_insertion_point(field_get:uncalibRecHitsProtocol.Event.jitter)
+  return _internal_jitter(index);
+}
+inline void Event::set_jitter(int index, float value) {
+  jitter_.Set(index, value);
+  // @@protoc_insertion_point(field_set:uncalibRecHitsProtocol.Event.jitter)
+}
+inline void Event::_internal_add_jitter(float value) {
+  jitter_.Add(value);
+}
+inline void Event::add_jitter(float value) {
+  _internal_add_jitter(value);
+  // @@protoc_insertion_point(field_add:uncalibRecHitsProtocol.Event.jitter)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+Event::_internal_jitter() const {
+  return jitter_;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+Event::jitter() const {
+  // @@protoc_insertion_point(field_list:uncalibRecHitsProtocol.Event.jitter)
+  return _internal_jitter();
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+Event::_internal_mutable_jitter() {
+  return &jitter_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+Event::mutable_jitter() {
+  // @@protoc_insertion_point(field_mutable_list:uncalibRecHitsProtocol.Event.jitter)
+  return _internal_mutable_jitter();
+}
+
+// repeated float chi2 = 4;
+inline int Event::_internal_chi2_size() const {
+  return chi2_.size();
+}
+inline int Event::chi2_size() const {
+  return _internal_chi2_size();
+}
+inline void Event::clear_chi2() {
+  chi2_.Clear();
+}
+inline float Event::_internal_chi2(int index) const {
+  return chi2_.Get(index);
+}
+inline float Event::chi2(int index) const {
+  // @@protoc_insertion_point(field_get:uncalibRecHitsProtocol.Event.chi2)
+  return _internal_chi2(index);
+}
+inline void Event::set_chi2(int index, float value) {
+  chi2_.Set(index, value);
+  // @@protoc_insertion_point(field_set:uncalibRecHitsProtocol.Event.chi2)
+}
+inline void Event::_internal_add_chi2(float value) {
+  chi2_.Add(value);
+}
+inline void Event::add_chi2(float value) {
+  _internal_add_chi2(value);
+  // @@protoc_insertion_point(field_add:uncalibRecHitsProtocol.Event.chi2)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+Event::_internal_chi2() const {
+  return chi2_;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+Event::chi2() const {
+  // @@protoc_insertion_point(field_list:uncalibRecHitsProtocol.Event.chi2)
+  return _internal_chi2();
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+Event::_internal_mutable_chi2() {
+  return &chi2_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+Event::mutable_chi2() {
+  // @@protoc_insertion_point(field_mutable_list:uncalibRecHitsProtocol.Event.chi2)
+  return _internal_mutable_chi2();
+}
+
+// repeated float ootamplitude = 5;
+inline int Event::_internal_ootamplitude_size() const {
+  return ootamplitude_.size();
+}
+inline int Event::ootamplitude_size() const {
+  return _internal_ootamplitude_size();
+}
+inline void Event::clear_ootamplitude() {
+  ootamplitude_.Clear();
+}
+inline float Event::_internal_ootamplitude(int index) const {
+  return ootamplitude_.Get(index);
+}
+inline float Event::ootamplitude(int index) const {
+  // @@protoc_insertion_point(field_get:uncalibRecHitsProtocol.Event.ootamplitude)
+  return _internal_ootamplitude(index);
+}
+inline void Event::set_ootamplitude(int index, float value) {
+  ootamplitude_.Set(index, value);
+  // @@protoc_insertion_point(field_set:uncalibRecHitsProtocol.Event.ootamplitude)
+}
+inline void Event::_internal_add_ootamplitude(float value) {
+  ootamplitude_.Add(value);
+}
+inline void Event::add_ootamplitude(float value) {
+  _internal_add_ootamplitude(value);
+  // @@protoc_insertion_point(field_add:uncalibRecHitsProtocol.Event.ootamplitude)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+Event::_internal_ootamplitude() const {
+  return ootamplitude_;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+Event::ootamplitude() const {
+  // @@protoc_insertion_point(field_list:uncalibRecHitsProtocol.Event.ootamplitude)
+  return _internal_ootamplitude();
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+Event::_internal_mutable_ootamplitude() {
+  return &ootamplitude_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+Event::mutable_ootamplitude() {
+  // @@protoc_insertion_point(field_mutable_list:uncalibRecHitsProtocol.Event.ootamplitude)
+  return _internal_mutable_ootamplitude();
+}
+
+// repeated float ootchi2 = 6;
+inline int Event::_internal_ootchi2_size() const {
+  return ootchi2_.size();
+}
+inline int Event::ootchi2_size() const {
+  return _internal_ootchi2_size();
+}
+inline void Event::clear_ootchi2() {
+  ootchi2_.Clear();
+}
+inline float Event::_internal_ootchi2(int index) const {
+  return ootchi2_.Get(index);
+}
+inline float Event::ootchi2(int index) const {
+  // @@protoc_insertion_point(field_get:uncalibRecHitsProtocol.Event.ootchi2)
+  return _internal_ootchi2(index);
+}
+inline void Event::set_ootchi2(int index, float value) {
+  ootchi2_.Set(index, value);
+  // @@protoc_insertion_point(field_set:uncalibRecHitsProtocol.Event.ootchi2)
+}
+inline void Event::_internal_add_ootchi2(float value) {
+  ootchi2_.Add(value);
+}
+inline void Event::add_ootchi2(float value) {
+  _internal_add_ootchi2(value);
+  // @@protoc_insertion_point(field_add:uncalibRecHitsProtocol.Event.ootchi2)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+Event::_internal_ootchi2() const {
+  return ootchi2_;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >&
+Event::ootchi2() const {
+  // @@protoc_insertion_point(field_list:uncalibRecHitsProtocol.Event.ootchi2)
+  return _internal_ootchi2();
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+Event::_internal_mutable_ootchi2() {
+  return &ootchi2_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< float >*
+Event::mutable_ootchi2() {
+  // @@protoc_insertion_point(field_mutable_list:uncalibRecHitsProtocol.Event.ootchi2)
+  return _internal_mutable_ootchi2();
+}
+
+// repeated uint32 flags = 7;
+inline int Event::_internal_flags_size() const {
+  return flags_.size();
+}
+inline int Event::flags_size() const {
+  return _internal_flags_size();
+}
+inline void Event::clear_flags() {
+  flags_.Clear();
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 Event::_internal_flags(int index) const {
+  return flags_.Get(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 Event::flags(int index) const {
+  // @@protoc_insertion_point(field_get:uncalibRecHitsProtocol.Event.flags)
+  return _internal_flags(index);
+}
+inline void Event::set_flags(int index, ::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  flags_.Set(index, value);
+  // @@protoc_insertion_point(field_set:uncalibRecHitsProtocol.Event.flags)
+}
+inline void Event::_internal_add_flags(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  flags_.Add(value);
+}
+inline void Event::add_flags(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  _internal_add_flags(value);
+  // @@protoc_insertion_point(field_add:uncalibRecHitsProtocol.Event.flags)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >&
+Event::_internal_flags() const {
+  return flags_;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >&
+Event::flags() const {
+  // @@protoc_insertion_point(field_list:uncalibRecHitsProtocol.Event.flags)
+  return _internal_flags();
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >*
+Event::_internal_mutable_flags() {
+  return &flags_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >*
+Event::mutable_flags() {
+  // @@protoc_insertion_point(field_mutable_list:uncalibRecHitsProtocol.Event.flags)
+  return _internal_mutable_flags();
+}
+
+// repeated uint32 aux = 8;
+inline int Event::_internal_aux_size() const {
+  return aux_.size();
+}
+inline int Event::aux_size() const {
+  return _internal_aux_size();
+}
+inline void Event::clear_aux() {
+  aux_.Clear();
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 Event::_internal_aux(int index) const {
+  return aux_.Get(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 Event::aux(int index) const {
+  // @@protoc_insertion_point(field_get:uncalibRecHitsProtocol.Event.aux)
+  return _internal_aux(index);
+}
+inline void Event::set_aux(int index, ::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  aux_.Set(index, value);
+  // @@protoc_insertion_point(field_set:uncalibRecHitsProtocol.Event.aux)
+}
+inline void Event::_internal_add_aux(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  aux_.Add(value);
+}
+inline void Event::add_aux(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  _internal_add_aux(value);
+  // @@protoc_insertion_point(field_add:uncalibRecHitsProtocol.Event.aux)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >&
+Event::_internal_aux() const {
+  return aux_;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >&
+Event::aux() const {
+  // @@protoc_insertion_point(field_list:uncalibRecHitsProtocol.Event.aux)
+  return _internal_aux();
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >*
+Event::_internal_mutable_aux() {
+  return &aux_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >*
+Event::mutable_aux() {
+  // @@protoc_insertion_point(field_mutable_list:uncalibRecHitsProtocol.Event.aux)
+  return _internal_mutable_aux();
+}
+
+// repeated uint32 id = 9;
+inline int Event::_internal_id_size() const {
+  return id_.size();
+}
+inline int Event::id_size() const {
+  return _internal_id_size();
+}
+inline void Event::clear_id() {
+  id_.Clear();
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 Event::_internal_id(int index) const {
+  return id_.Get(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 Event::id(int index) const {
+  // @@protoc_insertion_point(field_get:uncalibRecHitsProtocol.Event.id)
+  return _internal_id(index);
+}
+inline void Event::set_id(int index, ::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  id_.Set(index, value);
+  // @@protoc_insertion_point(field_set:uncalibRecHitsProtocol.Event.id)
+}
+inline void Event::_internal_add_id(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  id_.Add(value);
+}
+inline void Event::add_id(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  _internal_add_id(value);
+  // @@protoc_insertion_point(field_add:uncalibRecHitsProtocol.Event.id)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >&
+Event::_internal_id() const {
+  return id_;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >&
+Event::id() const {
+  // @@protoc_insertion_point(field_list:uncalibRecHitsProtocol.Event.id)
+  return _internal_id();
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >*
+Event::_internal_mutable_id() {
+  return &id_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >*
+Event::mutable_id() {
+  // @@protoc_insertion_point(field_mutable_list:uncalibRecHitsProtocol.Event.id)
+  return _internal_mutable_id();
 }
 
 // -------------------------------------------------------------------

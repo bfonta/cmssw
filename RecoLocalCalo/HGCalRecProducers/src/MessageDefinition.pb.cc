@@ -64,8 +64,24 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_MessageDefinition_2eproto::off
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  PROTOBUF_FIELD_OFFSET(::uncalibRecHitsProtocol::Event, integer_),
-  0,
+  PROTOBUF_FIELD_OFFSET(::uncalibRecHitsProtocol::Event, amplitude_),
+  PROTOBUF_FIELD_OFFSET(::uncalibRecHitsProtocol::Event, pedestal_),
+  PROTOBUF_FIELD_OFFSET(::uncalibRecHitsProtocol::Event, jitter_),
+  PROTOBUF_FIELD_OFFSET(::uncalibRecHitsProtocol::Event, chi2_),
+  PROTOBUF_FIELD_OFFSET(::uncalibRecHitsProtocol::Event, ootamplitude_),
+  PROTOBUF_FIELD_OFFSET(::uncalibRecHitsProtocol::Event, ootchi2_),
+  PROTOBUF_FIELD_OFFSET(::uncalibRecHitsProtocol::Event, flags_),
+  PROTOBUF_FIELD_OFFSET(::uncalibRecHitsProtocol::Event, aux_),
+  PROTOBUF_FIELD_OFFSET(::uncalibRecHitsProtocol::Event, id_),
+  ~0u,
+  ~0u,
+  ~0u,
+  ~0u,
+  ~0u,
+  ~0u,
+  ~0u,
+  ~0u,
+  ~0u,
   PROTOBUF_FIELD_OFFSET(::uncalibRecHitsProtocol::Data, _has_bits_),
   PROTOBUF_FIELD_OFFSET(::uncalibRecHitsProtocol::Data, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -75,8 +91,8 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_MessageDefinition_2eproto::off
   ~0u,
 };
 static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
-  { 0, 6, sizeof(::uncalibRecHitsProtocol::Event)},
-  { 7, 13, sizeof(::uncalibRecHitsProtocol::Data)},
+  { 0, 14, sizeof(::uncalibRecHitsProtocol::Event)},
+  { 23, 29, sizeof(::uncalibRecHitsProtocol::Data)},
 };
 
 static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
@@ -86,9 +102,12 @@ static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] =
 
 const char descriptor_table_protodef_MessageDefinition_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
   "\n\027MessageDefinition.proto\022\026uncalibRecHit"
-  "sProtocol\"\030\n\005Event\022\017\n\007integer\030\001 \001(\005\"5\n\004D"
-  "ata\022-\n\006events\030\001 \003(\0132\035.uncalibRecHitsProt"
-  "ocol.Event"
+  "sProtocol\"\231\001\n\005Event\022\021\n\tamplitude\030\001 \003(\002\022\020"
+  "\n\010pedestal\030\002 \003(\002\022\016\n\006jitter\030\003 \003(\002\022\014\n\004chi2"
+  "\030\004 \003(\002\022\024\n\014ootamplitude\030\005 \003(\002\022\017\n\007ootchi2\030"
+  "\006 \003(\002\022\r\n\005flags\030\007 \003(\r\022\013\n\003aux\030\010 \003(\r\022\n\n\002id\030"
+  "\t \003(\r\"5\n\004Data\022-\n\006events\030\001 \003(\0132\035.uncalibR"
+  "ecHitsProtocol.Event"
   ;
 static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_MessageDefinition_2eproto_deps[1] = {
 };
@@ -99,7 +118,7 @@ static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_Mes
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_MessageDefinition_2eproto_once;
 static bool descriptor_table_MessageDefinition_2eproto_initialized = false;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_MessageDefinition_2eproto = {
-  &descriptor_table_MessageDefinition_2eproto_initialized, descriptor_table_protodef_MessageDefinition_2eproto, "MessageDefinition.proto", 130,
+  &descriptor_table_MessageDefinition_2eproto_initialized, descriptor_table_protodef_MessageDefinition_2eproto, "MessageDefinition.proto", 260,
   &descriptor_table_MessageDefinition_2eproto_once, descriptor_table_MessageDefinition_2eproto_sccs, descriptor_table_MessageDefinition_2eproto_deps, 2, 0,
   schemas, file_default_instances, TableStruct_MessageDefinition_2eproto::offsets,
   file_level_metadata_MessageDefinition_2eproto, 2, file_level_enum_descriptors_MessageDefinition_2eproto, file_level_service_descriptors_MessageDefinition_2eproto,
@@ -116,9 +135,6 @@ void Event::InitAsDefaultInstance() {
 class Event::_Internal {
  public:
   using HasBits = decltype(std::declval<Event>()._has_bits_);
-  static void set_has_integer(HasBits* has_bits) {
-    (*has_bits)[0] |= 1u;
-  }
 };
 
 Event::Event()
@@ -129,14 +145,21 @@ Event::Event()
 Event::Event(const Event& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
       _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
+      _has_bits_(from._has_bits_),
+      amplitude_(from.amplitude_),
+      pedestal_(from.pedestal_),
+      jitter_(from.jitter_),
+      chi2_(from.chi2_),
+      ootamplitude_(from.ootamplitude_),
+      ootchi2_(from.ootchi2_),
+      flags_(from.flags_),
+      aux_(from.aux_),
+      id_(from.id_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  integer_ = from.integer_;
   // @@protoc_insertion_point(copy_constructor:uncalibRecHitsProtocol.Event)
 }
 
 void Event::SharedCtor() {
-  integer_ = 0;
 }
 
 Event::~Event() {
@@ -162,24 +185,158 @@ void Event::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  integer_ = 0;
+  amplitude_.Clear();
+  pedestal_.Clear();
+  jitter_.Clear();
+  chi2_.Clear();
+  ootamplitude_.Clear();
+  ootchi2_.Clear();
+  flags_.Clear();
+  aux_.Clear();
+  id_.Clear();
   _has_bits_.Clear();
   _internal_metadata_.Clear();
 }
 
 const char* Event::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
-  _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
     ::PROTOBUF_NAMESPACE_ID::uint32 tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
     CHK_(ptr);
     switch (tag >> 3) {
-      // optional int32 integer = 1;
+      // repeated float amplitude = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
-          _Internal::set_has_integer(&has_bits);
-          integer_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 13)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            _internal_add_amplitude(::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr));
+            ptr += sizeof(float);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<13>(ptr));
+        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedFloatParser(_internal_mutable_amplitude(), ptr, ctx);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // repeated float pedestal = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 21)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            _internal_add_pedestal(::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr));
+            ptr += sizeof(float);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<21>(ptr));
+        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedFloatParser(_internal_mutable_pedestal(), ptr, ctx);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // repeated float jitter = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 29)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            _internal_add_jitter(::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr));
+            ptr += sizeof(float);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<29>(ptr));
+        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedFloatParser(_internal_mutable_jitter(), ptr, ctx);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // repeated float chi2 = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 37)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            _internal_add_chi2(::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr));
+            ptr += sizeof(float);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<37>(ptr));
+        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedFloatParser(_internal_mutable_chi2(), ptr, ctx);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // repeated float ootamplitude = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 45)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            _internal_add_ootamplitude(::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr));
+            ptr += sizeof(float);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<45>(ptr));
+        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 42) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedFloatParser(_internal_mutable_ootamplitude(), ptr, ctx);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // repeated float ootchi2 = 6;
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 53)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            _internal_add_ootchi2(::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr));
+            ptr += sizeof(float);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<53>(ptr));
+        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 50) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedFloatParser(_internal_mutable_ootchi2(), ptr, ctx);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // repeated uint32 flags = 7;
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 56)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            _internal_add_flags(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<56>(ptr));
+        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 58) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedUInt32Parser(_internal_mutable_flags(), ptr, ctx);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // repeated uint32 aux = 8;
+      case 8:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 64)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            _internal_add_aux(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<64>(ptr));
+        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 66) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedUInt32Parser(_internal_mutable_aux(), ptr, ctx);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // repeated uint32 id = 9;
+      case 9:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 72)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            _internal_add_id(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<72>(ptr));
+        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 74) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedUInt32Parser(_internal_mutable_id(), ptr, ctx);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -196,7 +353,6 @@ const char* Event::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::inte
     }  // switch
   }  // while
 success:
-  _has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
@@ -210,11 +366,58 @@ failure:
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
-  // optional int32 integer = 1;
-  if (cached_has_bits & 0x00000001u) {
+  // repeated float amplitude = 1;
+  for (int i = 0, n = this->_internal_amplitude_size(); i < n; i++) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(1, this->_internal_integer(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteFloatToArray(1, this->_internal_amplitude(i), target);
+  }
+
+  // repeated float pedestal = 2;
+  for (int i = 0, n = this->_internal_pedestal_size(); i < n; i++) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteFloatToArray(2, this->_internal_pedestal(i), target);
+  }
+
+  // repeated float jitter = 3;
+  for (int i = 0, n = this->_internal_jitter_size(); i < n; i++) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteFloatToArray(3, this->_internal_jitter(i), target);
+  }
+
+  // repeated float chi2 = 4;
+  for (int i = 0, n = this->_internal_chi2_size(); i < n; i++) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteFloatToArray(4, this->_internal_chi2(i), target);
+  }
+
+  // repeated float ootamplitude = 5;
+  for (int i = 0, n = this->_internal_ootamplitude_size(); i < n; i++) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteFloatToArray(5, this->_internal_ootamplitude(i), target);
+  }
+
+  // repeated float ootchi2 = 6;
+  for (int i = 0, n = this->_internal_ootchi2_size(); i < n; i++) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteFloatToArray(6, this->_internal_ootchi2(i), target);
+  }
+
+  // repeated uint32 flags = 7;
+  for (int i = 0, n = this->_internal_flags_size(); i < n; i++) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(7, this->_internal_flags(i), target);
+  }
+
+  // repeated uint32 aux = 8;
+  for (int i = 0, n = this->_internal_aux_size(); i < n; i++) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(8, this->_internal_aux(i), target);
+  }
+
+  // repeated uint32 id = 9;
+  for (int i = 0, n = this->_internal_id_size(); i < n; i++) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(9, this->_internal_id(i), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -233,12 +436,85 @@ size_t Event::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // optional int32 integer = 1;
-  cached_has_bits = _has_bits_[0];
-  if (cached_has_bits & 0x00000001u) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
-        this->_internal_integer());
+  // repeated float amplitude = 1;
+  {
+    unsigned int count = static_cast<unsigned int>(this->_internal_amplitude_size());
+    size_t data_size = 4UL * count;
+    total_size += 1 *
+                  ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(this->_internal_amplitude_size());
+    total_size += data_size;
+  }
+
+  // repeated float pedestal = 2;
+  {
+    unsigned int count = static_cast<unsigned int>(this->_internal_pedestal_size());
+    size_t data_size = 4UL * count;
+    total_size += 1 *
+                  ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(this->_internal_pedestal_size());
+    total_size += data_size;
+  }
+
+  // repeated float jitter = 3;
+  {
+    unsigned int count = static_cast<unsigned int>(this->_internal_jitter_size());
+    size_t data_size = 4UL * count;
+    total_size += 1 *
+                  ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(this->_internal_jitter_size());
+    total_size += data_size;
+  }
+
+  // repeated float chi2 = 4;
+  {
+    unsigned int count = static_cast<unsigned int>(this->_internal_chi2_size());
+    size_t data_size = 4UL * count;
+    total_size += 1 *
+                  ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(this->_internal_chi2_size());
+    total_size += data_size;
+  }
+
+  // repeated float ootamplitude = 5;
+  {
+    unsigned int count = static_cast<unsigned int>(this->_internal_ootamplitude_size());
+    size_t data_size = 4UL * count;
+    total_size += 1 *
+                  ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(this->_internal_ootamplitude_size());
+    total_size += data_size;
+  }
+
+  // repeated float ootchi2 = 6;
+  {
+    unsigned int count = static_cast<unsigned int>(this->_internal_ootchi2_size());
+    size_t data_size = 4UL * count;
+    total_size += 1 *
+                  ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(this->_internal_ootchi2_size());
+    total_size += data_size;
+  }
+
+  // repeated uint32 flags = 7;
+  {
+    size_t data_size = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      UInt32Size(this->flags_);
+    total_size += 1 *
+                  ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(this->_internal_flags_size());
+    total_size += data_size;
+  }
+
+  // repeated uint32 aux = 8;
+  {
+    size_t data_size = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      UInt32Size(this->aux_);
+    total_size += 1 *
+                  ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(this->_internal_aux_size());
+    total_size += data_size;
+  }
+
+  // repeated uint32 id = 9;
+  {
+    size_t data_size = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      UInt32Size(this->id_);
+    total_size += 1 *
+                  ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(this->_internal_id_size());
+    total_size += data_size;
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -272,9 +548,15 @@ void Event::MergeFrom(const Event& from) {
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from._internal_has_integer()) {
-    _internal_set_integer(from._internal_integer());
-  }
+  amplitude_.MergeFrom(from.amplitude_);
+  pedestal_.MergeFrom(from.pedestal_);
+  jitter_.MergeFrom(from.jitter_);
+  chi2_.MergeFrom(from.chi2_);
+  ootamplitude_.MergeFrom(from.ootamplitude_);
+  ootchi2_.MergeFrom(from.ootchi2_);
+  flags_.MergeFrom(from.flags_);
+  aux_.MergeFrom(from.aux_);
+  id_.MergeFrom(from.id_);
 }
 
 void Event::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
@@ -299,7 +581,15 @@ void Event::InternalSwap(Event* other) {
   using std::swap;
   _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(integer_, other->integer_);
+  amplitude_.InternalSwap(&other->amplitude_);
+  pedestal_.InternalSwap(&other->pedestal_);
+  jitter_.InternalSwap(&other->jitter_);
+  chi2_.InternalSwap(&other->chi2_);
+  ootamplitude_.InternalSwap(&other->ootamplitude_);
+  ootchi2_.InternalSwap(&other->ootchi2_);
+  flags_.InternalSwap(&other->flags_);
+  aux_.InternalSwap(&other->aux_);
+  id_.InternalSwap(&other->id_);
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata Event::GetMetadata() const {

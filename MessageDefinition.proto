@@ -3,7 +3,15 @@ syntax = "proto2";
 package uncalibRecHitsProtocol;
 
 message Event {
-  optional int32 integer = 1;
+  repeated float amplitude = 1;
+  repeated float pedestal = 2;
+  repeated float jitter = 3;
+  repeated float chi2 = 4;
+  repeated float ootamplitude = 5;
+  repeated float ootchi2 = 6;
+  repeated uint32 flags = 7;
+  repeated uint32 aux = 8;
+  repeated uint32 id = 9;
 }
 
 message Data {
