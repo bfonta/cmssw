@@ -1,0 +1,11 @@
+syntax = "proto2";
+
+package uncalibRecHitsProtocol;
+
+message Event {
+  optional int32 integer = 1;
+}
+
+message Data {
+  repeated Event events = 1;
+}
