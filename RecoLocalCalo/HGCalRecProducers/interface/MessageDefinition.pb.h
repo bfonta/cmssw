@@ -190,8 +190,7 @@ class Event :
     kOotamplitudeFieldNumber = 5,
     kOotchi2FieldNumber = 6,
     kFlagsFieldNumber = 7,
-    kAuxFieldNumber = 8,
-    kIdFieldNumber = 9,
+    kIdFieldNumber = 8,
   };
   // repeated float amplitude = 1;
   int amplitude_size() const;
@@ -347,29 +346,7 @@ class Event :
   ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >*
       mutable_flags();
 
-  // repeated uint32 aux = 8;
-  int aux_size() const;
-  private:
-  int _internal_aux_size() const;
-  public:
-  void clear_aux();
-  private:
-  ::PROTOBUF_NAMESPACE_ID::uint32 _internal_aux(int index) const;
-  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >&
-      _internal_aux() const;
-  void _internal_add_aux(::PROTOBUF_NAMESPACE_ID::uint32 value);
-  ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >*
-      _internal_mutable_aux();
-  public:
-  ::PROTOBUF_NAMESPACE_ID::uint32 aux(int index) const;
-  void set_aux(int index, ::PROTOBUF_NAMESPACE_ID::uint32 value);
-  void add_aux(::PROTOBUF_NAMESPACE_ID::uint32 value);
-  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >&
-      aux() const;
-  ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >*
-      mutable_aux();
-
-  // repeated uint32 id = 9;
+  // repeated uint32 id = 8;
   int id_size() const;
   private:
   int _internal_id_size() const;
@@ -405,7 +382,6 @@ class Event :
   ::PROTOBUF_NAMESPACE_ID::RepeatedField< float > ootamplitude_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedField< float > ootchi2_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 > flags_;
-  ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 > aux_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 > id_;
   friend struct ::TableStruct_MessageDefinition_2eproto;
 };
@@ -894,54 +870,7 @@ Event::mutable_flags() {
   return _internal_mutable_flags();
 }
 
-// repeated uint32 aux = 8;
-inline int Event::_internal_aux_size() const {
-  return aux_.size();
-}
-inline int Event::aux_size() const {
-  return _internal_aux_size();
-}
-inline void Event::clear_aux() {
-  aux_.Clear();
-}
-inline ::PROTOBUF_NAMESPACE_ID::uint32 Event::_internal_aux(int index) const {
-  return aux_.Get(index);
-}
-inline ::PROTOBUF_NAMESPACE_ID::uint32 Event::aux(int index) const {
-  // @@protoc_insertion_point(field_get:uncalibRecHitsProtocol.Event.aux)
-  return _internal_aux(index);
-}
-inline void Event::set_aux(int index, ::PROTOBUF_NAMESPACE_ID::uint32 value) {
-  aux_.Set(index, value);
-  // @@protoc_insertion_point(field_set:uncalibRecHitsProtocol.Event.aux)
-}
-inline void Event::_internal_add_aux(::PROTOBUF_NAMESPACE_ID::uint32 value) {
-  aux_.Add(value);
-}
-inline void Event::add_aux(::PROTOBUF_NAMESPACE_ID::uint32 value) {
-  _internal_add_aux(value);
-  // @@protoc_insertion_point(field_add:uncalibRecHitsProtocol.Event.aux)
-}
-inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >&
-Event::_internal_aux() const {
-  return aux_;
-}
-inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >&
-Event::aux() const {
-  // @@protoc_insertion_point(field_list:uncalibRecHitsProtocol.Event.aux)
-  return _internal_aux();
-}
-inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >*
-Event::_internal_mutable_aux() {
-  return &aux_;
-}
-inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< ::PROTOBUF_NAMESPACE_ID::uint32 >*
-Event::mutable_aux() {
-  // @@protoc_insertion_point(field_mutable_list:uncalibRecHitsProtocol.Event.aux)
-  return _internal_mutable_aux();
-}
-
-// repeated uint32 id = 9;
+// repeated uint32 id = 8;
 inline int Event::_internal_id_size() const {
   return id_.size();
 }

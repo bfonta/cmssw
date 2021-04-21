@@ -8,6 +8,8 @@
 #include "CUDADataFormats/HGCal/interface/HGCRecHitSoA.h"
 #include "CUDADataFormats/HGCal/interface/HGCUncalibRecHitSoA.h"
 
+#include "RecoLocalCalo/HGCalRecProducers/interface/MessageDefinition.pb.h"
+
 template <class T>
 class HGCUncalibRecHitHost {
 public:
@@ -48,7 +50,21 @@ public:
     soa_.pad_   = pad_;
   }
 
-  void fillSoA_(const T& c) {
+  void fillSoA_(const uncalibRecHitsProtocol::Event& c) {
+    for (unsigned i(0); i<nhits_; ++i) {
+      soa_.amplitude_[i]    = c.amplitude(i);
+      soa_.pedestal_[i]     = c.pedestal(i);
+      soa_.jitter_[i]       = c.jitter(i);
+      soa_.chi2_[i]         = c.chi2(i);
+      soa_.OOTamplitude_[i] = c.ootamplitude(i);
+      soa_.OOTchi2_[i]      = c.ootchi2(i);
+      soa_.flags_[i]        = c.flags(i);
+      soa_.aux_[i]          = 0;
+      soa_.id_[i]           = c.id(i);
+    }
+  }
+
+  void fillSoA_(const HGCUncalibratedRecHitCollection& c) {
     for (unsigned i(0); i<nhits_; ++i) {
       soa_.amplitude_[i]    = c[i].amplitude();
       soa_.pedestal_[i]     = c[i].pedestal();

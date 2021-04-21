@@ -71,9 +71,7 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_MessageDefinition_2eproto::off
   PROTOBUF_FIELD_OFFSET(::uncalibRecHitsProtocol::Event, ootamplitude_),
   PROTOBUF_FIELD_OFFSET(::uncalibRecHitsProtocol::Event, ootchi2_),
   PROTOBUF_FIELD_OFFSET(::uncalibRecHitsProtocol::Event, flags_),
-  PROTOBUF_FIELD_OFFSET(::uncalibRecHitsProtocol::Event, aux_),
   PROTOBUF_FIELD_OFFSET(::uncalibRecHitsProtocol::Event, id_),
-  ~0u,
   ~0u,
   ~0u,
   ~0u,
@@ -91,8 +89,8 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_MessageDefinition_2eproto::off
   ~0u,
 };
 static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
-  { 0, 14, sizeof(::uncalibRecHitsProtocol::Event)},
-  { 23, 29, sizeof(::uncalibRecHitsProtocol::Data)},
+  { 0, 13, sizeof(::uncalibRecHitsProtocol::Event)},
+  { 21, 27, sizeof(::uncalibRecHitsProtocol::Data)},
 };
 
 static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
@@ -102,12 +100,12 @@ static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] =
 
 const char descriptor_table_protodef_MessageDefinition_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
   "\n\027MessageDefinition.proto\022\026uncalibRecHit"
-  "sProtocol\"\231\001\n\005Event\022\021\n\tamplitude\030\001 \003(\002\022\020"
+  "sProtocol\"\214\001\n\005Event\022\021\n\tamplitude\030\001 \003(\002\022\020"
   "\n\010pedestal\030\002 \003(\002\022\016\n\006jitter\030\003 \003(\002\022\014\n\004chi2"
   "\030\004 \003(\002\022\024\n\014ootamplitude\030\005 \003(\002\022\017\n\007ootchi2\030"
-  "\006 \003(\002\022\r\n\005flags\030\007 \003(\r\022\013\n\003aux\030\010 \003(\r\022\n\n\002id\030"
-  "\t \003(\r\"5\n\004Data\022-\n\006events\030\001 \003(\0132\035.uncalibR"
-  "ecHitsProtocol.Event"
+  "\006 \003(\002\022\r\n\005flags\030\007 \003(\r\022\n\n\002id\030\010 \003(\r\"5\n\004Data"
+  "\022-\n\006events\030\001 \003(\0132\035.uncalibRecHitsProtoco"
+  "l.Event"
   ;
 static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_MessageDefinition_2eproto_deps[1] = {
 };
@@ -118,7 +116,7 @@ static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_Mes
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_MessageDefinition_2eproto_once;
 static bool descriptor_table_MessageDefinition_2eproto_initialized = false;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_MessageDefinition_2eproto = {
-  &descriptor_table_MessageDefinition_2eproto_initialized, descriptor_table_protodef_MessageDefinition_2eproto, "MessageDefinition.proto", 260,
+  &descriptor_table_MessageDefinition_2eproto_initialized, descriptor_table_protodef_MessageDefinition_2eproto, "MessageDefinition.proto", 247,
   &descriptor_table_MessageDefinition_2eproto_once, descriptor_table_MessageDefinition_2eproto_sccs, descriptor_table_MessageDefinition_2eproto_deps, 2, 0,
   schemas, file_default_instances, TableStruct_MessageDefinition_2eproto::offsets,
   file_level_metadata_MessageDefinition_2eproto, 2, file_level_enum_descriptors_MessageDefinition_2eproto, file_level_service_descriptors_MessageDefinition_2eproto,
@@ -153,7 +151,6 @@ Event::Event(const Event& from)
       ootamplitude_(from.ootamplitude_),
       ootchi2_(from.ootchi2_),
       flags_(from.flags_),
-      aux_(from.aux_),
       id_(from.id_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   // @@protoc_insertion_point(copy_constructor:uncalibRecHitsProtocol.Event)
@@ -192,7 +189,6 @@ void Event::Clear() {
   ootamplitude_.Clear();
   ootchi2_.Clear();
   flags_.Clear();
-  aux_.Clear();
   id_.Clear();
   _has_bits_.Clear();
   _internal_metadata_.Clear();
@@ -310,32 +306,17 @@ const char* Event::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::inte
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // repeated uint32 aux = 8;
+      // repeated uint32 id = 8;
       case 8:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 64)) {
-          ptr -= 1;
-          do {
-            ptr += 1;
-            _internal_add_aux(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
-            CHK_(ptr);
-            if (!ctx->DataAvailable(ptr)) break;
-          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<64>(ptr));
-        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 66) {
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedUInt32Parser(_internal_mutable_aux(), ptr, ctx);
-          CHK_(ptr);
-        } else goto handle_unusual;
-        continue;
-      // repeated uint32 id = 9;
-      case 9:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 72)) {
           ptr -= 1;
           do {
             ptr += 1;
             _internal_add_id(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
-          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<72>(ptr));
-        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 74) {
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<64>(ptr));
+        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 66) {
           ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedUInt32Parser(_internal_mutable_id(), ptr, ctx);
           CHK_(ptr);
         } else goto handle_unusual;
@@ -408,16 +389,10 @@ failure:
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(7, this->_internal_flags(i), target);
   }
 
-  // repeated uint32 aux = 8;
-  for (int i = 0, n = this->_internal_aux_size(); i < n; i++) {
-    target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(8, this->_internal_aux(i), target);
-  }
-
-  // repeated uint32 id = 9;
+  // repeated uint32 id = 8;
   for (int i = 0, n = this->_internal_id_size(); i < n; i++) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(9, this->_internal_id(i), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(8, this->_internal_id(i), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -499,16 +474,7 @@ size_t Event::ByteSizeLong() const {
     total_size += data_size;
   }
 
-  // repeated uint32 aux = 8;
-  {
-    size_t data_size = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      UInt32Size(this->aux_);
-    total_size += 1 *
-                  ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(this->_internal_aux_size());
-    total_size += data_size;
-  }
-
-  // repeated uint32 id = 9;
+  // repeated uint32 id = 8;
   {
     size_t data_size = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
       UInt32Size(this->id_);
@@ -555,7 +521,6 @@ void Event::MergeFrom(const Event& from) {
   ootamplitude_.MergeFrom(from.ootamplitude_);
   ootchi2_.MergeFrom(from.ootchi2_);
   flags_.MergeFrom(from.flags_);
-  aux_.MergeFrom(from.aux_);
   id_.MergeFrom(from.id_);
 }
 
@@ -588,7 +553,6 @@ void Event::InternalSwap(Event* other) {
   ootamplitude_.InternalSwap(&other->ootamplitude_);
   ootchi2_.InternalSwap(&other->ootchi2_);
   flags_.InternalSwap(&other->flags_);
-  aux_.InternalSwap(&other->aux_);
   id_.InternalSwap(&other->id_);
 }
 

@@ -10,8 +10,7 @@ message Event {
   repeated float ootamplitude = 5;
   repeated float ootchi2 = 6;
   repeated uint32 flags = 7;
-  repeated uint32 aux = 8;
-  repeated uint32 id = 9;
+  repeated uint32 id = 8;
 }
 
 message Data {

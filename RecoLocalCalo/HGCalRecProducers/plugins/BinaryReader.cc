@@ -8,6 +8,7 @@
 #include "FWCore/Framework/interface/ESTransientHandle.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "DataFormats/HGCRecHit/interface/HGCRecHitCollections.h"
+#include "DataFormats/Provenance/interface/EventID.h"
 
 #include "RecoLocalCalo/HGCalRecProducers/interface/MessageDefinition.pb.h"
 
@@ -25,10 +26,14 @@ class BinaryReader : public edm::EDAnalyzer
   uncalibRecHitsProtocol::Data data_;
   edm::EDGetTokenT<HGCeeUncalibratedRecHitCollection> uncalibRecHitCPUToken_;
   std::string fileName_;
+  unsigned nEvents_;
+
+  unsigned counter_;
 };
 
 BinaryReader::BinaryReader(const edm::ParameterSet &ps):
-  fileName_{ps.getParameter<std::string>("fileName")}
+  fileName_{ps.getParameter<std::string>("fileName")},
+  nEvents_{ps.getParameter<unsigned>("nEvents")}
 {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
@@ -36,6 +41,8 @@ BinaryReader::BinaryReader(const edm::ParameterSet &ps):
   if (!data_.ParseFromIstream(&input)) {
     edm::LogError("ParseError") << "Failed to parse.";
   }
+
+  counter_ = 0;
 }
 
 BinaryReader::~BinaryReader()
@@ -48,40 +55,17 @@ void BinaryReader::endJob()
 {
 }
 
-void BinaryReader::listEventProtocol(const uncalibRecHitsProtocol::Data& src) {
-  std::cout << src.events_size() << std::endl;
-  /*
-  for (int i = 0; i < src.people_size(); i++) {
-    const tutorial::Person& person = address_book.people(i);
-
-    cout << "Person ID: " << person.id() << endl;
-    cout << "  Name: " << person.name() << endl;
-    if (person.has_email()) {
-      cout << "  E-mail address: " << person.email() << endl;
-    }
-
-    for (int j = 0; j < person.phones_size(); j++) {
-      const tutorial::Person::PhoneNumber& phone_number = person.phones(j);
-
-      switch (phone_number.type()) {
-        case tutorial::Person::MOBILE:
-          cout << "  Mobile phone #: ";
-          break;
-        case tutorial::Person::HOME:
-          cout << "  Home phone #: ";
-          break;
-        case tutorial::Person::WORK:
-          cout << "  Work phone #: ";
-          break;
-      }
-      cout << phone_number.number() << endl;
-    }
-  }
-  */
+void BinaryReader::listEventProtocol(const uncalibRecHitsProtocol::Data& src)
+{
+  unsigned dataEntry = counter_ % nEvents_;
+  const uncalibRecHitsProtocol::Event& ev = data_.events( dataEntry );
+  std::cout << src.events_size() << ", " << ev.amplitude_size() << ", " << counter_ << std::endl;
+  std::cout << "Amplitude " << ev.amplitude(2) << std::endl;
 }
 
-void BinaryReader::analyze( const edm::Event &iEvent, const edm::EventSetup &iSetup)
+void BinaryReader::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetup)
 {
+  ++counter_;
   /*
   const auto& hits = iEvent.get(uncalibRecHitCPUToken_);
   const unsigned nhits(hits.size());

@@ -54,7 +54,11 @@ process.EEFull = cms.EDProducer('EERecHitFull',
                                 HGCEE_noise_fC = HGCalRecHit.__dict__['HGCEE_noise_fC'],
                                 HGCEE_cce      = HGCalRecHit.__dict__['HGCEE_cce'],
                                 rcorr          = cms.vdouble( HGCalRecHit.__dict__['thicknessCorrection'][0:3] ),
-                                weights        = HGCalRecHit.__dict__['layerWeights'] )
+                                weights        = HGCalRecHit.__dict__['layerWeights'],
+
+                                fileName = cms.string('/eos/user/b/bfontana/GPUs/binaryPU' + str(PU) + '.out'),
+                                nEvents = cms.uint32(100),
+)
 
 process.ThroughputService = cms.Service( "ThroughputService",
                                          eventRange = cms.untracked.uint32( 300 ),

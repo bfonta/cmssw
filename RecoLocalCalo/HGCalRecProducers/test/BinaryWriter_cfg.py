@@ -35,7 +35,7 @@ process.source = cms.Source("PoolSource",
                             inputCommands = cms.untracked.vstring(keep),
                             duplicateCheckMode = cms.untracked.string("noDuplicateCheck") )
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(4) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
 wantSummaryFlag = True
 process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool( wantSummaryFlag )) #add option for edmStreams

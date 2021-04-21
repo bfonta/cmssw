@@ -2,6 +2,8 @@
 #include <memory>
 #include <chrono>
 #include <numeric>
+#include <string>
+#include <fstream>
 #include <cuda_runtime.h>
 
 #include "FWCore/Framework/interface/ESProducer.h"
@@ -72,8 +74,6 @@
 
 #include "CUDADataFormats/HGCal/interface/HGCRecHitGPUProduct.h"
 #include "CUDADataFormats/HGCal/interface/HGCRecHitCPUProduct.h"
-#include <iostream>
-#include <string>
 
 #include "FWCore/Framework/interface/stream/EDProducer.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
@@ -95,7 +95,7 @@
 #include "CUDADataFormats/HGCal/interface/HGCUncalibRecHitDevice.h"
 #include "CUDADataFormats/HGCal/interface/HGCUncalibRecHitHost.h"
 
-
+#include "RecoLocalCalo/HGCalRecProducers/interface/MessageDefinition.pb.h"
 
 class EERecHitFull : public edm::stream::EDProducer<> {
 public:
@@ -126,13 +126,21 @@ private:
   HGCRecHitGPUProduct prodGPU_;
   HGCRecHitCPUProduct prodCPU_;
   HGCUncalibRecHitDevice d_uncalib_;
-  HGCUncalibRecHitHost<HGCeeUncalibratedRecHitCollection> h_uncalib_;
+  //HGCUncalibRecHitHost<HGCeeUncalibratedRecHitCollection> h_uncalib_;
+  HGCUncalibRecHitHost<uncalibRecHitsProtocol::Event> h_uncalib_;
   std::unique_ptr<HGCeeRecHitCollection> rechits_;
   KernelConstantData<HGCeeUncalibRecHitConstantData> *kcdata_;
+
+  uncalibRecHitsProtocol::Data binary_data_;
+  std::string fileName_;
+  unsigned nEvents_;
+  unsigned counter_;
 };
 
 EERecHitFull::EERecHitFull(const edm::ParameterSet& ps):
-    uncalibRecHitCPUToken_{consumes<HGCUncalibratedRecHitCollection>(ps.getParameter<edm::InputTag>("HGCEEUncalibRecHitsTok"))}
+  uncalibRecHitCPUToken_{consumes<HGCUncalibratedRecHitCollection>(ps.getParameter<edm::InputTag>("HGCEEUncalibRecHitsTok"))},
+  fileName_{ps.getParameter<std::string>("fileName")},
+  nEvents_{ps.getParameter<unsigned>("nEvents")}
 {
   recHitCollectionToken_ = produces<HGCeeRecHitCollection>();
   
@@ -153,10 +161,19 @@ EERecHitFull::EERecHitFull(const edm::ParameterSet& ps):
   convert_constant_data_(kcdata_);
   
   tools_ = std::make_unique<hgcal::RecHitTools>();
+
+  //Protocol Buffer initialization
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+  std::ifstream input(fileName_, std::ios::in);
+  if (!binary_data_.ParseFromIstream(&input)) {
+    edm::LogError("ParseError") << "Failed to parse.";
+  }
+  counter_ = 0;
 }
 
 EERecHitFull::~EERecHitFull() {
   delete kcdata_;
+  /*
   for(unsigned i(0); i<totaltime.size(); ++i)
     std::cout << totaltime[i] << ", ";
   double sum = std::accumulate(totaltime.begin(), totaltime.end(), 0.);
@@ -167,6 +184,8 @@ EERecHitFull::~EERecHitFull() {
   std::cout << "TOTAL GPU " <<  sum << std::endl;
   std::cout << "mean " << mean << std::endl;
   std::cout << "std " << stdev << std::endl;
+  */
+  google::protobuf::ShutdownProtobufLibrary();
 }
 
 std::string EERecHitFull::assert_error_message_(std::string var, const size_t& s1, const size_t& s2) {
@@ -197,8 +216,14 @@ void EERecHitFull::assert_sizes_constants_(const HGCConstantVectorData& vd) {
 void EERecHitFull::produce(edm::Event& event, const edm::EventSetup& setup) {  
   cms::cuda::ScopedContextProduce ctx{event.streamID()};
 
+  ++counter_;
+  const uncalibRecHitsProtocol::Event& hits = binary_data_.events( counter_ % nEvents_ );
+  const unsigned nhits(hits.amplitude_size());
+
+  /*
   const auto& hits = event.get(uncalibRecHitCPUToken_);
   const unsigned nhits(hits.size());
+  */
 
   if (nhits == 0)
     cms::cuda::LogError("EERecHitFull") << "WARNING: no input hits!";
@@ -207,7 +232,8 @@ void EERecHitFull::produce(edm::Event& event, const edm::EventSetup& setup) {
   
   prodGPU_   = HGCRecHitGPUProduct(nhits, ctx.stream());
   d_uncalib_ = HGCUncalibRecHitDevice(nhits, ctx.stream());
-  h_uncalib_ = HGCUncalibRecHitHost<HGCeeUncalibratedRecHitCollection>(nhits, hits, ctx.stream());
+  //h_uncalib_ = HGCUncalibRecHitHost<HGCeeUncalibratedRecHitCollection>(nhits, hits, ctx.stream());
+  h_uncalib_ = HGCUncalibRecHitHost<uncalibRecHitsProtocol::Event>(nhits, hits, ctx.stream());
 
   KernelManagerHGCalRecHit km1(h_uncalib_.get(), d_uncalib_.get(), prodGPU_.get());
   km1.run_kernels(kcdata_, ctx.stream());

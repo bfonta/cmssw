@@ -35,13 +35,15 @@ process.source = cms.Source("PoolSource",
                             inputCommands = cms.untracked.vstring(keep),
                             duplicateCheckMode = cms.untracked.string("noDuplicateCheck") )
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(4) )
+nEvents = 100
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(nEvents) )
 wantSummaryFlag = True
 process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool( wantSummaryFlag )) #add option for edmStreams
 
 process.BinaryReader = cms.EDAnalyzer('BinaryReader',
                                       fileName = cms.string('data.out'),
+                                      nEvents = cms.uint32(nEvents),
 )
 
 process.ThroughputService = cms.Service( "ThroughputService",
