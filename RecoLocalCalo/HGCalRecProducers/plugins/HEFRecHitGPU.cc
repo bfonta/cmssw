@@ -26,14 +26,11 @@ public:
   explicit HEFRecHitGPU(const edm::ParameterSet &ps);
   ~HEFRecHitGPU() override;
   void beginRun(edm::Run const &, edm::EventSetup const &) override;
-
   void produce(edm::Event &, const edm::EventSetup &) override;
 
 private:
   edm::EDGetTokenT<HGChefUncalibratedRecHitCollection> uncalibRecHitCPUToken_;
   edm::EDPutTokenT<cms::cuda::Product<HGCRecHitGPUProduct>> recHitGPUToken_;
-
-  std::unique_ptr<HGChefRecHitCollection> rechits_;
 
   //constants
   HGChefUncalibRecHitConstantData cdata_;
@@ -115,7 +112,6 @@ void HEFRecHitGPU::produce(edm::Event &event, const edm::EventSetup &setup) {
 
   const auto &hits = event.get(uncalibRecHitCPUToken_);
   unsigned int nhits(hits.size());
-  rechits_ = std::make_unique<HGCRecHitCollection>();
 
   if (nhits == 0)
     edm::LogError("HEFRecHitGPU") << "WARNING: no input hits!";

@@ -37,8 +37,6 @@ public:
     soa_.flags_ = reinterpret_cast<uint32_t *>(soa_.OOTchi2_ + pad_);
     soa_.aux_ = soa_.flags_ + pad_;
     soa_.id_ = soa_.aux_ + pad_;
-    soa_.aux_ = soa_.flags_ + pad_;
-    soa_.id_ = soa_.aux_ + pad_;
 
     soa_.nbytes_ = size_tot_;
     soa_.nhits_ = nhits_;

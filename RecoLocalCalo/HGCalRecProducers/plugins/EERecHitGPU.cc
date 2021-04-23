@@ -26,14 +26,11 @@ public:
   explicit EERecHitGPU(const edm::ParameterSet &ps);
   ~EERecHitGPU() override;
   void beginRun(edm::Run const &, edm::EventSetup const &) override;
-
   void produce(edm::Event &, const edm::EventSetup &) override;
 
 private:
   edm::EDGetTokenT<HGCeeUncalibratedRecHitCollection> uncalibRecHitCPUToken_;
   edm::EDPutTokenT<cms::cuda::Product<HGCRecHitGPUProduct>> recHitGPUToken_;
-
-  std::unique_ptr<HGCeeRecHitCollection> rechits_;
 
   //constants
   HGCeeUncalibRecHitConstantData cdata_;
@@ -113,7 +110,6 @@ void EERecHitGPU::produce(edm::Event &event, const edm::EventSetup &setup) {
 
   const auto &hits = event.get(uncalibRecHitCPUToken_);
   const unsigned nhits(hits.size());
-  rechits_ = std::make_unique<HGCRecHitCollection>();
 
   if (nhits == 0)
     edm::LogError("EERecHitGPU") << "WARNING: no input hits!";
