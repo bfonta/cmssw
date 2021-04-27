@@ -312,11 +312,6 @@ process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool(True)
 )
 
-# report CUDAService messages
-process.MessageLogger.categories.append("CUDAService")
-
-
-#
 #process.DependencyGraph = cms.Service("DependencyGraph")
 
 
