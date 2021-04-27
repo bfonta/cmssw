@@ -21,20 +21,27 @@ process.load('SimCalorimetry.HGCalSimProducers.hgcalDigitizer_cfi')
 process.load( "HLTrigger.Timer.FastTimerService_cfi" )
 
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic_T15', '')
 
 indir =  '/home/bfontana/' #'/eos/user/b/bfontana/Samples/'
-filename_suff = 'hadd_out_PU' + str(PU) + '_uncompressed' #'step3_ttbar_PU' + str(PU)
+filename_suff = 'hadd_out_PU' + str(PU) #'step3_ttbar_PU' + str(PU) #+ '_uncompressed'
+keep = 'keep *'
+"""
 fNames = [ 'file:' + x for x in glob.glob(os.path.join(indir, filename_suff + '*.root')) ]
 if len(fNames)==0:
     print('Used globbing: ', glob.glob(os.path.join(indir, filename_suff + '*.root')))
     raise ValueError('No input files!')
 print('Input: ', fNames)
-keep = 'keep *'
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(fNames),
                             inputCommands = cms.untracked.vstring(keep),
                             duplicateCheckMode = cms.untracked.string("noDuplicateCheck") )
+"""
+fNames = 'file:' + os.path.join(indir, filename_suff + '.root')
+process.source = cms.Source("RepeatingCachedRootSource",
+                            fileName = cms.untracked.string(fNames),
+                            inputCommands = cms.untracked.vstring(keep),
+                            repeatNEvents = cms.untracked.uint32(47))
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 wantSummaryFlag = True
@@ -68,7 +75,6 @@ process.ThroughputService = cms.Service( "ThroughputService",
 process.FastTimerService.enableDQM = False
 process.FastTimerService.writeJSONSummary = True
 process.FastTimerService.jsonFileName = 'resources.json'
-process.MessageLogger.categories.append('ThroughputService')
 
 if withGPU:
     process.ee_t = cms.Task( process.EERecHitGPUProd, process.EERecHitGPUtoSoAProd, process.EERecHitFromSoAProd )
@@ -85,26 +91,24 @@ else:
 
 process.path = cms.Path( process.recHitsTask )
 
-"""
-process.consumer = cms.EDAnalyzer("GenericConsumer",                     
-                                  eventProducts = cms.untracked.vstring('EERecHitGPUProd',
-                                                                        'HEFRecHitGPUProd',
-                                                                        'HEBRecHitGPUProd') )
-"""
-"""
-process.consumer = cms.EDAnalyzer('GenericConsumer',
-                                  eventProducts = cms.untracked.vstring('recHitsClone') )
-                                  #eventProducts = cms.untracked.vstring('HGCalUncalibRecHit') ) #uncalib only (to assess reading speed)
-"""
-"""
-process.consume_step = cms.EndPath(process.consumer)
-"""
+if withGPU:
+    process.consumer = cms.EDAnalyzer("GenericConsumer",                     
+                                      eventProducts = cms.untracked.vstring('EERecHitFromSoAProd',
+                                                                            'HEFRecHitFromSoAProd',
+                                                                            'HEBRecHitFromSoAProd') )
+else:
+    process.consumer = cms.EDAnalyzer('GenericConsumer',
+                                      eventProducts = cms.untracked.vstring('recHitsClone') )
+    #eventProducts = cms.untracked.vstring('HGCalUncalibRecHit') ) #uncalib only (to assess reading speed)
 
+process.consume_step = cms.EndPath(process.consumer)
+
+"""
 process.out = cms.OutputModule( "PoolOutputModule", 
                                 fileName = cms.untracked.string( '/home/bfontana/out_Timing_PU' + str(PU) + '_' +str(withGPU)+ '.root'),
                                 outputCommands = cms.untracked.vstring(outkeeps[0], outkeeps[1], outkeeps[2])
 )
 process.outpath = cms.EndPath(process.out)
-
+"""
 
 #process.schedule.append(process.consume_step) #in case one has multiple Paths or EndPaths to run

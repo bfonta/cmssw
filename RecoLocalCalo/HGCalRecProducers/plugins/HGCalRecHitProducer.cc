@@ -114,6 +114,7 @@ void HGCalRecHitProducer::produce(edm::Event& evt, const edm::EventSetup& es) {
   }
 
   // sort collections before attempting recovery, to avoid insertion of double recHits
+  /*
   eeRecHits->sort();
   hefRecHits->sort();
   hebRecHits->sort();
@@ -126,7 +127,7 @@ void HGCalRecHitProducer::produce(edm::Event& evt, const edm::EventSetup& es) {
   evt.put(std::move(eeRecHits), eeRechitCollection_);
   evt.put(std::move(hefRecHits), hefRechitCollection_);
   evt.put(std::move(hebRecHits), hebRechitCollection_);
-
+  */
   // do the same for HFNose hits
   if (pHGChfnoseUncalibRecHits.isValid()) {
     auto hfnoseRecHits = std::make_unique<HGChfnoseRecHitCollection>();
