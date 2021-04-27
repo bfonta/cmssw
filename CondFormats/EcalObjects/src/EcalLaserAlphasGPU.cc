@@ -5,8 +5,12 @@
 
 EcalLaserAlphasGPU::EcalLaserAlphasGPU(EcalLaserAlphas const& values) {
   values_.reserve(values.size());
-  std::copy(values.begin(), values.end(), values_.begin());
+  std::copy(values.begin(), values.end(), std::back_inserter(values_));
   offset_ = values.barrelItems().size();
+  for(unsigned i = 0; i<10; ++i) 
+    {
+      std::cout << "laser " << values[i] << ", " << values_[i] << std::endl;;
+    }
 }
 
 EcalLaserAlphasGPU::Product const& EcalLaserAlphasGPU::getProduct(cudaStream_t cudaStream) const {

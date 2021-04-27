@@ -1,3 +1,4 @@
+import sys, os, inspect
 import FWCore.ParameterSet.Config as cms
 
 from Configuration.StandardSequences.Eras import eras
@@ -7,33 +8,21 @@ process = cms.Process('RECO', eras.Run2_2018)
 
 # import of standard configurations
 process.load('Configuration.StandardSequences.Services_cff')
-#process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load('HeterogeneousCore.CUDAServices.CUDAService_cfi')
-#process.load('Configuration.EventContent.EventContent_cff')
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
 process.load('Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff')
-#process.load('Configuration.StandardSequences.RawToDigi_Data_cff')
-#process.load('Configuration.StandardSequences.Reconstruction_Data_cff')
-#process.load('DQMOffline.Configuration.DQMOffline_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-
-
-
-
-
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '102X_dataRun2_HLT_v2', '')
-
+process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase1_2021_realistic', '')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(1000)
+    input = cms.untracked.int32(10)
 )
 
 # load data using the DAQ source
-import sys, os, inspect
 sys.path.append(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))))
 process.load('sourceFromRawCmggpu_cff')
 
@@ -306,8 +295,8 @@ process.schedule = cms.Schedule(
 )
 
 process.options = cms.untracked.PSet(
-    numberOfThreads = cms.untracked.uint32(4),
-    numberOfStreams = cms.untracked.uint32(4),
+    numberOfThreads = cms.untracked.uint32(1),
+    numberOfStreams = cms.untracked.uint32(1),
     SkipEvent = cms.untracked.vstring('ProductNotFound'),
     wantSummary = cms.untracked.bool(True)
 )

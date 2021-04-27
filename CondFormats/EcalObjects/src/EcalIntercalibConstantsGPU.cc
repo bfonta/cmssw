@@ -4,10 +4,13 @@
 #include "HeterogeneousCore/CUDAUtilities/interface/copyAsync.h"
 
 EcalIntercalibConstantsGPU::EcalIntercalibConstantsGPU(EcalIntercalibConstants const& values) {
-  values_.assign(values.begin(), values.end());
+  std::cout << "Constructor " << values.size() << std::endl;
+  values_.assign(values.size(), 2.5f);
+  //values_.reserve(values.size());
+  //std::copy(values.begin(), values.end(), std::back_inserter(values_));
   for(unsigned i = 0; i<10; ++i) 
     {
-      std::cout << values_[i] << ", " << std::endl;;
+      std::cout << (float)values[i] << ", " << values_[i] << std::endl;;
     }
   offset_ = values.barrelItems().size();
 }

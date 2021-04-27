@@ -4,8 +4,7 @@
 #include "HeterogeneousCore/CUDAUtilities/interface/copyAsync.h"
 
 EcalLaserAPDPNRatiosRefGPU::EcalLaserAPDPNRatiosRefGPU(EcalLaserAPDPNRatiosRef const& values) {
-  values_.reserve(values.size());
-  std::copy(values.begin(), values.end(), values_.begin());
+  values_.assign(values.begin(), values.end());
   offset_ = values.barrelItems().size();
 }
 

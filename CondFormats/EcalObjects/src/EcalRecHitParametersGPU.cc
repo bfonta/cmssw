@@ -10,8 +10,9 @@ EcalRecHitParametersGPU::EcalRecHitParametersGPU(edm::ParameterSet const& ps) {
   auto const& channelStatusToBeExcluded = StringToEnumValue<EcalChannelStatusCode::Code>(
       ps.getParameter<std::vector<std::string>>("ChannelStatusToBeExcluded"));
 
-  channelStatusToBeExcluded_.resize(channelStatusToBeExcluded.size());
-  std::copy(channelStatusToBeExcluded.begin(), channelStatusToBeExcluded.end(), channelStatusToBeExcluded_.begin());
+  
+  channelStatusToBeExcluded_.assign(channelStatusToBeExcluded.begin(),
+				    channelStatusToBeExcluded.end());
 
   //     https://github.com/cms-sw/cmssw/blob/266e21cfc9eb409b093e4cf064f4c0a24c6ac293/RecoLocalCalo/EcalRecProducers/plugins/EcalRecHitWorkerSimple.cc
 

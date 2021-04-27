@@ -177,15 +177,23 @@ void EcalRecHitProducerGPU::acquire(edm::Event const& event,
   // - adt2gev
 
   //
+  std::cout << "check1" << std::endl;
   setup.get<EcalADCToGeVConstantRcd>().get(ADCToGeVConstantHandle_);
+  std::cout << "check2" << std::endl;
   setup.get<EcalIntercalibConstantsRcd>().get(IntercalibConstantsHandle_);
+  std::cout << "check3" << std::endl;
   setup.get<EcalChannelStatusRcd>().get(ChannelStatusHandle_);
-
+  std::cout << "check4" << std::endl;
   setup.get<EcalLaserAPDPNRatiosRcd>().get(LaserAPDPNRatiosHandle_);
+  std::cout << "check5" << std::endl;
   setup.get<EcalLaserAPDPNRatiosRefRcd>().get(LaserAPDPNRatiosRefHandle_);
+  std::cout << "check6" << std::endl;
   setup.get<EcalLaserAlphasRcd>().get(LaserAlphasHandle_);
+  std::cout << "check7" << std::endl;
   setup.get<EcalLinearCorrectionsRcd>().get(LinearCorrectionsHandle_);
+  std::cout << "check8" << std::endl;
   setup.get<JobConfigurationGPURecord>().get(recHitParametersHandle_);
+  std::cout << "check9" << std::endl;
 
   auto const& ADCToGeVConstantProduct = ADCToGeVConstantHandle_->getProduct(ctx.stream());
   auto const& IntercalibConstantsProduct = IntercalibConstantsHandle_->getProduct(ctx.stream());

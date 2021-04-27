@@ -9,15 +9,14 @@ EcalMultifitParametersGPU::EcalMultifitParametersGPU(edm::ParameterSet const& ps
   auto const& timeFitParametersEB = ps.getParameter<std::vector<double>>("EBtimeFitParameters");
   auto const& timeFitParametersEE = ps.getParameter<std::vector<double>>("EEtimeFitParameters");
 
-  amplitudeFitParametersEB_.resize(amplitudeFitParametersEB.size());
-  amplitudeFitParametersEE_.resize(amplitudeFitParametersEE.size());
-  timeFitParametersEB_.resize(timeFitParametersEB.size());
-  timeFitParametersEE_.resize(timeFitParametersEE.size());
-
-  std::copy(amplitudeFitParametersEB.begin(), amplitudeFitParametersEB.end(), amplitudeFitParametersEB_.begin());
-  std::copy(amplitudeFitParametersEE.begin(), amplitudeFitParametersEE.end(), amplitudeFitParametersEE_.begin());
-  std::copy(timeFitParametersEB.begin(), timeFitParametersEB.end(), timeFitParametersEB_.begin());
-  std::copy(timeFitParametersEE.begin(), timeFitParametersEE.end(), timeFitParametersEE_.begin());
+  amplitudeFitParametersEB_.assign(amplitudeFitParametersEB.begin(),
+				   amplitudeFitParametersEB.end());
+  amplitudeFitParametersEE_.assign(amplitudeFitParametersEE.begin(),
+				   amplitudeFitParametersEE.end());
+  timeFitParametersEB_.assign(timeFitParametersEB.begin(),
+			      timeFitParametersEB.end());
+  timeFitParametersEE_.assign(timeFitParametersEE.begin(),
+			      timeFitParametersEE.end());
 }
 
 EcalMultifitParametersGPU::Product const& EcalMultifitParametersGPU::getProduct(cudaStream_t cudaStream) const {
