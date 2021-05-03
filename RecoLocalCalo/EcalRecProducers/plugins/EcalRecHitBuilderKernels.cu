@@ -364,7 +364,7 @@ namespace ecal {
         //
 
         //         energy[ch] = amplitude[inputCh] * adc2gev_to_use * intercalib_to_use ;
-        energy[inputCh] = amplitude[inputCh] * adc2gev_to_use * intercalib_to_use * lasercalib;
+        energy[inputCh] = amplitude[inputCh]; /* * adc2gev_to_use * intercalib_to_use * lasercalib; */
 
         // Time is not saved so far, FIXME
         //         time[ch] = time_in[inputCh];
@@ -528,7 +528,7 @@ namespace ecal {
         if (dbstatus == 10 || dbstatus == 11 || dbstatus == 12) {
           is_recoverable = true;
         }
-
+ 
         if (is_recoverable) {
           if (dbstatus == EcalChannelStatusCode_Code::kDeadVFE) {
             is_VFE = true;
@@ -549,6 +549,7 @@ namespace ecal {
               }
               // kill all the other cases
               else {
+	        printf("=========== Null EB: %f\n", energy[inputCh]);
                 energy[inputCh] = 0.;  // Need to set also the flags ...
               }
             }
@@ -568,6 +569,7 @@ namespace ecal {
               }
               // kill all the other cases
               else {
+	        printf("=========== Null EE: %f\n", energy[inputCh]);
                 energy[inputCh] = 0.;  // Need to set also the flags ...
               }
             }
