@@ -39,7 +39,7 @@ public:
     }
 
     float clockToNsConstant = 25;
-    float energy = uncalibRH.amplitude() * adcToGeVConstant_ * intercalibConstant;
+    float energy = uncalibRH.amplitude(); /* * adcToGeVConstant_ * intercalibConstant;*/
     float time = uncalibRH.jitter() * clockToNsConstant + timeIntercalib;
 
     EcalRecHit rh(uncalibRH.id(), energy, time);

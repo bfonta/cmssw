@@ -191,8 +191,8 @@ void EcalRecHitProducerGPU::acquire(edm::Event const& event,
 
   // conditions
   // - laser correction
-  // - IC
-  // - adt2gev
+  // - IC (intercalibration)
+  // - adc2gev
 
   //
   IntercalibConstantsHandle_ = setup.getHandle(tokenIntercalibConstants_);
@@ -215,7 +215,6 @@ void EcalRecHitProducerGPU::acquire(edm::Event const& event,
   configParameters_.expanded_Sizes_v_DB_reco_flags = recHitParametersProduct.expanded_Sizes_v_DB_reco_flags.get();
   configParameters_.expanded_flagbit_v_DB_reco_flags = recHitParametersProduct.expanded_flagbit_v_DB_reco_flags.get();
   configParameters_.expanded_v_DB_reco_flagsSize = std::get<3>(recHitParametersHandle_->getValues()).get().size();
-
   // bundle up conditions
   ecal::rechit::ConditionsProducts conditions{ADCToGeVConstantProduct,
                                               IntercalibConstantsProduct,

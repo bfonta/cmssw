@@ -2,6 +2,16 @@ import FWCore.ParameterSet.Config as cms
 
 from Configuration.StandardSequences.Eras import eras
 
+#arguments parsing                                                                 
+from FWCore.ParameterSet.VarParsing import VarParsing
+F=VarParsing('analysis')
+F.register('outName',
+           'default',
+           F.multiplicity.singleton,
+           F.varType.string,
+           'Output file name.')
+F.parseArguments()
+
 process = cms.Process('RECO', eras.Run2_2018)
 
 # import of standard configurations
@@ -17,7 +27,7 @@ from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase1_2021_realistic', '')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(200)
+    input = cms.untracked.int32(1000)
 )
 
 # load data using the DAQ source
@@ -160,22 +170,15 @@ process.ecalDigis.InputLabel = cms.InputTag('rawDataCollector')
 
 process.out = cms.OutputModule(
     "PoolOutputModule",
-    fileName = cms.untracked.string("testRechit.root"),
+    fileName = cms.untracked.string(F.outName+'Out.root'),
     outputCommands = cms.untracked.vstring("keep *"),
 )
 
-
 process.out_dqm = cms.OutputModule(
      "DQMRootOutputModule",
-    fileName = cms.untracked.string("testDQM.root"),
+    fileName = cms.untracked.string(F.outName+'DQM.root'),
 )
 
-#process.out = cms.OutputModule("AsciiOutputModule",
-#    outputCommands = cms.untracked.vstring(
-#        'keep *_ecalMultiFitUncalibRecHit_*_*', 
-#    ),
-#    verbosity = cms.untracked.uint32(0)
-#)
 process.finalize = cms.EndPath(process.out * process.out_dqm)
 
 process.bunchSpacing = cms.Path(
@@ -190,14 +193,16 @@ process.digiPath = cms.Path(
 )
 
 process.recoPath = cms.Path(
-    (process.ecalMultiFitUncalibRecHit+process.ecalDetIdToBeRecovered)
-    *process.ecalRecHit
+    process.ecalMultiFitUncalibRecHit
+    +process.ecalDetIdToBeRecovered
+    +process.ecalRecHit
     #gpu
-    *process.ecalUncalibRecHitProducerGPU
-    *process.ecalCPUUncalibRecHitProducer
-    *process.ecalRecHitProducerGPU
-    *process.ecalCPURecHitProducer
-    *process.ecalrechitGPUAnalyzer #DQM
+    +process.ecalUncalibRecHitProducerGPU
+    +process.ecalCPUUncalibRecHitProducer
+    +process.ecalRecHitProducerGPU
+    +process.ecalCPURecHitProducer
+    #DQM
+    +process.ecalrechitGPUAnalyzer
 )
 
 process.schedule = cms.Schedule(
@@ -209,11 +214,7 @@ process.schedule = cms.Schedule(
 )
 
 process.options = cms.untracked.PSet(
-    numberOfThreads = cms.untracked.uint32(1),
-    numberOfStreams = cms.untracked.uint32(1),
-    #SkipEvent = cms.untracked.vstring('ProductNotFound'),
+    numberOfThreads = cms.untracked.uint32(4),
+    numberOfStreams = cms.untracked.uint32(4),
     wantSummary = cms.untracked.bool(True)
 )
-
-#
-#process.DependencyGraph = cms.Service("DependencyGraph")

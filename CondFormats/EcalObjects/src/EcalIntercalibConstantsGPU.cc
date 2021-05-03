@@ -4,10 +4,15 @@
 #include "HeterogeneousCore/CUDAUtilities/interface/copyAsync.h"
 
 EcalIntercalibConstantsGPU::EcalIntercalibConstantsGPU(EcalIntercalibConstants const& values) {
+  std::cout << "check v1" << std::endl;
   values_.reserve(values.size());
+  std::cout << "check v2" << std::endl;
   values_.insert(values_.end(), values.barrelItems().begin(), values.barrelItems().end());
+  std::cout << "check v3" << std::endl;
   values_.insert(values_.end(), values.endcapItems().begin(), values.endcapItems().end());
+  std::cout << "check v4" << std::endl;
   offset_ = values.barrelItems().size();
+  std::cout << "check v5" << std::endl;
 }
 
 EcalIntercalibConstantsGPU::Product const& EcalIntercalibConstantsGPU::getProduct(cudaStream_t cudaStream) const {

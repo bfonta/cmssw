@@ -144,7 +144,14 @@ void EcalRecHitGPUAnalyzer::analyze(const edm::Event &iEvent, const edm::EventSe
   const auto cpu_ee_size = hitsEEcpu.size();
   auto gpu_eb_size = hitsEBgpu.energy.size();
   auto gpu_ee_size = hitsEEgpu.energy.size();
-  std::cout <<  hitsEBgpu.energy.size() << ", " <<  hitsEBgpu.time.size() << ", " <<  hitsEBgpu.chi2.size() << ", " <<  hitsEBgpu.extra.size() << ", " <<  hitsEBgpu.flagBits.size() << ", " <<  hitsEBgpu.did.size() << std::endl;
+
+  if (cpu_eb_size!=gpu_eb_size or cpu_ee_size!=gpu_ee_size)
+    edm::LogError("DifferentSizes_BEFORE_Selection") <<
+      "  EB size: " << std::setw(4) << cpu_eb_size << " (cpu) vs " << std::setw(4) << gpu_eb_size <<
+      " (gpu)\n" <<
+      "  EE size: " << std::setw(4) << cpu_ee_size << " (cpu) vs " << std::setw(4) << gpu_ee_size <<
+      " (gpu)" << std::endl;
+
   const float eb_ratio = (float)gpu_eb_size / cpu_eb_size;
   const float ee_ratio = (float)gpu_ee_size / cpu_ee_size;
 
@@ -336,12 +343,14 @@ void EcalRecHitGPUAnalyzer::analyze(const edm::Event &iEvent, const edm::EventSe
   hPositiveRechitsEEdeltavsCPU->Fill(positive_cpu_ee_size, positive_gpu_ee_size - positive_cpu_ee_size);
 
   if (cpu_eb_size != selected_gpu_eb_size or cpu_ee_size != selected_gpu_ee_size) {
-    edm::LogError("MissingDetId") << "  EB size: " << std::setw(4) << cpu_eb_size << " (cpu) vs " << std::setw(4) << selected_gpu_eb_size
-				  << " (gpu)\n"
-				  << "  EE size: " << std::setw(4) << cpu_ee_size << " (cpu) vs " << std::setw(4) << selected_gpu_ee_size
-				  << " (gpu)" << std::endl;
+    edm::LogError("DifferentSizes_AFTER_Selection") <<
+      "  EB size: " << std::setw(4) << cpu_eb_size << " (cpu) vs " << std::setw(4) << selected_gpu_eb_size <<
+      " (gpu)\n" <<
+      "  EE size: " << std::setw(4) << cpu_ee_size << " (cpu) vs " << std::setw(4) << selected_gpu_ee_size <<
+      " (gpu)" << std::endl;
   }
-  
+  if (cpu_eb_size < selected_gpu_eb_size or cpu_ee_size < selected_gpu_ee_size)
+    edm::LogError("MissingRecHits_AFTER_Selection") << std::endl;
 }
 
 void EcalRecHitGPUAnalyzer::bookHistograms(DQMStore::IBooker &iBooker, edm::Run const &, edm::EventSetup const &) {
@@ -351,22 +360,22 @@ void EcalRecHitGPUAnalyzer::bookHistograms(DQMStore::IBooker &iBooker, edm::Run 
 
   //iBooker.setCurrentFolder("DQM_tmp/");  // Use folder with name of PAG
 
-  hRechitsEBGPU = iBooker.book1D("RechitsEBGPU", "RechitsEBGPU; No. of Rechits. No Filter GPU", nbins, 0, last);
-  hRechitsEBCPU = iBooker.book1D("RechitsEBCPU", "RechitsEBCPU; No. of Rechits. No Filter GPU", nbins, 0, last);
-  hRechitsEEGPU = iBooker.book1D("RechitsEEGPU", "RechitsEEGPU; No. of Rechits. No Filter GPU", nbins, 0, last);
-  hRechitsEECPU = iBooker.book1D("RechitsEECPU", "RechitsEECPU; No. of Rechits. No Filter GPU", nbins, 0, last);
+  hRechitsEBGPU = iBooker.book1D("RechitsEBGPU_NoFilter", "RechitsEBGPU; No. of Rechits (no GPU filter)", nbins, 0, last);
+  hRechitsEBCPU = iBooker.book1D("RechitsEBCPU_NoFilter", "RechitsEBCPU; No. of Rechits (no GPU filter)", nbins, 0, last);
+  hRechitsEEGPU = iBooker.book1D("RechitsEEGPU_NoFilter", "RechitsEEGPU; No. of Rechits (no GPU filter)", nbins, 0, last);
+  hRechitsEECPU = iBooker.book1D("RechitsEECPU_NoFilter", "RechitsEECPU; No. of Rechits (no GPU filter)", nbins, 0, last);
   hRechitsEBGPUvsCPU =
-    iBooker.book2D("RechitsEBGPUvsCPU", "RechitsEBGPUvsCPU; CPU; GPU. No Filter GPU", last, 0, last, last, 0, last);
+    iBooker.book2D("RechitsEBGPUvsCPU_NoFilter", "RechitsEBGPUvsCPU; CPU; GPU (no GPU filter)", last, 0, last, last, 0, last);
   hRechitsEEGPUvsCPU =
-    iBooker.book2D("RechitsEEGPUvsCPU", "RechitsEEGPUvsCPU; CPU; GPU. No Filter GPU", last, 0, last, last, 0, last);
+    iBooker.book2D("RechitsEEGPUvsCPU_NoFilter", "RechitsEEGPUvsCPU; CPU; GPU (no GPU filter)", last, 0, last, last, 0, last);
   hRechitsEBGPUCPUratio =
-    iBooker.book1D("RechitsEBGPU/CPUratio", "RechitsEBGPU/CPUratio; GPU/CPU. No Filter GPU", 200, 0.95, 1.05);
+    iBooker.book1D("RechitsEBGPU/CPUratio_NoFilter", "RechitsEBGPU/CPUratio; GPU/CPU (no GPU filter)", 200, 0.95, 1.05);
   hRechitsEEGPUCPUratio =
-    iBooker.book1D("RechitsEEGPU/CPUratio", "RechitsEEGPU/CPUratio; GPU/CPU. No Filter GPU", 200, 0.95, 1.05);
+    iBooker.book1D("RechitsEEGPU/CPUratio_NoFilter", "RechitsEEGPU/CPUratio; GPU/CPU (no GPU filter)", 200, 0.95, 1.05);
   hRechitsEBdeltavsCPU =
-    iBooker.book2D("RechitsEBdeltavsCPU", "RechitsEBdeltavsCPU. No Filter GPU", nbins, 0, last, nbins_delta, -delta, delta);
+    iBooker.book2D("RechitsEBdeltavsCPU_NoFilter", "RechitsEBdeltavsCPU (no GPU filter)", nbins, 0, last, nbins_delta, -delta, delta);
   hRechitsEEdeltavsCPU =
-    iBooker.book2D("RechitsEEdeltavsCPU", "RechitsEEdeltavsCPU. No Filter GPU", nbins, 0, last, nbins_delta, -delta, delta);
+    iBooker.book2D("RechitsEEdeltavsCPU_NoFilter", "RechitsEEdeltavsCPU (no GPU filter)", nbins, 0, last, nbins_delta, -delta, delta);
 
   // RecHits plots for EB and EE on both GPU and CPU
   hSelectedRechitsEBGPU = iBooker.book1D("RechitsEBGPU", "RechitsEBGPU; No. of Rechits", nbins, 0, last);
@@ -387,22 +396,22 @@ void EcalRecHitGPUAnalyzer::bookHistograms(DQMStore::IBooker &iBooker, edm::Run 
     iBooker.book2D("RechitsEEdeltavsCPU", "RechitsEEdeltavsCPU", nbins, 0, last, nbins_delta, -delta, delta);
 
   // RecHits plots for EB and EE on both GPU and CPU
-  hPositiveRechitsEBGPU = iBooker.book1D("RechitsEBGPU", "RechitsEBGPU; No. of Rechits", nbins, 0, last);
-  hPositiveRechitsEBCPU = iBooker.book1D("RechitsEBCPU", "RechitsEBCPU; No. of Rechits", nbins, 0, last);
-  hPositiveRechitsEEGPU = iBooker.book1D("RechitsEEGPU", "RechitsEEGPU; No. of Rechits", nbins, 0, last);
-  hPositiveRechitsEECPU = iBooker.book1D("RechitsEECPU", "RechitsEECPU; No. of Rechits", nbins, 0, last);
+  hPositiveRechitsEBGPU = iBooker.book1D("RechitsEBGPU_Positive", "RechitsEBGPU; No. of Rechits (positive)", nbins, 0, last);
+  hPositiveRechitsEBCPU = iBooker.book1D("RechitsEBCPU_Positive", "RechitsEBCPU; No. of Rechits (positive)", nbins, 0, last);
+  hPositiveRechitsEEGPU = iBooker.book1D("RechitsEEGPU_Positive", "RechitsEEGPU; No. of Rechits (positive)", nbins, 0, last);
+  hPositiveRechitsEECPU = iBooker.book1D("RechitsEECPU_Positive", "RechitsEECPU; No. of Rechits (positive)", nbins, 0, last);
   hPositiveRechitsEBGPUvsCPU =
-    iBooker.book2D("RechitsEBGPUvsCPU", "RechitsEBGPUvsCPU; CPU; GPU", last, 0, last, last, 0, last);
+    iBooker.book2D("RechitsEBGPUvsCPU_Positive", "RechitsEBGPUvsCPU; CPU; GPU (positive)", last, 0, last, last, 0, last);
   hPositiveRechitsEEGPUvsCPU =
-    iBooker.book2D("RechitsEEGPUvsCPU", "RechitsEEGPUvsCPU; CPU; GPU", last, 0, last, last, 0, last);
+    iBooker.book2D("RechitsEEGPUvsCPU_Positive", "RechitsEEGPUvsCPU; CPU; GPU (positive)", last, 0, last, last, 0, last);
   hPositiveRechitsEBGPUCPUratio =
-    iBooker.book1D("RechitsEBGPU/CPUratio", "RechitsEBGPU/CPUratio; GPU/CPU", 200, 0.95, 1.05);
+    iBooker.book1D("RechitsEBGPU/CPUratio_Positive", "RechitsEBGPU/CPUratio; GPU/CPU (positive)", 200, 0.95, 1.05);
   hPositiveRechitsEEGPUCPUratio =
-    iBooker.book1D("RechitsEEGPU/CPUratio", "RechitsEEGPU/CPUratio; GPU/CPU", 200, 0.95, 1.05);
+    iBooker.book1D("RechitsEEGPU/CPUratio_Positive", "RechitsEEGPU/CPUratio; GPU/CPU (positive)", 200, 0.95, 1.05);
   hPositiveRechitsEBdeltavsCPU =
-    iBooker.book2D("RechitsEBdeltavsCPU", "RechitsEBdeltavsCPU", nbins, 0, last, nbins_delta, -delta, delta);
+    iBooker.book2D("RechitsEBdeltavsCPU_Positive", "RechitsEBdeltavsCPU (positive)", nbins, 0, last, nbins_delta, -delta, delta);
   hPositiveRechitsEEdeltavsCPU =
-    iBooker.book2D("RechitsEEdeltavsCPU", "RechitsEEdeltavsCPU", nbins, 0, last, nbins_delta, -delta, delta);
+    iBooker.book2D("RechitsEEdeltavsCPU_Positive", "RechitsEEdeltavsCPU (positive)", nbins, 0, last, nbins_delta, -delta, delta);
 
   // Energies plots for EB and EE on both GPU and CPU
   hEnergiesEBGPU = iBooker.book1D("EnergiesEBGPU", "EnergiesEBGPU; Energy [GeV]", nbins_energy, 0, last_energy);
