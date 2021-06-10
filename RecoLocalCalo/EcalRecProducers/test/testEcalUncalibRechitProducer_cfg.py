@@ -1,35 +1,33 @@
 import FWCore.ParameterSet.Config as cms
-
 from Configuration.StandardSequences.Eras import eras
 #from Configuration.ProcessModifiers.gpu_cff import gpu
+
+#arguments parsing                                                                 
+from FWCore.ParameterSet.VarParsing import VarParsing
+F=VarParsing('analysis')
+F.register('outName',
+           'default',
+           F.multiplicity.singleton,
+           F.varType.string,
+           'Output file name.')
+F.parseArguments()
 
 process = cms.Process('RECO', eras.Run2_2018)
 
 # import of standard configurations
 process.load('Configuration.StandardSequences.Services_cff')
-#process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load('HeterogeneousCore.CUDAServices.CUDAService_cfi')
-#process.load('Configuration.EventContent.EventContent_cff')
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
 process.load('Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff')
-#process.load('Configuration.StandardSequences.RawToDigi_Data_cff')
-#process.load('Configuration.StandardSequences.Reconstruction_Data_cff')
-#process.load('DQMOffline.Configuration.DQMOffline_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-
-
-
-
-
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '102X_dataRun2_HLT_v2', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase1_2021_realistic', '')
 
 
 process.maxEvents = cms.untracked.PSet(
-    #input = cms.untracked.int32(100)
     input = cms.untracked.int32(1000)
 )
 
@@ -43,7 +41,6 @@ process.load('sourceFromRawCmggpu_cff')
 #-----------------------------------------
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
 process.load("RecoLocalCalo.Configuration.hcalLocalReco_cff")
-#process.load("RecoLocalCalo.Configuration.ecalLocalRecoSequence_cff")
 process.load("EventFilter.HcalRawToDigi.HcalRawToDigi_cfi")
 process.load("EventFilter.EcalRawToDigi.EcalUnpackerData_cfi")
 process.load("RecoLuminosity.LumiProducer.bunchSpacingProducer_cfi")
@@ -60,16 +57,8 @@ process.load("RecoLocalCalo.EcalRecProducers.ecalCPUUncalibRecHitProducer_cfi")
 #
 # ../cfipython/slc7_amd64_gcc700/RecoLocalCalo/EcalRecProducers/ecalCPUUncalibRecHitProducer_cfi.py
 #
-
 process.load("EventFilter.EcalRawToDigi.ecalRawToDigiGPU_cfi")
 process.load("EventFilter.EcalRawToDigi.ecalElectronicsMappingGPUESProducer_cfi")
-
-#process.ecalUncalibRecHitProducerGPU.kernelsVersion = 0
-#process.ecalUncalibRecHitProducerGPU.kernelMinimizeThreads = cms.vuint32(16, 1, 1)
-#
-# process.ecalUncalibRecHitProducerGPU.shouldRunTimingComputation = cms.bool(False)
-#
-
 
 process.load("RecoLocalCalo.EcalRecProducers.ecalPedestalsGPUESProducer_cfi")
 process.load("RecoLocalCalo.EcalRecProducers.ecalGainRatiosGPUESProducer_cfi")
@@ -79,11 +68,10 @@ process.load("RecoLocalCalo.EcalRecProducers.ecalSamplesCorrelationGPUESProducer
 process.load("RecoLocalCalo.EcalRecProducers.ecalTimeBiasCorrectionsGPUESProducer_cfi")
 process.load("RecoLocalCalo.EcalRecProducers.ecalTimeCalibConstantsGPUESProducer_cfi")
 
-#process.ecalMultiFitUncalibRecHitgpu.algoPSet.threads = cms.vint32(256, 1, 1)
-
-
 process.load("RecoLocalCalo.EcalRecProducers.ecalMultifitParametersGPUESProducer_cfi")
 
+#DQM
+process.load("DQMOffline.Ecal.EcalUncalibRecHitGPUAnalyzer_cfi")
 
 
 ##
@@ -159,38 +147,21 @@ process.ecalMultiFitUncalibRecHit.algoPSet = cms.PSet(
       outOfTimeThresholdGain61mEB = cms.double( 5.0 )
 )     
       
-##    
-    
-    
-    
-#process.load('Configuration.StandardSequences.Reconstruction_cff')
-#process.ecalRecHit
-
-    
-    
-#process.load("RecoLocalCalo.EcalRecProducers.ecalRecHitGPU_cfi")
-#process.ecalRecHitGPU
-    
-
-
-#process.hcalDigis.silent = cms.untracked.bool(False)
-#process.hcalDigis.InputLabel = rawTag
 process.ecalDigis = process.ecalEBunpacker.clone()
 process.ecalDigis.InputLabel = cms.InputTag('rawDataCollector')
-#process.hbheprerecogpu.processQIE11 = cms.bool(True)
 
 process.out = cms.OutputModule(
     "PoolOutputModule",
-    fileName = cms.untracked.string("test_uncalib.root")
+    fileName = cms.untracked.string(F.outName+'UncalibRecHitsOut.root'),
+    outputCommands = cms.untracked.vstring("keep *"),
 )
 
-#process.out = cms.OutputModule("AsciiOutputModule",
-#    outputCommands = cms.untracked.vstring(
-#        'keep *_ecalMultiFitUncalibRecHit_*_*', 
-#    ),
-#    verbosity = cms.untracked.uint32(0)
-#)
-process.finalize = cms.EndPath(process.out)
+process.out_dqm = cms.OutputModule(
+     "DQMRootOutputModule",
+    fileName = cms.untracked.string(F.outName+'UncalibRecHitsDQM.root'),
+)
+
+process.finalize = cms.EndPath(process.out + process.out_dqm)
 
 process.bunchSpacing = cms.Path(
     process.bunchSpacingProducer
@@ -199,17 +170,18 @@ process.bunchSpacing = cms.Path(
 process.digiPath = cms.Path(
     #process.hcalDigis
     process.ecalDigis
-    *process.ecalRawToDigiGPU    
+    +process.ecalRawToDigiGPU
 )
 
 process.recoPath = cms.Path(
-    #(process.ecalMultiFitUncalibRecHit+process.ecalDetIdToBeRecovered)
+    #process.ecalMultiFitUncalibRecHit
+    #+process.ecalDetIdToBeRecovered
     process.ecalMultiFitUncalibRecHit
-    #*process.ecalRecHit
-#   gpu
-    *process.ecalUncalibRecHitProducerGPU
-    *process.ecalCPUUncalibRecHitProducer
-    #*process.ecalRecHitGPU
+    #gpu
+    +process.ecalUncalibRecHitProducerGPU
+    +process.ecalCPUUncalibRecHitProducer
+    #DQM
+    +process.ecalUncalibRechitGPUAnalyzer
 )
 
 process.schedule = cms.Schedule(
@@ -223,11 +195,5 @@ process.schedule = cms.Schedule(
 process.options = cms.untracked.PSet(
     numberOfThreads = cms.untracked.uint32(8),
     numberOfStreams = cms.untracked.uint32(8),
-    SkipEvent = cms.untracked.vstring('ProductNotFound'),
     wantSummary = cms.untracked.bool(True)
 )
-
-# report CUDAService messages
-process.MessageLogger.categories.append("CUDAService")
-
-

@@ -100,7 +100,7 @@ void EcalUncalibRecHitProducerGPU::fillDescriptions(edm::ConfigurationDescriptio
   desc.add<uint32_t>("maxNumberHitsEB", 61200);
   desc.add<uint32_t>("maxNumberHitsEE", 14648);
   desc.addUntracked<std::vector<uint32_t>>("kernelMinimizeThreads", {32, 1, 1});
-  desc.add<bool>("shouldRunTimingComputation", true);
+  desc.add<bool>("shouldRunTimingComputation", false);
   confDesc.addWithDefaultLabel(desc);
 }
 
