@@ -48,26 +48,20 @@ void HGCalCLUEAlgoGPUEM::make_clusters(const unsigned nhits,
   // calculate rho, delta and find seeds
   // 1 point per thread
   ////////////////////////////////////////////
-  cudaCheck( cudaStreamSynchronize(stream) );
-  std::cout << "MAKE_CLUSTERS 1" << std::endl;
   kernel_compute_histogram<<<gridSize,blockSize,0,stream>>>(mDevHist, mDevPoints, nhits);
-  cudaCheck( cudaStreamSynchronize(stream) );
-  std::cout << "MAKE_CLUSTERS 2" << std::endl;
+
   kernel_calculate_density<<<gridSize,blockSize,0,stream>>>(mDevHist, mDevPoints, mCLUESoA,
 							    mDc, nhits);
-  cudaCheck( cudaStreamSynchronize(stream) );
-  std::cout << "MAKE_CLUSTERS 3" << std::endl;
+
   kernel_calculate_distanceToHigher<<<gridSize,blockSize,0,stream>>>(mDevHist, mDevPoints, mCLUESoA,
 								     mOutlierDeltaFactor, mDc,
 								     nhits);
-  cudaCheck( cudaStreamSynchronize(stream) );
-  std::cout << "MAKE_CLUSTERS 4" << std::endl;
+
   kernel_find_clusters<<<gridSize,blockSize,0,stream>>>(mDevSeeds, mDevFollowers,
 							mDevPoints, mCLUESoA,
 							mOutlierDeltaFactor, mDc, mKappa,
 							nhits);
   cudaCheck( cudaStreamSynchronize(stream) );
-  std::cout << "MAKE_CLUSTERS 5" << std::endl;
   
   ////////////////////////////////////////////
   // assign clusters
@@ -77,5 +71,4 @@ void HGCalCLUEAlgoGPUEM::make_clusters(const unsigned nhits,
   kernel_assign_clusters<<<gridSize_nseeds,blockSize,0,stream>>>(mDevSeeds, mDevFollowers, mCLUESoA,
 								 nhits);
   cudaCheck( cudaStreamSynchronize(stream) );
-  std::cout << "MAKE_CLUSTERS 6" << std::endl;
 }

@@ -17,14 +17,6 @@
 #include "CUDADataFormats/HGCal/interface/HGCCLUESoA.h"
 #include "CUDADataFormats/HGCal/interface/HGCConditions.h"
 
-namespace clue_gpu {
-  //number of float pointers in the CLUE EM SoA
-  constexpr unsigned float_hgcclue_inemsoa = 4;
-  constexpr unsigned int32_hgcclue_inemsoa = 1;
-  //number of different pointer types in the CLUE EM SoA
-  constexpr unsigned ntypes_hgcclue_inemsoa = 2;
-} // namespace npointers
-
 class HGCalCLUEAlgoGPUEM final: public HGCalCLUEAlgoGPUBase {
 public:
   HGCalCLUEAlgoGPUEM(float, float, float, float,
@@ -37,7 +29,7 @@ public:
   void make_clusters(const unsigned, const cudaStream_t&) override;
 
 private:
-  static constexpr unsigned mNThreadsEM = 1024;
+  static constexpr unsigned mNThreadsEM = 1;
   clue_gpu::HGCCLUEInputSoAEM mDevPoints;
 
   void set_input_SoA_layout(const uint32_t, const cudaStream_t&);
