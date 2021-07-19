@@ -46,12 +46,14 @@ void kernel_compute_histogram( LayerTilesGPU *hist,
 			       int numberOfPoints
 			       )
 {
-  int i = blockIdx.x * blockDim.x + threadIdx.x;
-  if(i < numberOfPoints) {
-    if( is_energy_valid(in.energy[i]) )
-      // push index of points into tiles
-      hist[in.layer[i]].fill(in.x[i], in.y[i], i);
-  }
+  int tid = blockIdx.x * blockDim.x + threadIdx.x;
+
+  for (unsigned i = tid; i < numberOfPoints; i += blockDim.x * gridDim.x)
+    {
+      if( is_energy_valid(in.energy[i]) )
+	// push index of points into tiles
+	hist[in.layer[i]].fill(in.x[i], in.y[i], i);
+    }
 } // kernel
 
 __global__
@@ -62,9 +64,10 @@ void kernel_calculate_density( LayerTilesGPU *hist,
 			       int numberOfPoints
 			       ) 
 { 
-  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
-  if (i < numberOfPoints){
+  for (unsigned i = tid; i < numberOfPoints; i += blockDim.x * gridDim.x)
+    {
     double rhoi{0.};
 
     if( is_energy_valid(in.energy[i]) ) {
@@ -119,11 +122,12 @@ void kernel_calculate_distanceToHigher(LayerTilesGPU* hist,
 				       int numberOfPoints
 				       )
 {
-  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
   float dm = outlierDeltaFactor * dc;
 
-  if (i < numberOfPoints){
+  for (unsigned i = tid; i < numberOfPoints; i += blockDim.x * gridDim.x)
+    {
 
     float deltai = std::numeric_limits<float>::max();
     int nearestHigheri = -1;
@@ -189,31 +193,35 @@ void kernel_find_clusters( cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* d_seeds
 			   int numberOfPoints
 			   ) 
 {
-  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
 
-  if (i < numberOfPoints and is_energy_valid(in.energy[i])) {
-    // initialize clusterIndex
-    out.clusterIndex[i] = -1;
-    // determine seed or outlier
-    float deltai = out.delta[i];
-    float rhoi = out.rho[i];
-    float rhoc = kappa * in.sigmaNoise[i];
-    bool isSeed = (deltai > dc) && (rhoi >= rhoc);
-    bool isOutlier = (deltai > outlierDeltaFactor * dc) && (rhoi < rhoc);
+  for (unsigned i = tid; i < numberOfPoints; i += blockDim.x * gridDim.x)
+    {
+      if (is_energy_valid(in.energy[i])) {
+	// initialize clusterIndex
+	out.clusterIndex[i] = -1;
+	// determine seed or outlier
+	float deltai = out.delta[i];
+	float rhoi = out.rho[i];
+	float rhoc = kappa * in.sigmaNoise[i];
+	bool isSeed = (deltai > dc) && (rhoi >= rhoc);
+	bool isOutlier = (deltai > outlierDeltaFactor * dc) && (rhoi < rhoc);
 
-    if (isSeed) {
-      // set isSeed as 1
-      out.isSeed[i] = 1;
-      d_seeds[0].push_back(i); // head of d_seeds
-    } else {
-      if (!isOutlier) {
-        assert(out.nearestHigher[i] < numberOfPoints);
-        // register as follower of its nearest higher
-        d_followers[out.nearestHigher[i]].push_back(i);  
+	if (isSeed) {
+	  // set isSeed as 1
+	  out.isSeed[i] = 1;
+	  d_seeds[0].push_back(i); // head of d_seeds
+	} else {
+	  if (!isOutlier) {
+	    assert(out.nearestHigher[i] < numberOfPoints);
+	    // register as follower of its nearest higher
+	    d_followers[out.nearestHigher[i]].push_back(i);  
+	  }
+	}
       }
-    }
-  }
+    } // for
+  
 } //kernel
 
 
@@ -224,37 +232,40 @@ void kernel_assign_clusters( const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>*
 {
   
   int idxCls = blockIdx.x * blockDim.x + threadIdx.x;
+
   const auto& seeds = d_seeds[0];
   const auto nSeeds = seeds.size();
-  if (idxCls < nSeeds){
 
-    int localStack[clue_gpu::localStackSizePerSeed] = {-1};
-    int localStackSize = 0;
+  for (unsigned i = idxCls; i < nSeeds; i += blockDim.x * gridDim.x)
+    {
+      int localStack[clue_gpu::localStackSizePerSeed] = {-1};
+      int localStackSize = 0;
 
-    // asgine cluster to seed[idxCls]
-    int idxThisSeed = seeds[idxCls];
-    out.clusterIndex[idxThisSeed] = idxCls;
-    // push_back idThisSeed to localStack
-    localStack[localStackSize] = idxThisSeed;
-    localStackSize++;
-    // process all elements in localStack
-    while (localStackSize>0){
-      // get last element of localStack
-      int idxEndOflocalStack = localStack[localStackSize-1];
+      // assign cluster to seed[i]
+      int idxThisSeed = seeds[i];
+      out.clusterIndex[idxThisSeed] = i;
+      // push_back idThisSeed to localStack
+      localStack[localStackSize] = idxThisSeed;
+      localStackSize++;
+      // process all elements in localStack
 
-      int temp_clusterIndex = out.clusterIndex[idxEndOflocalStack];
-      // pop_back last element of localStack
-      localStack[localStackSize-1] = -1;
-      localStackSize--;
-      
-      // loop over followers of last element of localStack
-      for( int j : d_followers[idxEndOflocalStack]){
-        // // pass id to follower
-        out.clusterIndex[j] = temp_clusterIndex;
-        // push_back follower to localStack
-        //localStack[localStackSize] = j;
-        localStackSize++;
+      while (localStackSize>0) {
+	// get last element of localStack
+	int idxEndOflocalStack = localStack[localStackSize-1];
+	int temp_clusterIndex = out.clusterIndex[idxEndOflocalStack];
+	// pop_back last element of localStack
+	localStack[localStackSize-1] = -1;
+	localStackSize--;
+	
+	// loop over followers of last element of localStack
+	for( int j : d_followers[idxEndOflocalStack]){
+	  // pass id to follower
+	  out.clusterIndex[j] = temp_clusterIndex;
+	  // push_back follower to localStack
+	  localStack[localStackSize] = j;
+	  localStackSize++;
+	  assert(localStackSize <= clue_gpu::localStackSizePerSeed);
+	}
       }
-    }
-  }
+    } // for
 } // kernel

@@ -13,9 +13,6 @@ namespace cms {
     template <class T, int maxSize>
     class VecArray {
     public:
-      using self = VecArray<T, maxSize>;
-      using value_t = T;
-
       inline constexpr int push_back_unsafe(const T &element) {
         auto previousSize = m_size;
         m_size++;

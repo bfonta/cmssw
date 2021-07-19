@@ -14,9 +14,15 @@
 
 namespace clue_gpu {
   static const int maxNSeeds = 100000; 
-  static const int maxNFollowers = 20; 
-  static const int localStackSizePerSeed = 20;
+  static const int maxNFollowers = 2000; 
+  static const int localStackSizePerSeed = 2000;
   static const float unphysicalEnergy = -1.f;
+
+  //number of float pointers in the CLUE EM SoA
+  constexpr unsigned float_hgcclue_inemsoa = 4;
+  constexpr unsigned int32_hgcclue_inemsoa = 1;
+  //number of different pointer types in the CLUE EM SoA
+  constexpr unsigned ntypes_hgcclue_inemsoa = 2;
 
   class HGCCLUEInputSoAEM {
   public:
