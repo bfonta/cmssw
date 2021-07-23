@@ -24,6 +24,21 @@ void HGCalCLUEAlgoGPUBase::allocate_common_memory_blocks(uint32_t nhits) {
   cudaMalloc(&mDevFollowers, sizeof(cms::cuda::VecArray<int,clue_gpu::maxNFollowers>)*nhits);
 }
 
+void HGCalCLUEAlgoGPUBase::set_memory(uint32_t nhits) {
+  // // result variables
+  cudaMemset(mCLUESoA.rho,           0x00, sizeof(float)*nhits);
+  cudaMemset(mCLUESoA.delta,         0x00, sizeof(float)*nhits);
+  cudaMemset(mCLUESoA.nearestHigher, 0x00, sizeof(int)*nhits);
+  cudaMemset(mCLUESoA.clusterIndex,  0x00, sizeof(int)*nhits);
+  cudaMemset(mCLUESoA.isSeed,        0x00, sizeof(int)*nhits);
+  
+  // algorithm internal variables
+  cudaMemset(mDevHist, 0x00, sizeof(LayerTilesGPU) * NLAYERS);
+  cudaMemset(mDevSeeds, 0x00, sizeof(GPU::VecArray<int,clue_gpu::maxNSeeds>));
+  cudaMemset(mDevFollowers, 0x00, sizeof(GPU::VecArray<int,clue_gpu::maxNFollowers>)*nhits);
+}
+      
+
 uint32_t HGCalCLUEAlgoGPUBase::calculate_padding(uint32_t nhits) {
   //align to warp boundary (assumption: warpSize = 32)
   return ((nhits - 1) / 32 + 1) * 32;

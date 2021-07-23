@@ -5,6 +5,7 @@
 #include "RecoLocalCalo/HGCalRecProducers/plugins/HGCalCLUEAlgoGPUEMKernelImpl.cuh"
 
 #include "HeterogeneousCore/CUDAUtilities/interface/VecArray.h"
+#include "HeterogeneousCore/CUDAUtilities/interface/cuda_assert.h"
 
 __device__
 bool is_energy_valid(float en) {
@@ -27,6 +28,8 @@ void kernel_fill_input_soa(ConstHGCRecHitSoA hits,
 
     in.x[i] = conds->posmap.x[shift];
     in.y[i] = conds->posmap.y[shift];
+    if(i==0 or i==100 or i==200 or i==300 or i==400)
+      printf("[HGCalCLUEAlgoKernelImpl.cu] shift=%u, x=%f, y=%f, in_detid=%u, map_detid=%u\n", shift, conds->posmap.x[shift], conds->posmap.y[shift], hits.id[i], conds->posmap.detid[shift]);
 
     if(shift<static_cast<unsigned>(conds->posmap.nCellsTot)) { //silicon
       HeterogeneousHGCSiliconDetId did(hits.id[i]);
@@ -228,7 +231,7 @@ void kernel_find_clusters( cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* d_seeds
 __global__
 void kernel_assign_clusters( const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* d_seeds, 
 			     const cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* d_followers,
-			     HGCCLUESoA out, int numberOfPoints)
+			     HGCCLUESoA out)
 {
   
   int idxCls = blockIdx.x * blockDim.x + threadIdx.x;
@@ -240,7 +243,7 @@ void kernel_assign_clusters( const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>*
     {
       int localStack[clue_gpu::localStackSizePerSeed] = {-1};
       int localStackSize = 0;
-
+      
       // assign cluster to seed[i]
       int idxThisSeed = seeds[i];
       out.clusterIndex[idxThisSeed] = i;
@@ -250,22 +253,27 @@ void kernel_assign_clusters( const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>*
       // process all elements in localStack
 
       while (localStackSize>0) {
-	// get last element of localStack
-	int idxEndOflocalStack = localStack[localStackSize-1];
-	int temp_clusterIndex = out.clusterIndex[idxEndOflocalStack];
-	// pop_back last element of localStack
-	localStack[localStackSize-1] = -1;
-	localStackSize--;
+      	// get last element of localStack
+      	int idxEndOflocalStack = localStack[localStackSize-1];
+      	int temp_clusterIndex = out.clusterIndex[idxEndOflocalStack];
+      	// pop_back last element of localStack
+  	localStack[localStackSize-1] = -1;
+      	localStackSize--;
 	
 	// loop over followers of last element of localStack
-	for( int j : d_followers[idxEndOflocalStack]){
-	  // pass id to follower
-	  out.clusterIndex[j] = temp_clusterIndex;
-	  // push_back follower to localStack
-	  localStack[localStackSize] = j;
+      	for( int j : d_followers[idxEndOflocalStack]){
+	//for( int j : d_followers[0]){
+      	  // pass id to follower
+      	  out.clusterIndex[j] = temp_clusterIndex;
+      	  // push_back follower to localStack
+      	  localStack[localStackSize] = j;
 	  localStackSize++;
-	  assert(localStackSize <= clue_gpu::localStackSizePerSeed);
+      	  assert(localStackSize <= clue_gpu::localStackSizePerSeed);
+	  assert(idxEndOflocalStack <= clue_gpu::maxNFollowers);
 	}
+      
       }
+      
     } // for
+  
 } // kernel

@@ -30,7 +30,7 @@ from SimCalorimetry.HGCalSimProducers.hgcalDigitizer_cfi import HGCAL_noise_fC, 
 from FWCore.ParameterSet.VarParsing import VarParsing
 F = VarParsing('analysis')
 F.register('PU',
-           -1,
+           0,
            F.multiplicity.singleton,
            F.varType.int,
            "Pileup to consider.")
@@ -55,7 +55,7 @@ process.TFileService = cms.Service("TFileService",
 
     
 process.source = getHeterogeneousRecHitsSource(F.PU)
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(20) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(4) )
 process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool( False )) #add option for edmStreams
 
