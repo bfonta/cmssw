@@ -55,6 +55,6 @@ void kernel_find_clusters( cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* d_seeds
 __global__
 void kernel_assign_clusters( const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* d_seeds, 
 			     const cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* d_followers,
-			     HGCCLUESoA out, int numberOfPoints);
+			     HGCCLUESoA out);
 
 #endif //RecoLocalCalo_HGCalRecProducers_HGCalCLUEAlgoGPUEMKernelImpl_cuh

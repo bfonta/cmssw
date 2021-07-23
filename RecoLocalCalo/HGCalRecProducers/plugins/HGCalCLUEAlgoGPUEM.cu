@@ -32,17 +32,21 @@ void HGCalCLUEAlgoGPUEM::populate(const ConstHGCRecHitSoA& hits,
   const unsigned nhits = hits.nhits;
   set_input_SoA_layout(nhits, stream);
   allocate_common_memory_blocks(nhits);
+  set_memory(nhits);
 
   const dim3 blockSize(mNThreadsEM,1,1);
   const dim3 gridSize( calculate_block_multiplicity(nhits, blockSize.x), 1, 1 );
 
   kernel_fill_input_soa<<<gridSize,blockSize,0,stream>>>(hits, mDevPoints, conds, mEcut);
+
+  cudaCheck( cudaStreamSynchronize(stream) );
 }
 
 void HGCalCLUEAlgoGPUEM::make_clusters(const unsigned nhits,
 				       const cudaStream_t &stream) {
   const dim3 blockSize(mNThreadsEM,1,1);
-  const dim3 gridSize( calculate_block_multiplicity(nhits, blockSize.x), 1, 1 );
+  //const dim3 gridSize( calculate_block_multiplicity(nhits, blockSize.x), 1, 1 );
+  const dim3 gridSize( 1, 1, 1 );
 
   ////////////////////////////////////////////
   // calculate rho, delta and find seeds
@@ -61,14 +65,12 @@ void HGCalCLUEAlgoGPUEM::make_clusters(const unsigned nhits,
 							mDevPoints, mCLUESoA,
 							mOutlierDeltaFactor, mDc, mKappa,
 							nhits);
-  cudaCheck( cudaStreamSynchronize(stream) );
   
   ////////////////////////////////////////////
   // assign clusters
   // 1 point per seeds
   ////////////////////////////////////////////
-  const dim3 gridSize_nseeds( calculate_block_multiplicity(clue_gpu::maxNSeeds, blockSize.x), 1, 1 );
-  kernel_assign_clusters<<<gridSize_nseeds,blockSize,0,stream>>>(mDevSeeds, mDevFollowers, mCLUESoA,
-								 nhits);
-  cudaCheck( cudaStreamSynchronize(stream) );
+  // const dim3 gridSize_nseeds( calculate_block_multiplicity(clue_gpu::maxNSeeds, blockSize.x), 1, 1 );
+  const dim3 gridSize_nseeds( 1, 1, 1 );
+  kernel_assign_clusters<<<gridSize_nseeds,blockSize,0,stream>>>(mDevSeeds, mDevFollowers, mCLUESoA);
 }

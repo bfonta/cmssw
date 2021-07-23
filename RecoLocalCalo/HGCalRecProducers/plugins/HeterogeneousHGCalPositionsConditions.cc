@@ -281,7 +281,7 @@ HeterogeneousHGCalPositionsConditions::getHeterogeneousConditionsESProductAsync(
     cudaCheck(cudaMalloc(&data.device, sizeof(hgcal_conditions::HeterogeneousPositionsConditionsESProduct)));
 
     // Transfer the payload, first the array(s) ...
-    //Important: The transfer does *not* start at posmap.x because the positions are not known in the CPU side!
+    // Important: The transfer does *not* start at posmap.x because the positions are not known in the CPU side!
     size_t non_position_memory_size_to_transfer =
         this->chunk_ - this->number_position_arrays * this->nelems_posmap_ *
                            sfloat;  //size in bytes occupied by the non-position information

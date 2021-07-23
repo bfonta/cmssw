@@ -56,6 +56,7 @@ protected:
   uint32_t calculate_padding(uint32_t);
   float calculate_block_multiplicity(unsigned, unsigned);
   void allocate_common_memory_blocks(uint32_t);
+  void set_memory(uint32_t nhits);
   cms::cuda::device::unique_ptr<std::byte[]> allocate_soa_memory_block(uint32_t,
 								       uint32_t,
 								       const cudaStream_t &);

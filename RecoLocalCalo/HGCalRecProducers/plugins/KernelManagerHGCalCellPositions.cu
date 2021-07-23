@@ -6,7 +6,7 @@
 
 namespace {  //kernel parameters
   dim3 nb_celpos_;
-  constexpr dim3 nt_celpos_(256);
+  constexpr dim3 nt_celpos_(1024);
 }  // namespace
 
 KernelManagerHGCalCellPositions::KernelManagerHGCalCellPositions(const size_t& nelems) {
