@@ -1,8 +1,8 @@
-#ifndef L1Trigger_L1THGCal_HGCalModuleDetId_H
-#define L1Trigger_L1THGCal_HGCalModuleDetId_H 1
+#ifndef DataFormats_ForwardDetId_HGCalTriggerModuleDetId_H
+#define DataFormats_ForwardDetId_HGCalTriggerModuleDetId_H 1
 
-#include "L1Trigger/L1THGCal/interface/HGCalBackendCommon.h"
 #include "DataFormats/DetId/interface/DetId.h"
+#include "DataFormats/ForwardDetId/interface/HGCalTriggerBackendCommon.h"
 #include "DataFormats/ForwardDetId/interface/ForwardSubdetector.h"
 
 /* \brief description of the bit assigment
@@ -23,29 +23,29 @@
 
    [21:21] z-side (0 for +z; 1 for -z)
    [22:23] Trigger Subdetector Type(HGCEE/HGCHEF/HGCHEB/HFNose) 
-   [24:24] Class identifier (0 for HGCalModuleDetID, 1 for HGCalBackendDetID)
+   [24:24] Class identifier (0 for HGCalTriggerModuleDetID, 1 for HGCalTriggerBackendDetID)
    [25:27] Subdetector Type (HGCTrigger)
    [28:31] Detector type (Forward)
 */
 
-class HGCalModuleDetId : public DetId {
+class HGCalTriggerModuleDetId : public DetId {
 public:
   /** Create a null module id*/
-  HGCalModuleDetId();
+  HGCalTriggerModuleDetId();
   /** Create module id from raw id (0=invalid id) */
-  HGCalModuleDetId(uint32_t rawid);
+  HGCalTriggerModuleDetId(uint32_t rawid);
   /** Constructor from subdetector, zplus, type, layer, sector, module numbers */
-  HGCalModuleDetId(HGCalTriggerSubdetector subdet, int zp, int type, int layer, int sector, int moduleU, int moduleV);
+  HGCalTriggerModuleDetId(HGCalTriggerSubdetector subdet, int zp, int type, int layer, int sector, int moduleU, int moduleV);
   /** Constructor from a generic det id */
-  HGCalModuleDetId(const DetId& id);
+  HGCalTriggerModuleDetId(const DetId& id);
   /** Assignment from a generic det id */
-  HGCalModuleDetId& operator=(const DetId& id);
+  HGCalTriggerModuleDetId& operator=(const DetId& id);
 
   /// get the trigger sub-detector
   int triggerSubdetId() const { return (id_ >> kHGCalTriggerSubdetOffset) & kHGCalTriggerSubdetMask; }
 
   /// get the class
-  int classId() const { return (id_ >> kHGCalClassIdentifierOffset) & kHGCalClassIdentifierMask; }
+  int classId() const { return (id_ >> kHGCalTriggerClassIdentifierOffset) & kHGCalTriggerClassIdentifierMask; }
 
   /// get the type
   int type() const { return (id_ >> kHGCalTypeOffset) & kHGCalTypeMask; }
@@ -78,10 +78,10 @@ public:
   bool isHScintillator() const { return (triggerSubdetId() == HGCalHScTrigger); }
   bool isForward() const { return true; }
   bool isHGCTrigger() const { return true; }
-  bool isHGCalModuleDetId() const { return (classId() == HGCalClassIdentifier::ModuleDetId); }
-  bool isHGCalBackendDetId() const { return (classId() == HGCalClassIdentifier::BackendDetId); }
+  bool isHGCalModuleDetId() const { return (classId() == HGCalTriggerClassIdentifier::ModuleDetId); }
+  bool isHGCalBackendDetId() const { return (classId() == HGCalTriggerClassIdentifier::BackendDetId); }
 
-  static const HGCalModuleDetId Undefined;
+  static const HGCalTriggerModuleDetId Undefined;
 
   static const int kHGCalModuleUOffset = 0;
   static const int kHGCalModuleUMask = 0xF;
@@ -97,10 +97,10 @@ public:
   static const int kHGCalZsideMask = 0x1;
   static const int kHGCalTriggerSubdetOffset = 22;
   static const int kHGCalTriggerSubdetMask = 0x3;
-  static const int kHGCalClassIdentifierOffset = 24;
-  static const int kHGCalClassIdentifierMask = 0x1;
+  static const int kHGCalTriggerClassIdentifierOffset = 24;
+  static const int kHGCalTriggerClassIdentifierMask = 0x1;
 };
 
-std::ostream& operator<<(std::ostream&, const HGCalModuleDetId& id);
+std::ostream& operator<<(std::ostream&, const HGCalTriggerModuleDetId& id);
 
 #endif

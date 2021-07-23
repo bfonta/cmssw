@@ -5,7 +5,7 @@
 #include "DataFormats/ForwardDetId/interface/HFNoseDetId.h"
 #include "DataFormats/ForwardDetId/interface/HFNoseTriggerDetId.h"
 #include "DataFormats/ForwardDetId/interface/HGCalTriggerDetId.h"
-#include "L1Trigger/L1THGCal//interface/HGCalModuleDetId.h"
+#include "DataFormats/ForwardDetId/interface/HGCalTriggerModuleDetId.h"
 #include "Geometry/HcalCommonData/interface/HcalHitRelabeller.h"
 #include "Geometry/Records/interface/CaloGeometryRecord.h"
 #include "SimDataFormats/CaloTest/interface/HGCalTestNumbering.h"
@@ -106,7 +106,7 @@ unsigned HGCalTriggerTools::layer(const DetId& id) const {
   if (id.det() == DetId::Forward && id.subdetId() == ForwardSubdetector::HFNose) {
     layer = HFNoseDetId(id).layer();
   } else if (id.det() == DetId::Forward && id.subdetId() == ForwardSubdetector::HGCTrigger) {
-    layer = HGCalModuleDetId(id).layer();
+    layer = HGCalTriggerModuleDetId(id).layer();
   } else if (id.det() == DetId::HGCalEE || id.det() == DetId::HGCalHSi) {
     layer = HGCSiliconDetId(id).layer();
   } else if (id.det() == DetId::HGCalTrigger &&
@@ -140,7 +140,7 @@ bool HGCalTriggerTools::isEm(const DetId& id) const {
   if (id.det() == DetId::Forward && id.subdetId() == ForwardSubdetector::HFNose) {
     em = HFNoseDetId(id).isEE();
   } else if (id.det() == DetId::Forward && id.subdetId() == ForwardSubdetector::HGCTrigger) {
-    em = HGCalModuleDetId(id).isEE();
+    em = HGCalTriggerModuleDetId(id).isEE();
   } else if (id.det() == DetId::HGCalEE) {
     em = true;
   } else if (id.det() == DetId::HGCalTrigger &&
@@ -167,7 +167,7 @@ bool HGCalTriggerTools::isNose(const DetId& id) const {
 bool HGCalTriggerTools::isSilicon(const DetId& id) const {
   bool silicon = false;
   if (id.det() == DetId::Forward && id.subdetId() == HGCTrigger) {
-    silicon = (HGCalModuleDetId(id).triggerSubdetId() != HGCalHScTrigger);
+    silicon = (HGCalTriggerModuleDetId(id).triggerSubdetId() != HGCalHScTrigger);
   } else if (id.det() == DetId::HGCalEE || id.det() == DetId::HGCalHSi) {
     silicon = true;
   } else if (id.det() == DetId::HGCalTrigger &&
@@ -198,7 +198,7 @@ int HGCalTriggerTools::zside(const DetId& id) const {
   if (id.det() == DetId::Forward && id.subdetId() == ForwardSubdetector::HFNose) {
     zside = HFNoseDetId(id).zside();
   } else if (id.det() == DetId::Forward && id.subdetId() == ForwardSubdetector::HGCTrigger) {
-    zside = HGCalModuleDetId(id).zside();
+    zside = HGCalTriggerModuleDetId(id).zside();
   } else if (id.det() == DetId::HGCalEE || id.det() == DetId::HGCalHSi) {
     zside = HGCSiliconDetId(id).zside();
   } else if (id.det() == DetId::HGCalTrigger &&
@@ -225,7 +225,7 @@ int HGCalTriggerTools::thicknessIndex(const DetId& id) const {
   } else if (det == DetId::Forward && id.subdetId() == ForwardSubdetector::HFNose) {
     thickness = HFNoseDetId(id).type();
   } else if (det == DetId::Forward && id.subdetId() == ForwardSubdetector::HGCTrigger) {
-    thickness = HGCalModuleDetId(id).type();
+    thickness = HGCalTriggerModuleDetId(id).type();
   } else if (id.det() == DetId::HGCalTrigger &&
              (HGCalTriggerDetId(id).subdet() == HGCalTriggerSubdetector::HGCalEETrigger ||
               HGCalTriggerDetId(id).subdet() == HGCalTriggerSubdetector::HGCalHSiTrigger)) {

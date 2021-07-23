@@ -1,9 +1,9 @@
-#ifndef L1Trigger_L1THGCal_HGCalBackendDetId_H
-#define L1Trigger_L1THGCal_HGCalBackendDetId_H 1
+#ifndef DataFormats_ForwardDetId_HGCalTriggerBackendDetId_H
+#define DataFormats_ForwardDetId_HGCalTriggerBackendDetId_H 1
 
 #include "DataFormats/DetId/interface/DetId.h"
+#include "DataFormats/ForwardDetId/interface/HGCalTriggerBackendCommon.h"
 #include "DataFormats/ForwardDetId/interface/ForwardSubdetector.h"
-#include "L1Trigger/L1THGCal/interface/HGCalBackendCommon.h"
 
 /* \brief description of the bit assigment
    [0:10]  ID of the lpGBT or Stage 1 FPGA in sector 0 
@@ -14,26 +14,26 @@
                  3 Stage 2 FPGA)
    [16:16] z-side (0 for +z; 1 for -z)
    [19:23] reserved for future use
-   [24:24] Class identifier (0 for HGCalModuleDetID, 1 for HGCalBackendDetID)
+   [24:24] Class identifier (0 for HGCalTriggerModuleDetID, 1 for HGCalTriggerBackendDetID)
    [25:27] Subdetector Type (HGCTrigger)
    [28:31] Detector type (Forward)
 */
 
-class HGCalBackendDetId : public DetId {
+class HGCalTriggerBackendDetId : public DetId {
 public:
   /** Create a null backend id*/
-  HGCalBackendDetId();
+  HGCalTriggerBackendDetId();
   /** Create backend id from raw id (0=invalid id) */
-  HGCalBackendDetId(uint32_t rawid);
+  HGCalTriggerBackendDetId(uint32_t rawid);
   /** Constructor from zplus, type, sector, label */
-  HGCalBackendDetId(int zp, int type, int sector, int label);
+  HGCalTriggerBackendDetId(int zp, int type, int sector, int label);
   /** Constructor from a generic det id */
-  HGCalBackendDetId(const DetId& id);
+  HGCalTriggerBackendDetId(const DetId& id);
   /** Assignment from a generic det id */
-  HGCalBackendDetId& operator=(const DetId& id);
+  HGCalTriggerBackendDetId& operator=(const DetId& id);
 
   /// get the class
-  int classId() const { return (id_ >> kHGCalClassIdentifierOffset) & kHGCalClassIdentifierMask; }
+  int classId() const { return (id_ >> kHGCalTriggerClassIdentifierOffset) & kHGCalTriggerClassIdentifierMask; }
 
   /// get the type
   int type() const { return (id_ >> kHGCalTypeOffset) & kHGCalTypeMask; }
@@ -52,10 +52,10 @@ public:
   bool isStage1Link() const { return (type() == BackendType::Stage1Link); }
   bool isStage2FPGA() const { return (type() == BackendType::Stage2FPGA); }
   bool isForward() const { return true; }
-  bool isHGCalModuleDetId() const { return (classId() == HGCalClassIdentifier::ModuleDetId); }
-  bool isHGCalBackendDetId() const { return (classId() == HGCalClassIdentifier::BackendDetId); }
+  bool isHGCalModuleDetId() const { return (classId() == HGCalTriggerClassIdentifier::ModuleDetId); }
+  bool isHGCalBackendDetId() const { return (classId() == HGCalTriggerClassIdentifier::BackendDetId); }
 
-  static const HGCalBackendDetId Undefined;
+  static const HGCalTriggerBackendDetId Undefined;
 
   static const int kHGCalLabelOffset = 0;
   static const int kHGCalLabelMask = 0x7FF;
@@ -65,12 +65,12 @@ public:
   static const int kHGCalTypeMask = 0x7;
   static const int kHGCalZsideOffset = 16;
   static const int kHGCalZsideMask = 0x1;
-  static const int kHGCalClassIdentifierOffset = 24;
-  static const int kHGCalClassIdentifierMask = 0x1;
+  static const int kHGCalTriggerClassIdentifierOffset = 24;
+  static const int kHGCalTriggerClassIdentifierMask = 0x1;
 
   enum BackendType { LpGBT, Stage1FPGA, Stage1Link, Stage2FPGA };
 };
 
-std::ostream& operator<<(std::ostream&, const HGCalBackendDetId& id);
+std::ostream& operator<<(std::ostream&, const HGCalTriggerBackendDetId& id);
 
 #endif
