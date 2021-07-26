@@ -28,9 +28,10 @@ void kernel_fill_input_soa(ConstHGCRecHitSoA hits,
 
     in.x[i] = conds->posmap.x[shift];
     in.y[i] = conds->posmap.y[shift];
-    if(i==0 or i==100 or i==200 or i==300 or i==400)
-      printf("[HGCalCLUEAlgoKernelImpl.cu] shift=%u, x=%f, y=%f, in_detid=%u, map_detid=%u\n", shift, conds->posmap.x[shift], conds->posmap.y[shift], hits.id[i], conds->posmap.detid[shift]);
-
+    if(i==0 or i==100 or i==200 or i==300 or i==400) {
+      printf("[HGCalCLUEAlgoKernelImpl.cu] shift=%u, x=%f, y=%f, in_detid=%u, map_detid=%u, nelemsposmap=%d\n", shift, conds->posmap.x[i], conds->posmap.y[i], hits.id[i], conds->posmap.detid[shift], conds->nelems_posmap);
+    }
+    
     if(shift<static_cast<unsigned>(conds->posmap.nCellsTot)) { //silicon
       HeterogeneousHGCSiliconDetId did(hits.id[i]);
       in.layer[i] = abs(did.layer());  //remove abs if both endcaps are considered for x and y

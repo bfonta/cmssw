@@ -55,7 +55,7 @@ process.TFileService = cms.Service("TFileService",
 
     
 process.source = getHeterogeneousRecHitsSource(F.PU)
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(4) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1) )
 process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool( False )) #add option for edmStreams
 
