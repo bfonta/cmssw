@@ -9,6 +9,7 @@
 #include "RecoLocalCalo/HGCalRecProducers/interface/LayerTilesGPU.h"
 #include "CUDADataFormats/HGCal/interface/HGCRecHitSoA.h"
 #include "CUDADataFormats/HGCal/interface/ConstHGCRecHitSoA.h"
+#include "CUDADataFormats/HGCal/interface/ConstHGCCLUESoA.h"
 #include "CUDADataFormats/HGCal/interface/HGCCLUESoA.h"
 #include "CUDADataFormats/HGCal/interface/HGCConditions.h"
 
@@ -39,26 +40,30 @@ namespace clue_gpu {
 class HGCalCLUEAlgoGPUBase {
 public:
   HGCalCLUEAlgoGPUBase(float, float, float, float,
-		       const HGCCLUESoA&);
-
+		       const HGCCLUESoA&, uint32_t);
+  HGCalCLUEAlgoGPUBase(const HGCCLUESoA&,
+		       const ConstHGCCLUESoA&, uint32_t);
+  
 protected:
   //when using polymorphism the base destructor should be instead
   //made virtual to avoid not calling the derived destructor
   ~HGCalCLUEAlgoGPUBase();
 
   float mDc, mKappa, mEcut, mOutlierDeltaFactor;
+  uint32_t mNHits, mPad;
   cms::cuda::device::unique_ptr<std::byte[]> mMem;
-  HGCCLUESoA mCLUESoA;
+  HGCCLUESoA mCLUESoAHost, mCLUESoA;
+  ConstHGCCLUESoA mCLUESoADev;
   LayerTilesGPU *mDevHist;
   cms::cuda::VecArray<int,clue_gpu::maxNSeeds> *mDevSeeds;
   cms::cuda::VecArray<int,clue_gpu::maxNFollowers> *mDevFollowers;
 
   uint32_t calculate_padding(uint32_t);
   float calculate_block_multiplicity(unsigned, unsigned);
-  void allocate_common_memory_blocks(uint32_t);
-  void set_memory(uint32_t nhits);
+  void allocate_common_memory_blocks();
+  void set_memory();
+  void copy_tohost(const cudaStream_t&);
   cms::cuda::device::unique_ptr<std::byte[]> allocate_soa_memory_block(uint32_t,
-								       uint32_t,
 								       const cudaStream_t &);
   void free_device();
 
@@ -66,7 +71,7 @@ private:
   virtual void populate(const ConstHGCRecHitSoA&,
 			const hgcal_conditions::HeterogeneousPositionsConditionsESProduct*,
 			const cudaStream_t&) = 0;
-  virtual void make_clusters(const unsigned, const cudaStream_t&) = 0;
+  virtual void make_clusters(const cudaStream_t&) = 0;
 };
 
 #endif // HGCalCLUEAlgoGPUBase_h

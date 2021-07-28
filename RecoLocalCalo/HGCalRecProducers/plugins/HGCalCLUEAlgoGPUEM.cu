@@ -3,68 +3,74 @@
 #include "RecoLocalCalo/HGCalRecProducers/plugins/HGCalCLUEAlgoGPUEM.h"
 
 HGCalCLUEAlgoGPUEM::HGCalCLUEAlgoGPUEM(float dc, float kappa, float ecut, float outlierDeltaFactor,
-				       const HGCCLUESoA& hits_soa)
-  : HGCalCLUEAlgoGPUBase(dc, kappa, ecut, outlierDeltaFactor, hits_soa)
+				       const HGCCLUESoA& hits_soa, uint32_t nhits)
+  : HGCalCLUEAlgoGPUBase(dc, kappa, ecut, outlierDeltaFactor, hits_soa, nhits)
 {}
 
-void HGCalCLUEAlgoGPUEM::set_input_SoA_layout(const uint32_t nhits, const cudaStream_t &stream) {
+HGCalCLUEAlgoGPUEM::HGCalCLUEAlgoGPUEM(const HGCCLUESoA& clueSoAHost,
+				       const ConstHGCCLUESoA& clueSoADev, uint32_t nhits)
+  : HGCalCLUEAlgoGPUBase(clueSoAHost, clueSoADev, nhits)
+{}
+
+void HGCalCLUEAlgoGPUEM::copy_tohost(const cudaStream_t& s) {
+  HGCalCLUEAlgoGPUBase::copy_tohost(s);
+}  
+
+void HGCalCLUEAlgoGPUEM::set_input_SoA_layout(const cudaStream_t &stream) {
   const std::array<uint32_t, clue_gpu::ntypes_hgcclue_inemsoa> sizes_ = {
 		{clue_gpu::float_hgcclue_inemsoa * sizeof(float),
 		 clue_gpu::int32_hgcclue_inemsoa * sizeof(int32_t)}
   };
   const uint32_t size_tot = std::accumulate(sizes_.begin(), sizes_.end(), 0);
-  mMem = allocate_soa_memory_block(size_tot, nhits, stream);
-  const uint32_t pad = calculate_padding(nhits);
+  mMem = allocate_soa_memory_block(size_tot, stream);
   
   //set input SoA memory view
   mDevPoints.x          = reinterpret_cast<float *>(mMem.get());
-  mDevPoints.y          = mDevPoints.x      + pad;
-  mDevPoints.energy     = mDevPoints.y      + pad;
-  mDevPoints.sigmaNoise = mDevPoints.energy + pad;
-  mDevPoints.layer      = reinterpret_cast<int32_t *>(mDevPoints.sigmaNoise + pad);
+  mDevPoints.y          = mDevPoints.x      + mPad;
+  mDevPoints.energy     = mDevPoints.y      + mPad;
+  mDevPoints.sigmaNoise = mDevPoints.energy + mPad;
+  mDevPoints.layer      = reinterpret_cast<int32_t *>(mDevPoints.sigmaNoise + mPad);
 
-  mDevPoints.pad = pad;
+  mDevPoints.pad = mPad;
 }
 				  
 void HGCalCLUEAlgoGPUEM::populate(const ConstHGCRecHitSoA& hits,
 				  const hgcal_conditions::HeterogeneousPositionsConditionsESProduct* conds,
 				  const cudaStream_t& stream) {
-  const unsigned nhits = hits.nhits;
-  set_input_SoA_layout(nhits, stream);
-  allocate_common_memory_blocks(nhits);
-  set_memory(nhits);
+  set_input_SoA_layout(stream);
+  allocate_common_memory_blocks();
+  set_memory();
 
   const dim3 blockSize(mNThreadsEM,1,1);
-  const dim3 gridSize( calculate_block_multiplicity(nhits, blockSize.x), 1, 1 );
+  const dim3 gridSize( calculate_block_multiplicity(mNHits, blockSize.x), 1, 1 );
 
   kernel_fill_input_soa<<<gridSize,blockSize,0,stream>>>(hits, mDevPoints, conds, mEcut);
 
   cudaCheck( cudaStreamSynchronize(stream) );
 }
 
-void HGCalCLUEAlgoGPUEM::make_clusters(const unsigned nhits,
-				       const cudaStream_t &stream) {
+void HGCalCLUEAlgoGPUEM::make_clusters(const cudaStream_t &stream) {
   const dim3 blockSize(mNThreadsEM,1,1);
-  //const dim3 gridSize( calculate_block_multiplicity(nhits, blockSize.x), 1, 1 );
+  //const dim3 gridSize( calculate_block_multiplicity(mNHits, blockSize.x), 1, 1 );
   const dim3 gridSize( 1, 1, 1 );
 
   ////////////////////////////////////////////
   // calculate rho, delta and find seeds
   // 1 point per thread
   ////////////////////////////////////////////
-  kernel_compute_histogram<<<gridSize,blockSize,0,stream>>>(mDevHist, mDevPoints, nhits);
+  kernel_compute_histogram<<<gridSize,blockSize,0,stream>>>(mDevHist, mDevPoints, mNHits);
 
   kernel_calculate_density<<<gridSize,blockSize,0,stream>>>(mDevHist, mDevPoints, mCLUESoA,
-							    mDc, nhits);
+							    mDc, mNHits);
 
   kernel_calculate_distanceToHigher<<<gridSize,blockSize,0,stream>>>(mDevHist, mDevPoints, mCLUESoA,
 								     mOutlierDeltaFactor, mDc,
-								     nhits);
+								     mNHits);
 
   kernel_find_clusters<<<gridSize,blockSize,0,stream>>>(mDevSeeds, mDevFollowers,
 							mDevPoints, mCLUESoA,
 							mOutlierDeltaFactor, mDc, mKappa,
-							nhits);
+							mNHits);
   
   ////////////////////////////////////////////
   // assign clusters
