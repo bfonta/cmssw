@@ -86,9 +86,9 @@ void HGCalLayerClusterProducerEMGPU::acquire(edm::Event const& event,
   const auto* gpuPositionsConds = hPosConds->getHeterogeneousConditionsESProductAsync(ctx.stream());
 
   mAlgo = std::make_unique<HGCalCLUEAlgoGPUEM>(mDc, mKappa, mEcut, mOutlierDeltaFactor,
-					       mClusters.get());
+					       mClusters.get(), nhits);
   mAlgo->populate(eeHits.get(), gpuPositionsConds, ctx.stream());
-  mAlgo->make_clusters(nhits, ctx.stream());
+  mAlgo->make_clusters(ctx.stream());
 }
 
 void HGCalLayerClusterProducerEMGPU::produce(edm::Event& event,

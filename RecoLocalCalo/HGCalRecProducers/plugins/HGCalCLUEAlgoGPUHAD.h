@@ -42,7 +42,7 @@ class HGCalCLUEAlgoGPUHAD final: public HGCalCLUEAlgoGPUBase {
   void populate(const ConstHGCRecHitSoA&,
 		const hgcal_conditions::HeterogeneousPositionsConditionsESProduct*,
 		const cudaStream_t&) override;
-  void make_clusters(const unsigned, const cudaStream_t&) override;
+  void make_clusters(const cudaStream_t&) override;
 
  private:
   static constexpr unsigned mNThreadsHAD = 1024;

@@ -42,6 +42,8 @@ __global__ void fill_positions_from_detids(
       // if(i==0 or i==100 or i==200 or i==300 or i==400) {
       // 	printf("[HGCalCLUEAlgoKernelImpl.cu] x=%f, y=%f\n", conds->posmap.x[i], conds->posmap.y[i]);
       // }
+
+      cudaDeviceSynchronize();
     }
 
     else {
