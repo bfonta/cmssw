@@ -27,3 +27,9 @@ void HGCalCLUEAlgoGPUHAD::populate(const ConstHGCRecHitSoA& hits,
 void HGCalCLUEAlgoGPUHAD::make_clusters(const cudaStream_t &stream) {
   
 }
+
+void HGCalCLUEAlgoGPUHAD::get_clusters(const cudaStream_t &stream) {
+  
+}
+
+

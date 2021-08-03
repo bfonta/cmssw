@@ -6,7 +6,7 @@
 
 #include "DataFormats/EgammaReco/interface/BasicClusterFwd.h"
 
-#include "CUDADataFormats/HGCal/interface/HGCCLUECPUProduct.h"
+#include "CUDADataFormats/HGCal/interface/HGCCLUECPUClustersProduct.h"
 #include "CUDADataFormats/HGCal/interface/ConstHGCCLUESoA.h"
 
 class HGCalLayerClusterProducerEMFromSoA : public edm::stream::EDProducer<> {
@@ -16,38 +16,38 @@ public:
   ~HGCalLayerClusterProducerEMFromSoA() override;
 
   void produce(edm::Event&, const edm::EventSetup&) override;
-  void getClusters_(uint32_t, reco::BasicClusterCollection&, ConstHGCCLUESoA*);
+  void getClusters_(uint32_t, reco::BasicClusterCollection&, ConstHGCCLUEClustersSoA*);
 
 private:
   std::unique_ptr<reco::BasicClusterCollection> out_;
   reco::BasicClusterCollection clusters_;
 
-  edm::EDGetTokenT<HGCCLUECPUProduct> clueSoAToken_;
+  edm::EDGetTokenT<HGCCLUECPUClustersProduct> clueSoAToken_;
   edm::EDPutTokenT<reco::BasicClusterCollection> clueCollectionToken_;
 };
 
 HGCalLayerClusterProducerEMFromSoA::HGCalLayerClusterProducerEMFromSoA(const edm::ParameterSet& ps) {
-  clueSoAToken_ = consumes<HGCCLUECPUProduct>(ps.getParameter<edm::InputTag>("EECLUESoATok"));
+  clueSoAToken_ = consumes<HGCCLUECPUClustersProduct>(ps.getParameter<edm::InputTag>("EECLUESoATok"));
   clueCollectionToken_ = produces<reco::BasicClusterCollection>();
 }
 
 HGCalLayerClusterProducerEMFromSoA::~HGCalLayerClusterProducerEMFromSoA() {}
 
 void HGCalLayerClusterProducerEMFromSoA::produce(edm::Event& event, const edm::EventSetup& setup) {
-  const HGCCLUECPUProduct& clueHits = event.get(clueSoAToken_);
-  ConstHGCCLUESoA clueSoA = clueHits.get();
+  const HGCCLUECPUClustersProduct& clueClusters = event.get(clueSoAToken_);
+  ConstHGCCLUEClustersSoA clueSoA = clueClusters.get();
 
   out_ = std::make_unique<reco::BasicClusterCollection>();
-  getClusters_(clueHits.nHits(), *out_, &clueSoA);
+  getClusters_(clueClusters.nClusters(), *out_, &clueSoA);
   event.put(std::move(out_));
 }
 
-void HGCalLayerClusterProducerEMFromSoA::getClusters_(uint32_t nhits,
+void HGCalLayerClusterProducerEMFromSoA::getClusters_(uint32_t nclusters,
                                                       reco::BasicClusterCollection& out,
-                                                      ConstHGCCLUESoA* soa) {
-  clusters_.reserve(nhits);
+                                                      ConstHGCCLUEClustersSoA* soa) {
+  clusters_.reserve(nclusters);
 
-  // for (uint i = 0; i < nhits; ++i) {
+  // for (uint i = 0; i < nclusters; ++i) {
   //   DetId id_converted(soa->id[i]);
   //   float son = soa->energy[i]/soa->sigmaNoise[i];
   //   cluehits.emplace_back(id_converted,

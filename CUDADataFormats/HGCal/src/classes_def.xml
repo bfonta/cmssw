@@ -7,12 +7,20 @@
   </class>
   <class name="edm::Wrapper<HGCRecHitCPUProduct>" persistent="false"/>
 
-  <class name="cms::cuda::Product<HGCCLUEGPUProduct>" persistent="false"/>
-  <class name="edm::Wrapper<cms::cuda::Product<HGCCLUEGPUProduct>>" persistent="false"/>
+  <class name="cms::cuda::Product<HGCCLUEGPUHitsProduct>" persistent="false"/>
+  <class name="edm::Wrapper<cms::cuda::Product<HGCCLUEGPUHitsProduct>>" persistent="false"/>
 
-  <class name="HGCCLUECPUProduct" persistent="false">
-    <field name="mMemCLUEHost" transient="true" />
+  <class name="HGCCLUECPUHitsProduct" persistent="false">
+    <field name="mMemCLUEHitsHost" transient="true" />
   </class>
-  <class name="edm::Wrapper<HGCCLUECPUProduct>" persistent="false"/>
+  <class name="edm::Wrapper<HGCCLUEHitsCPUProduct>" persistent="false"/>
+
+  <class name="cms::cuda::Product<HGCCLUEGPUClustersProduct>" persistent="false"/>
+  <class name="edm::Wrapper<cms::cuda::Product<HGCCLUEGPUClustersProduct>>" persistent="false"/>
+
+  <class name="HGCCLUECPUClustersProduct" persistent="false">
+    <field name="mMemCLUEClustersHost" transient="true" />
+  </class>
+  <class name="edm::Wrapper<HGCCLUEClustersCPUProduct>" persistent="false"/>
 
 </lcgdict>

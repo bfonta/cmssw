@@ -24,8 +24,10 @@
 
 #include "RecoLocalCalo/HGCalRecProducers/plugins/HGCalCLUEAlgoGPUEM.h"
 
-#include "CUDADataFormats/HGCal/interface/HGCCLUEGPUProduct.h"
-#include "CUDADataFormats/HGCal/interface/HGCCLUECPUProduct.h"
+#include "CUDADataFormats/HGCal/interface/HGCCLUEGPUHitsProduct.h"
+#include "CUDADataFormats/HGCal/interface/HGCCLUECPUHitsProduct.h"
+#include "CUDADataFormats/HGCal/interface/HGCCLUEGPUClustersProduct.h"
+#include "CUDADataFormats/HGCal/interface/HGCCLUECPUClustersProduct.h"
 
 class HGCalLayerClusterProducerEMGPUtoSoA : public edm::stream::EDProducer<edm::ExternalWork> {
 public:
@@ -37,17 +39,24 @@ public:
 
 private:
   cms::cuda::ContextState ctxState_;
-  edm::EDGetTokenT<cms::cuda::Product<HGCCLUEGPUProduct>> clueGPUToken_;
-  edm::EDPutTokenT<HGCCLUECPUProduct> clueCPUSoAToken_;
+  edm::EDGetTokenT<cms::cuda::Product<HGCCLUEGPUHitsProduct>> clueGPUHitsToken_;
+  edm::EDGetTokenT<cms::cuda::Product<HGCCLUEGPUClustersProduct>> clueGPUClustersToken_;
+  edm::EDPutTokenT<HGCCLUECPUHitsProduct> clueCPUHitsSoAToken_;
+  edm::EDPutTokenT<HGCCLUECPUClustersProduct> clueCPUClustersSoAToken_;
 
-  std::unique_ptr<HGCCLUECPUProduct> prodPtr_;
+  std::unique_ptr<HGCCLUECPUHitsProduct> prodHitsPtr_;
+  std::unique_ptr<HGCCLUECPUClustersProduct> prodClustersPtr_;
   std::unique_ptr<HGCalCLUEAlgoGPUEM> mAlgo;
 };
 
 HGCalLayerClusterProducerEMGPUtoSoA::HGCalLayerClusterProducerEMGPUtoSoA(const edm::ParameterSet& ps)
-  : clueGPUToken_{consumes<cms::cuda::Product<HGCCLUEGPUProduct>>(
-          ps.getParameter<edm::InputTag>("EMInputCLUEGPU"))},
-      clueCPUSoAToken_(produces<HGCCLUECPUProduct>()) {}
+  : clueGPUHitsToken_{consumes<cms::cuda::Product<HGCCLUEGPUHitsProduct>>(
+          ps.getParameter<edm::InputTag>("EMInputCLUEHitsGPU"))},
+    clueGPUClustersToken_{consumes<cms::cuda::Product<HGCCLUEGPUClustersProduct>>(
+          ps.getParameter<edm::InputTag>("EMInputCLUEClustersGPU"))},
+    clueCPUHitsSoAToken_(produces<HGCCLUECPUHitsProduct>()),
+    clueCPUClustersSoAToken_(produces<HGCCLUECPUClustersProduct>())
+{}
 
 HGCalLayerClusterProducerEMGPUtoSoA::~HGCalLayerClusterProducerEMGPUtoSoA() {}
 
@@ -55,18 +64,27 @@ void HGCalLayerClusterProducerEMGPUtoSoA::acquire(edm::Event const& event,
                                edm::EventSetup const& setup,
                                edm::WaitingTaskWithArenaHolder w) {
   cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w)};
-  const auto& gpuCLUEHits = ctx.get(event, clueGPUToken_);
+  const auto& gpuCLUEHits = ctx.get(event, clueGPUHitsToken_);
+  const auto& gpuCLUEClusters = ctx.get(event, clueGPUClustersToken_);
   const unsigned nhits(gpuCLUEHits.nHits());
+  const unsigned nclusters(gpuCLUEClusters.nClusters());
+  
+  prodHitsPtr_ = std::make_unique<HGCCLUECPUHitsProduct>(nhits, ctx.stream());
+  prodClustersPtr_ = std::make_unique<HGCCLUECPUHitsProduct>(nhits, ctx.stream());
 
-  prodPtr_ = std::make_unique<HGCCLUECPUProduct>(nhits, ctx.stream());
+  HGCCLUECPUHitsProduct& prodHits_ = *prodHitsPtr_;
+  HGCCLUECPUHitsProduct& prodClusters_ = *prodClustersPtr_;
 
-  HGCCLUECPUProduct& prod_ = *prodPtr_;
-
-  mAlgo = std::make_unique<HGCalCLUEAlgoGPUEM>(prod_.get(), gpuCLUEHits.get(), nhits);
+  mAlgo = std::make_unique<HGCalCLUEAlgoGPUEM>(prodHits_.get(), gpuCLUEHits.get(),
+					       prodClusters_.get(), gpuCLUEClusters.get(),
+					       nhits, nclusters);
   mAlgo->copy_tohost(ctx.stream());
 }
 
-void HGCalLayerClusterProducerEMGPUtoSoA::produce(edm::Event& event, const edm::EventSetup& setup) { event.put(std::move(prodPtr_)); }
+void HGCalLayerClusterProducerEMGPUtoSoA::produce(edm::Event& event, const edm::EventSetup& setup) {
+  event.put(std::move(prodHitsPtr_));
+  event.put(std::move(prodClustersPtr_));
+}
 
 #include "FWCore/Framework/interface/MakerMacros.h"
 DEFINE_FWK_MODULE(HGCalLayerClusterProducerEMGPUtoSoA);

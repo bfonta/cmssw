@@ -63,7 +63,7 @@ void kernel_compute_histogram( LayerTilesGPU *hist,
 __global__
 void kernel_calculate_density( LayerTilesGPU *hist, 
 			       clue_gpu::HGCCLUEInputSoAEM in,
-			       HGCCLUESoA out,
+			       HGCCLUEHitsSoA out,
 			       float dc,
 			       int numberOfPoints
 			       ) 
@@ -120,7 +120,7 @@ void kernel_calculate_density( LayerTilesGPU *hist,
 __global__
 void kernel_calculate_distanceToHigher(LayerTilesGPU* hist, 
 				       clue_gpu::HGCCLUEInputSoAEM in,
-				       HGCCLUESoA out,
+				       HGCCLUEHitsSoA out,
 				       float outlierDeltaFactor,
 				       float dc,
 				       int numberOfPoints
@@ -192,7 +192,7 @@ __global__
 void kernel_find_clusters( cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* d_seeds,
 			   cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* d_followers,
 			   clue_gpu::HGCCLUEInputSoAEM in,
-			   HGCCLUESoA out,
+			   HGCCLUEHitsSoA out,
 			   float outlierDeltaFactor, float dc, float kappa,
 			   int numberOfPoints
 			   ) 
@@ -232,7 +232,7 @@ void kernel_find_clusters( cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* d_seeds
 __global__
 void kernel_assign_clusters( const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* d_seeds, 
 			     const cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* d_followers,
-			     HGCCLUESoA out)
+			     HGCCLUEHitsSoA out)
 {
   
   int idxCls = blockIdx.x * blockDim.x + threadIdx.x;
