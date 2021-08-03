@@ -38,7 +38,6 @@ void HGCalCLUEAlgoGPUEM::populate(const ConstHGCRecHitSoA& hits,
 				  const hgcal_conditions::HeterogeneousPositionsConditionsESProduct* conds,
 				  const cudaStream_t& stream) {
   set_input_SoA_layout(stream);
-  allocate_common_memory_blocks();
   set_memory();
 
   const dim3 blockSize(mNThreadsEM,1,1);

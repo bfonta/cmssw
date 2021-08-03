@@ -27,10 +27,10 @@
 #include "CUDADataFormats/HGCal/interface/HGCCLUEGPUProduct.h"
 #include "CUDADataFormats/HGCal/interface/HGCCLUECPUProduct.h"
 
-class LayerClusterProducerEMGPUtoSoA : public edm::stream::EDProducer<edm::ExternalWork> {
+class HGCalLayerClusterProducerEMGPUtoSoA : public edm::stream::EDProducer<edm::ExternalWork> {
 public:
-  explicit LayerClusterProducerEMGPUtoSoA(const edm::ParameterSet& ps);
-  ~LayerClusterProducerEMGPUtoSoA() override;
+  explicit HGCalLayerClusterProducerEMGPUtoSoA(const edm::ParameterSet& ps);
+  ~HGCalLayerClusterProducerEMGPUtoSoA() override;
 
   void acquire(edm::Event const&, edm::EventSetup const&, edm::WaitingTaskWithArenaHolder) override;
   void produce(edm::Event&, const edm::EventSetup&) override;
@@ -44,14 +44,14 @@ private:
   std::unique_ptr<HGCalCLUEAlgoGPUEM> mAlgo;
 };
 
-LayerClusterProducerEMGPUtoSoA::LayerClusterProducerEMGPUtoSoA(const edm::ParameterSet& ps)
+HGCalLayerClusterProducerEMGPUtoSoA::HGCalLayerClusterProducerEMGPUtoSoA(const edm::ParameterSet& ps)
   : clueGPUToken_{consumes<cms::cuda::Product<HGCCLUEGPUProduct>>(
-          ps.getParameter<edm::InputTag>("EECLUEGPUTok"))},
+          ps.getParameter<edm::InputTag>("EMInputCLUEGPU"))},
       clueCPUSoAToken_(produces<HGCCLUECPUProduct>()) {}
 
-LayerClusterProducerEMGPUtoSoA::~LayerClusterProducerEMGPUtoSoA() {}
+HGCalLayerClusterProducerEMGPUtoSoA::~HGCalLayerClusterProducerEMGPUtoSoA() {}
 
-void LayerClusterProducerEMGPUtoSoA::acquire(edm::Event const& event,
+void HGCalLayerClusterProducerEMGPUtoSoA::acquire(edm::Event const& event,
                                edm::EventSetup const& setup,
                                edm::WaitingTaskWithArenaHolder w) {
   cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w)};
@@ -66,7 +66,7 @@ void LayerClusterProducerEMGPUtoSoA::acquire(edm::Event const& event,
   mAlgo->copy_tohost(ctx.stream());
 }
 
-void LayerClusterProducerEMGPUtoSoA::produce(edm::Event& event, const edm::EventSetup& setup) { event.put(std::move(prodPtr_)); }
+void HGCalLayerClusterProducerEMGPUtoSoA::produce(edm::Event& event, const edm::EventSetup& setup) { event.put(std::move(prodPtr_)); }
 
 #include "FWCore/Framework/interface/MakerMacros.h"
-DEFINE_FWK_MODULE(LayerClusterProducerEMGPUtoSoA);
+DEFINE_FWK_MODULE(HGCalLayerClusterProducerEMGPUtoSoA);

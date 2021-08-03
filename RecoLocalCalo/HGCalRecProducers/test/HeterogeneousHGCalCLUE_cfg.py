@@ -55,7 +55,7 @@ process.TFileService = cms.Service("TFileService",
 
     
 process.source = getHeterogeneousRecHitsSource(F.PU)
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(5) )
 process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool( False )) #add option for edmStreams
 
@@ -64,6 +64,7 @@ process.HeterogeneousHGCalPositionsFiller = cms.ESProducer("HeterogeneousHGCalPo
 
 process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEERecHitGPU_cfi')
 process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEGPU_cfi')
+process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEGPUtoSoA_cfi')
 
 #process.task = cms.Task( process.HeterogeneousHGCalPositionsFiller, process.HeterogeneousHGCalHEFRecHits )
 #process.task = cms.Task( process.HGCalRecHits, process.HeterogeneousHGCalHEFRecHits )
@@ -71,7 +72,7 @@ process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEGPU_cfi')
 #process.HGCalRecHits = HGCalRecHit.clone()
 
 process.ee_task = cms.Task( process.EERecHitGPUProd,
-                            process.EMCLUEGPUProd
+                            process.EMCLUEGPUProd, process.EMCLUEGPUtoSoAProd
 )
 
 process.global_task = cms.Task( process.HeterogeneousHGCalPositionsFiller,
@@ -80,5 +81,5 @@ process.global_task = cms.Task( process.HeterogeneousHGCalPositionsFiller,
 process.path = cms.Path( process.global_task )
 
 process.consumer = cms.EDAnalyzer("GenericConsumer",                     
-                                  eventProducts = cms.untracked.vstring('EMCLUEGPUProd',) )
+                                  eventProducts = cms.untracked.vstring('EMCLUEGPUtoSoAProd',) )
 process.consume_step = cms.EndPath(process.consumer)

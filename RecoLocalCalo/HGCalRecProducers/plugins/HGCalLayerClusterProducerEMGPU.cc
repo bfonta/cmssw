@@ -60,7 +60,7 @@ HGCalLayerClusterProducerEMGPU::HGCalLayerClusterProducerEMGPU(const edm::Parame
     mEcut(ps.getParameter<double>("ecut")),
     mOutlierDeltaFactor(ps.getParameter<double>("outlierDeltaFactor")),
     gpuPositionsTok_(esConsumes<HeterogeneousHGCalPositionsConditions, HeterogeneousHGCalPositionsConditionsRecord>()),
-    InEEToken{consumes<cms::cuda::Product<HGCRecHitGPUProduct>>(ps.getParameter<edm::InputTag>("HGCEEInputGPU"))},
+    InEEToken{consumes<cms::cuda::Product<HGCRecHitGPUProduct>>(ps.getParameter<edm::InputTag>("EMInputRecHitsGPU"))},
     OutEEToken{produces<cms::cuda::Product<HGCCLUEGPUProduct>>()}
 {}
 

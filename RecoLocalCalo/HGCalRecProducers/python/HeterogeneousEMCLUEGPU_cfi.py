@@ -2,7 +2,7 @@ import FWCore.ParameterSet.Config as cms
 from RecoLocalCalo.HGCalRecProducers.HGCalRecHit_cfi import HGCalRecHit
 
 EMCLUEGPUProd = cms.EDProducer('HGCalLayerClusterProducerEMGPU',
-                               HGCEEInputGPU = cms.InputTag('EERecHitGPUProd'),
+                               EMInputRecHitsGPU = cms.InputTag('EERecHitGPUProd'),
                                dc = cms.double(1.3),
                                kappa = cms.double(9.),
                                ecut = cms.double(3.),
