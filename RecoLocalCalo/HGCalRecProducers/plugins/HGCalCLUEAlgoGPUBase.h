@@ -60,7 +60,6 @@ protected:
 
   uint32_t calculate_padding(uint32_t);
   float calculate_block_multiplicity(unsigned, unsigned);
-  void allocate_common_memory_blocks();
   void set_memory();
   void copy_tohost(const cudaStream_t&);
   cms::cuda::device::unique_ptr<std::byte[]> allocate_soa_memory_block(uint32_t,
@@ -72,6 +71,8 @@ private:
 			const hgcal_conditions::HeterogeneousPositionsConditionsESProduct*,
 			const cudaStream_t&) = 0;
   virtual void make_clusters(const cudaStream_t&) = 0;
+
+  bool was_memory_allocated;
 };
 
 #endif // HGCalCLUEAlgoGPUBase_h

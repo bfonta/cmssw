@@ -10,6 +10,12 @@ HGCalCLUEAlgoGPUBase::HGCalCLUEAlgoGPUBase(float pDc, float pKappa, float pEcut,
   : mDc(pDc), mKappa(pKappa), mEcut(pEcut), mOutlierDeltaFactor(pOutlierDeltaFactor), mCLUESoA(pCLUESoA), mNHits(nhits)
 {
   mPad = calculate_padding(mNHits);
+
+  cudaMalloc(&mDevHist, sizeof(LayerTilesGPU) * NLAYERS);
+  cudaMalloc(&mDevSeeds, sizeof(cms::cuda::VecArray<int,clue_gpu::maxNSeeds>) );
+  cudaMalloc(&mDevFollowers, sizeof(cms::cuda::VecArray<int,clue_gpu::maxNFollowers>)*mNHits);
+
+  was_memory_allocated = true;
 }
 
 HGCalCLUEAlgoGPUBase::HGCalCLUEAlgoGPUBase(const HGCCLUESoA& pCLUESoAHost,
@@ -18,21 +24,20 @@ HGCalCLUEAlgoGPUBase::HGCalCLUEAlgoGPUBase(const HGCCLUESoA& pCLUESoAHost,
   : mCLUESoAHost(pCLUESoAHost), mCLUESoADev(pCLUESoADev), mNHits(nhits)
 {
   mPad = calculate_padding(mNHits);
+
+  was_memory_allocated = false;
 }
 
-HGCalCLUEAlgoGPUBase::~HGCalCLUEAlgoGPUBase() { free_device(); }
+HGCalCLUEAlgoGPUBase::~HGCalCLUEAlgoGPUBase() {
+  if(was_memory_allocated)
+    free_device();
+}
     
 void HGCalCLUEAlgoGPUBase::free_device() {
   // algorithm internal variables
   cudaFree(mDevHist);
   cudaFree(mDevSeeds);
   cudaFree(mDevFollowers);
-}
-
-void HGCalCLUEAlgoGPUBase::allocate_common_memory_blocks() {
-  cudaMalloc(&mDevHist, sizeof(LayerTilesGPU) * NLAYERS);
-  cudaMalloc(&mDevSeeds, sizeof(cms::cuda::VecArray<int,clue_gpu::maxNSeeds>) );
-  cudaMalloc(&mDevFollowers, sizeof(cms::cuda::VecArray<int,clue_gpu::maxNFollowers>)*mNHits);
 }
 
 void HGCalCLUEAlgoGPUBase::set_memory() {

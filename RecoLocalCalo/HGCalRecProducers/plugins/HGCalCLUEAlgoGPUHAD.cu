@@ -16,8 +16,6 @@ void HGCalCLUEAlgoGPUHAD::init_device(uint32_t nhits, const cudaStream_t &stream
   // d_points.energy_     = d_points.layer_ + pad;
   // d_points.sigmaNoise_ = d_points.energy_ + pad;
   // d_points.isSi_       = reinterpret_cast<bool *>(d_points.sigmaNoise_ + pad);
-
-  // allocate_common_memory_blocks(nhits);
 }
 
 void HGCalCLUEAlgoGPUHAD::populate(const ConstHGCRecHitSoA& hits,

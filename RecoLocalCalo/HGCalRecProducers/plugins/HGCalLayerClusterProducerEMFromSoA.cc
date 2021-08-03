@@ -4,45 +4,49 @@
 #include "FWCore/Utilities/interface/EDGetToken.h"
 #include "FWCore/Utilities/interface/EDPutToken.h"
 
+#include "DataFormats/EgammaReco/interface/BasicClusterFwd.h"
+
 #include "CUDADataFormats/HGCal/interface/HGCCLUECPUProduct.h"
 #include "CUDADataFormats/HGCal/interface/ConstHGCCLUESoA.h"
 
-using OutColl = ConstHGCCLUESoA; //CHANGE!!!
-
-class LayerClusterProducerEMFromSoA : public edm::stream::EDProducer<> {
+class HGCalLayerClusterProducerEMFromSoA : public edm::stream::EDProducer<> {
 public:
   
-  explicit LayerClusterProducerEMFromSoA(const edm::ParameterSet& ps);
-  ~LayerClusterProducerEMFromSoA() override;
+  explicit HGCalLayerClusterProducerEMFromSoA(const edm::ParameterSet& ps);
+  ~HGCalLayerClusterProducerEMFromSoA() override;
 
   void produce(edm::Event&, const edm::EventSetup&) override;
-  void convert_soa_data_to_collection_(uint32_t, OutColl&, ConstHGCCLUESoA*);
+  void getClusters_(uint32_t, reco::BasicClusterCollection&, ConstHGCCLUESoA*);
 
 private:
-  std::unique_ptr<OutColl> cluehits_;
+  std::unique_ptr<reco::BasicClusterCollection> out_;
+  reco::BasicClusterCollection clusters_;
+
   edm::EDGetTokenT<HGCCLUECPUProduct> clueSoAToken_;
-  edm::EDPutTokenT<OutColl> clueCollectionToken_;
+  edm::EDPutTokenT<reco::BasicClusterCollection> clueCollectionToken_;
 };
 
-LayerClusterProducerEMFromSoA::LayerClusterProducerEMFromSoA(const edm::ParameterSet& ps) {
+HGCalLayerClusterProducerEMFromSoA::HGCalLayerClusterProducerEMFromSoA(const edm::ParameterSet& ps) {
   clueSoAToken_ = consumes<HGCCLUECPUProduct>(ps.getParameter<edm::InputTag>("EECLUESoATok"));
-  clueCollectionToken_ = produces<OutColl>();
+  clueCollectionToken_ = produces<reco::BasicClusterCollection>();
 }
 
-LayerClusterProducerEMFromSoA::~LayerClusterProducerEMFromSoA() {}
+HGCalLayerClusterProducerEMFromSoA::~HGCalLayerClusterProducerEMFromSoA() {}
 
-void LayerClusterProducerEMFromSoA::produce(edm::Event& event, const edm::EventSetup& setup) {
+void HGCalLayerClusterProducerEMFromSoA::produce(edm::Event& event, const edm::EventSetup& setup) {
   const HGCCLUECPUProduct& clueHits = event.get(clueSoAToken_);
   ConstHGCCLUESoA clueSoA = clueHits.get();
-  cluehits_ = std::make_unique<OutColl>();
-  convert_soa_data_to_collection_(clueHits.nHits(), *cluehits_, &clueSoA);
-  event.put(std::move(cluehits_));
+
+  out_ = std::make_unique<reco::BasicClusterCollection>();
+  getClusters_(clueHits.nHits(), *out_, &clueSoA);
+  event.put(std::move(out_));
 }
 
-void LayerClusterProducerEMFromSoA::convert_soa_data_to_collection_(uint32_t nhits,
-                                                      OutColl& cluehits,
+void HGCalLayerClusterProducerEMFromSoA::getClusters_(uint32_t nhits,
+                                                      reco::BasicClusterCollection& out,
                                                       ConstHGCCLUESoA* soa) {
-  // cluehits.reserve(nhits);
+  clusters_.reserve(nhits);
+
   // for (uint i = 0; i < nhits; ++i) {
   //   DetId id_converted(soa->id[i]);
   //   float son = soa->energy[i]/soa->sigmaNoise[i];
@@ -55,8 +59,8 @@ void LayerClusterProducerEMFromSoA::convert_soa_data_to_collection_(uint32_t nhi
   //                        soa->timeError[i]);
   //   cluehits[i].setSignalOverSigmaNoise(son);
   // }
-  printf("TO BE DEFINED!!!!!\n");
+  //TO BE DONE!!!!!
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"
-DEFINE_FWK_MODULE(LayerClusterProducerEMFromSoA);
+DEFINE_FWK_MODULE(HGCalLayerClusterProducerEMFromSoA);
