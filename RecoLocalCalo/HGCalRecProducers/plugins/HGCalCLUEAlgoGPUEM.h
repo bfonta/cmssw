@@ -20,9 +20,10 @@
 class HGCalCLUEAlgoGPUEM final: public HGCalCLUEAlgoGPUBase {
 public:
   HGCalCLUEAlgoGPUEM(float, float, float, float,
-		     const HGCCLUESoA&, uint32_t);
-  HGCalCLUEAlgoGPUEM(const HGCCLUESoA&,
-		     const ConstHGCCLUESoA&, uint32_t);
+		     const HGCCLUEHitsSoA&, const HGCCLUEClustersSoA&, uint32_t);
+  HGCalCLUEAlgoGPUEM(const HGCCLUEHitsSoA&, const ConstHGCCLUEHitsSoA&,
+		     const HGCCLUEClustersSoA&, const ConstHGCCLUEClustersSoA&,
+		     uint32_t, uint32_t);
 
   ~HGCalCLUEAlgoGPUEM() = default;
 
@@ -31,6 +32,7 @@ public:
 		const cudaStream_t&) override;
   void make_clusters(const cudaStream_t&) override;
   void copy_tohost(const cudaStream_t&);
+  void get_clusters(const cudaStream_t&) override;
 
 private:
   static constexpr unsigned mNThreadsEM = 1;

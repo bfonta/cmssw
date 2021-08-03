@@ -26,7 +26,8 @@
 #include "HeterogeneousCore/CUDAServices/interface/CUDAService.h"
 #include "CUDADataFormats/HGCal/interface/HGCRecHitSoA.h"
 #include "CUDADataFormats/HGCal/interface/HGCRecHitGPUProduct.h"
-#include "CUDADataFormats/HGCal/interface/HGCCLUEGPUProduct.h"
+#include "CUDADataFormats/HGCal/interface/HGCCLUEGPUHitsProduct.h"
+#include "CUDADataFormats/HGCal/interface/HGCCLUEGPUClustersProduct.h"
 
 #include "CondFormats/HGCalObjects/interface/HeterogeneousHGCalPositionsConditions.h"
 #include "CondFormats/DataRecord/interface/HeterogeneousHGCalPositionsConditionsRecord.h"
@@ -46,9 +47,11 @@ private:
   edm::ESGetToken<HeterogeneousHGCalPositionsConditions,
 		  HeterogeneousHGCalPositionsConditionsRecord> gpuPositionsTok_;
   edm::EDGetTokenT<cms::cuda::Product<HGCRecHitGPUProduct>> InEEToken;
-  edm::EDPutTokenT<cms::cuda::Product<HGCCLUEGPUProduct>> OutEEToken;
+  edm::EDPutTokenT<cms::cuda::Product<HGCCLUEGPUHitsProduct>> OutEEHitsToken;
+  edm::EDPutTokenT<cms::cuda::Product<HGCCLUEGPUClustersProduct>> OutEEClustersToken;
   cms::cuda::ContextState ctxState_;
-  HGCCLUEGPUProduct mClusters;
+  HGCCLUEGPUHitsProduct mCLUEHits;
+  HGCCLUEGPUClustersProduct mCLUEClusters;
   std::unique_ptr<HGCalCLUEAlgoGPUEM> mAlgo;
 };
 
@@ -61,7 +64,8 @@ HGCalLayerClusterProducerEMGPU::HGCalLayerClusterProducerEMGPU(const edm::Parame
     mOutlierDeltaFactor(ps.getParameter<double>("outlierDeltaFactor")),
     gpuPositionsTok_(esConsumes<HeterogeneousHGCalPositionsConditions, HeterogeneousHGCalPositionsConditionsRecord>()),
     InEEToken{consumes<cms::cuda::Product<HGCRecHitGPUProduct>>(ps.getParameter<edm::InputTag>("EMInputRecHitsGPU"))},
-    OutEEToken{produces<cms::cuda::Product<HGCCLUEGPUProduct>>()}
+    OutEEHitsToken{produces<cms::cuda::Product<HGCCLUEGPUHitsProduct>>()},
+    OutEEClustersToken{produces<cms::cuda::Product<HGCCLUEGPUClustersProduct>>()}
 {}
 
 // void HGCalLayerClusterProducerEMGPU::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
@@ -79,21 +83,27 @@ void HGCalLayerClusterProducerEMGPU::acquire(edm::Event const& event,
   const auto& eeHits = ctx.get(event, InEEToken);
   const unsigned nhits(eeHits.nHits());
   
-  mClusters = HGCCLUEGPUProduct(nhits, ctx.stream());
+  mCLUEHits = HGCCLUEGPUHitsProduct(nhits, ctx.stream());
+  mCLUEClusters = HGCCLUEGPUClustersProduct(nhits, ctx.stream());
 
   //retrieve HGCAL positions conditions data
   auto hPosConds = es.getHandle(gpuPositionsTok_);
   const auto* gpuPositionsConds = hPosConds->getHeterogeneousConditionsESProductAsync(ctx.stream());
 
   mAlgo = std::make_unique<HGCalCLUEAlgoGPUEM>(mDc, mKappa, mEcut, mOutlierDeltaFactor,
-					       mClusters.get(), nhits);
+					       mCLUEHits.get(), mCLUEClusters.get(), nhits);
   mAlgo->populate(eeHits.get(), gpuPositionsConds, ctx.stream());
   mAlgo->make_clusters(ctx.stream());
+
+  cudaStreamSynchronize(ctx.stream());
+
+  mAlgo->get_clusters(ctx.stream());
 }
 
 void HGCalLayerClusterProducerEMGPU::produce(edm::Event& event,
 					     const edm::EventSetup& es) {
   cms::cuda::ScopedContextProduce ctx{ctxState_};
-  ctx.emplace(event, OutEEToken, std::move(mClusters));
+  ctx.emplace(event, OutEEHitsToken, std::move(mCLUEHits));
+  ctx.emplace(event, OutEEClustersToken, std::move(mCLUEClusters));
 }
 #endif  //__RecoLocalCalo_HGCRecProducers_HGCalLayerClusterProducerEMGPU_H__

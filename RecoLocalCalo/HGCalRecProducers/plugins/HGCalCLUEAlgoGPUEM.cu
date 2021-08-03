@@ -3,13 +3,14 @@
 #include "RecoLocalCalo/HGCalRecProducers/plugins/HGCalCLUEAlgoGPUEM.h"
 
 HGCalCLUEAlgoGPUEM::HGCalCLUEAlgoGPUEM(float dc, float kappa, float ecut, float outlierDeltaFactor,
-				       const HGCCLUESoA& hits_soa, uint32_t nhits)
-  : HGCalCLUEAlgoGPUBase(dc, kappa, ecut, outlierDeltaFactor, hits_soa, nhits)
+				       const HGCCLUEHitsSoA& hits_soa, const HGCCLUEClustersSoA& clusters_soa, uint32_t nhits)
+  : HGCalCLUEAlgoGPUBase(dc, kappa, ecut, outlierDeltaFactor, hits_soa, clusters_soa, nhits)
 {}
 
-HGCalCLUEAlgoGPUEM::HGCalCLUEAlgoGPUEM(const HGCCLUESoA& clueSoAHost,
-				       const ConstHGCCLUESoA& clueSoADev, uint32_t nhits)
-  : HGCalCLUEAlgoGPUBase(clueSoAHost, clueSoADev, nhits)
+HGCalCLUEAlgoGPUEM::HGCalCLUEAlgoGPUEM(const HGCCLUEHitsSoA& clueHitsSoAHost, const ConstHGCCLUEHitsSoA& clueHitsSoADev,
+				       const HGCCLUEClustersSoA& clueClustersSoAHost, const ConstHGCCLUEClustersSoA& clueClustersSoADev,
+				       uint32_t nhits, uint32_t nclusters)
+  : HGCalCLUEAlgoGPUBase(clueClustersSoAHost, clueClustersSoADev, clueClustersSoAHost, clueClustersSoADev, nhits)
 {}
 
 void HGCalCLUEAlgoGPUEM::copy_tohost(const cudaStream_t& s) {
@@ -59,15 +60,15 @@ void HGCalCLUEAlgoGPUEM::make_clusters(const cudaStream_t &stream) {
   ////////////////////////////////////////////
   kernel_compute_histogram<<<gridSize,blockSize,0,stream>>>(mDevHist, mDevPoints, mNHits);
 
-  kernel_calculate_density<<<gridSize,blockSize,0,stream>>>(mDevHist, mDevPoints, mCLUESoA,
+  kernel_calculate_density<<<gridSize,blockSize,0,stream>>>(mDevHist, mDevPoints, mCLUEHitsSoA,
 							    mDc, mNHits);
 
-  kernel_calculate_distanceToHigher<<<gridSize,blockSize,0,stream>>>(mDevHist, mDevPoints, mCLUESoA,
+  kernel_calculate_distanceToHigher<<<gridSize,blockSize,0,stream>>>(mDevHist, mDevPoints, mCLUEHitsSoA,
 								     mOutlierDeltaFactor, mDc,
 								     mNHits);
 
   kernel_find_clusters<<<gridSize,blockSize,0,stream>>>(mDevSeeds, mDevFollowers,
-							mDevPoints, mCLUESoA,
+							mDevPoints, mCLUEHitsSoA,
 							mOutlierDeltaFactor, mDc, mKappa,
 							mNHits);
   
@@ -77,5 +78,9 @@ void HGCalCLUEAlgoGPUEM::make_clusters(const cudaStream_t &stream) {
   ////////////////////////////////////////////
   // const dim3 gridSize_nseeds( calculate_block_multiplicity(clue_gpu::maxNSeeds, blockSize.x), 1, 1 );
   const dim3 gridSize_nseeds( 1, 1, 1 );
-  kernel_assign_clusters<<<gridSize_nseeds,blockSize,0,stream>>>(mDevSeeds, mDevFollowers, mCLUESoA);
+  kernel_assign_clusters<<<gridSize_nseeds,blockSize,0,stream>>>(mDevSeeds, mDevFollowers, mCLUEHitsSoA);
+}
+
+void HGCalCLUEAlgoGPUEM::get_clusters(const cudaStream_t &stream) {
+
 }

@@ -40,9 +40,10 @@ namespace clue_gpu {
 class HGCalCLUEAlgoGPUBase {
 public:
   HGCalCLUEAlgoGPUBase(float, float, float, float,
-		       const HGCCLUESoA&, uint32_t);
-  HGCalCLUEAlgoGPUBase(const HGCCLUESoA&,
-		       const ConstHGCCLUESoA&, uint32_t);
+		       const HGCCLUEHitsSoA&, const HGCCLUEClustersSoA&, uint32_t);
+  HGCalCLUEAlgoGPUBase(const HGCCLUEHitsSoA&, const ConstHGCCLUEHitsSoA&,
+		       const HGCCLUEClustersSoA&, const ConstHGCCLUEClustersSoA&,
+		       uint32_t);
   
 protected:
   //when using polymorphism the base destructor should be instead
@@ -52,8 +53,12 @@ protected:
   float mDc, mKappa, mEcut, mOutlierDeltaFactor;
   uint32_t mNHits, mPad;
   cms::cuda::device::unique_ptr<std::byte[]> mMem;
-  HGCCLUESoA mCLUESoAHost, mCLUESoA;
-  ConstHGCCLUESoA mCLUESoADev;
+
+  HGCCLUEHitsSoA mCLUEHitsSoAHost, mCLUEHitsSoA;
+  ConstHGCCLUEHitsSoA mCLUEHitsSoADev;
+  HGCCLUEClustersSoA mCLUEClustersSoAHost, mCLUEClustersSoA;
+  ConstHGCCLUEClustersSoA mCLUEClustersSoADev;
+
   LayerTilesGPU *mDevHist;
   cms::cuda::VecArray<int,clue_gpu::maxNSeeds> *mDevSeeds;
   cms::cuda::VecArray<int,clue_gpu::maxNFollowers> *mDevFollowers;
@@ -71,6 +76,7 @@ private:
 			const hgcal_conditions::HeterogeneousPositionsConditionsESProduct*,
 			const cudaStream_t&) = 0;
   virtual void make_clusters(const cudaStream_t&) = 0;
+  virtual void get_clusters(const cudaStream_t&) = 0;
 
   bool was_memory_allocated;
 };

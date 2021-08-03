@@ -1,5 +1,5 @@
-#ifndef CUDADAtaFormats_HGCal_HGCCLUECPUProduct_H
-#define CUDADAtaFormats_HGCal_HGCCLUECPUProduct_H
+#ifndef CUDADAtaFormats_HGCal_HGCCLUECPUHitsProduct_H
+#define CUDADAtaFormats_HGCal_HGCCLUECPUHitsProduct_H
 
 #include <numeric>
 
@@ -9,23 +9,23 @@
 #include "CUDADataFormats/HGCal/interface/ConstHGCCLUESoA.h"
 #include "CUDADataFormats/HGCal/interface/HGCUncalibRecHitSoA.h"
 
-class HGCCLUECPUProduct {
+class HGCCLUECPUHitsProduct {
 public:
-  HGCCLUECPUProduct() = default;
-  explicit HGCCLUECPUProduct(uint32_t nhits, const cudaStream_t &stream) : nhits_(nhits) {
+  HGCCLUECPUHitsProduct() = default;
+  explicit HGCCLUECPUHitsProduct(uint32_t nhits, const cudaStream_t &stream) : nhits_(nhits) {
     size_tot_ = std::accumulate(sizes_.begin(), sizes_.end(), 0);
     pad_ = ((nhits - 1) / 32 + 1) * 32; //align to warp boundary (assumption: warpSize = 32)
     mMemCLUEHost = cms::cuda::make_host_unique<std::byte[]>(pad_ * size_tot_, stream);
   }
-  ~HGCCLUECPUProduct() = default;
+  ~HGCCLUECPUHitsProduct() = default;
 
-  HGCCLUECPUProduct(const HGCCLUECPUProduct &) = delete;
-  HGCCLUECPUProduct &operator=(const HGCCLUECPUProduct &) = delete;
-  HGCCLUECPUProduct(HGCCLUECPUProduct &&) = default;
-  HGCCLUECPUProduct &operator=(HGCCLUECPUProduct &&) = default;
+  HGCCLUECPUHitsProduct(const HGCCLUECPUHitsProduct &) = delete;
+  HGCCLUECPUHitsProduct &operator=(const HGCCLUECPUHitsProduct &) = delete;
+  HGCCLUECPUHitsProduct(HGCCLUECPUHitsProduct &&) = default;
+  HGCCLUECPUHitsProduct &operator=(HGCCLUECPUHitsProduct &&) = default;
 
-  HGCCLUESoA get() {
-    HGCCLUESoA soa;
+  HGCCLUEHitsSoA get() {
+    HGCCLUEHitsSoA soa;
     soa.rho = reinterpret_cast<float *>(mMemCLUEHost.get());
     soa.delta = soa.rho + pad_;
     soa.nearestHigher = reinterpret_cast<int32_t *>(soa.delta + pad_);
@@ -37,8 +37,8 @@ public:
     return soa;
   }
 
-  ConstHGCCLUESoA get() const {
-    ConstHGCCLUESoA soa;
+  ConstHGCCLUEHitsSoA get() const {
+    ConstHGCCLUEHitsSoA soa;
     soa.rho = reinterpret_cast<float const*>(mMemCLUEHost.get());
     soa.delta = soa.rho + pad_;
     soa.nearestHigher = reinterpret_cast<int32_t const*>(soa.delta + pad_);
@@ -56,13 +56,13 @@ public:
 
 private:
   cms::cuda::host::unique_ptr<std::byte[]> mMemCLUEHost;
-  static constexpr std::array<uint32_t, memory::npointers::ntypes_hgcclue_soa> sizes_ = {
-      {memory::npointers::float_hgcclue_soa * sizeof(float),
-       memory::npointers::int32_hgcclue_soa * sizeof(uint32_t),
-       memory::npointers::bool_hgcclue_soa * sizeof(bool)}};
+  static constexpr std::array<uint32_t, memory::npointers::ntypes_hgccluehits_soa> sizes_ = {
+      {memory::npointers::float_hgccluehits_soa * sizeof(float),
+       memory::npointers::int32_hgccluehits_soa * sizeof(uint32_t),
+       memory::npointers::bool_hgccluehits_soa * sizeof(bool)}};
   uint32_t pad_;
   uint32_t nhits_;
   uint32_t size_tot_;
 };
 
-#endif  //CUDADAtaFormats_HGCal_HGCCLUECPUProduct_H
+#endif  //CUDADAtaFormats_HGCal_HGCCLUECPUHitsProduct_H
