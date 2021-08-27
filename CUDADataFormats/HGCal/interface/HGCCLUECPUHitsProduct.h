@@ -15,7 +15,7 @@ public:
   explicit HGCCLUECPUHitsProduct(uint32_t nhits, const cudaStream_t &stream) : nhits_(nhits) {
     size_tot_ = std::accumulate(sizes_.begin(), sizes_.end(), 0);
     pad_ = ((nhits - 1) / 32 + 1) * 32; //align to warp boundary (assumption: warpSize = 32)
-    mMemCLUEHost = cms::cuda::make_host_unique<std::byte[]>(pad_ * size_tot_, stream);
+    mMemCLUEHitsHost = cms::cuda::make_host_unique<std::byte[]>(pad_ * size_tot_, stream);
   }
   ~HGCCLUECPUHitsProduct() = default;
 
@@ -26,7 +26,7 @@ public:
 
   HGCCLUEHitsSoA get() {
     HGCCLUEHitsSoA soa;
-    soa.rho = reinterpret_cast<float *>(mMemCLUEHost.get());
+    soa.rho = reinterpret_cast<float *>(mMemCLUEHitsHost.get());
     soa.delta = soa.rho + pad_;
     soa.nearestHigher = reinterpret_cast<int32_t *>(soa.delta + pad_);
     soa.clusterIndex = soa.nearestHigher + pad_;
@@ -39,7 +39,7 @@ public:
 
   ConstHGCCLUEHitsSoA get() const {
     ConstHGCCLUEHitsSoA soa;
-    soa.rho = reinterpret_cast<float const*>(mMemCLUEHost.get());
+    soa.rho = reinterpret_cast<float const*>(mMemCLUEHitsHost.get());
     soa.delta = soa.rho + pad_;
     soa.nearestHigher = reinterpret_cast<int32_t const*>(soa.delta + pad_);
     soa.clusterIndex = soa.nearestHigher + pad_;
@@ -55,7 +55,7 @@ public:
   uint32_t nBytes() const { return size_tot_; }
 
 private:
-  cms::cuda::host::unique_ptr<std::byte[]> mMemCLUEHost;
+  cms::cuda::host::unique_ptr<std::byte[]> mMemCLUEHitsHost;
   static constexpr std::array<uint32_t, memory::npointers::ntypes_hgccluehits_soa> sizes_ = {
       {memory::npointers::float_hgccluehits_soa * sizeof(float),
        memory::npointers::int32_hgccluehits_soa * sizeof(uint32_t),

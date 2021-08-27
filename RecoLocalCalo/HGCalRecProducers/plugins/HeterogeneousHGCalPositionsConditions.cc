@@ -300,8 +300,10 @@ HeterogeneousHGCalPositionsConditions::getHeterogeneousConditionsESProductAsync(
                               stream));
 
     //Fill x and y positions in the GPU
-    KernelManagerHGCalCellPositions km(this->nelems_posmap_);
-    km.fill_positions(data.device);
+    unsigned nThreads = 1024;
+    unsigned nBlocks = (this->nelems_posmap_ + nThreads - 1) / nThreads;
+    fill_positions(nThreads, nBlocks, data.device, stream);
+    
   });  //gpuData_.dataForCurrentDeviceAsync
 
   // Returns the payload object on the memory of the current device

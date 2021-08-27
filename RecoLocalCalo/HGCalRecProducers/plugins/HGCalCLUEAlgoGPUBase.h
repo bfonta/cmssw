@@ -40,10 +40,10 @@ namespace clue_gpu {
 class HGCalCLUEAlgoGPUBase {
 public:
   HGCalCLUEAlgoGPUBase(float, float, float, float,
-		       const HGCCLUEHitsSoA&, const HGCCLUEClustersSoA&, uint32_t);
+		       const HGCCLUEHitsSoA&, const HGCCLUEClustersSoA&);
+  
   HGCalCLUEAlgoGPUBase(const HGCCLUEHitsSoA&, const ConstHGCCLUEHitsSoA&,
-		       const HGCCLUEClustersSoA&, const ConstHGCCLUEClustersSoA&,
-		       uint32_t);
+		       const HGCCLUEClustersSoA&, const ConstHGCCLUEClustersSoA&);
   
 protected:
   //when using polymorphism the base destructor should be instead
@@ -51,7 +51,8 @@ protected:
   ~HGCalCLUEAlgoGPUBase();
 
   float mDc, mKappa, mEcut, mOutlierDeltaFactor;
-  uint32_t mNHits, mPad;
+  uint32_t mNHits, mNClusters;
+  uint32_t mPadHits, mPadClusters;
   cms::cuda::device::unique_ptr<std::byte[]> mMem;
 
   HGCCLUEHitsSoA mCLUEHitsSoAHost, mCLUEHitsSoA;

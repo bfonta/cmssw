@@ -6,13 +6,11 @@
 HGCalCLUEAlgoGPUBase::HGCalCLUEAlgoGPUBase(float pDc, float pKappa, float pEcut,
 					   float pOutlierDeltaFactor,
 					   const HGCCLUEHitsSoA& pCLUEHitsSoA,
-					   const HGCCLUEHitsSoA& pCLUEHitsSoA,
-					   uint32_t nhits, uint32_t nclusters)
-  : mDc(pDc), mKappa(pKappa), mEcut(pEcut), mOutlierDeltaFactor(pOutlierDeltaFactor), mCLUEHitsSoA(pCLUEHitsSoA), mCLUEClustersSoA(pCLUEClustersSoA),
-    mNHits(nhits), mNClusters(nclusters)
+					   const HGCCLUEClustersSoA& pCLUEClustersSoA)
+  : mDc(pDc), mKappa(pKappa), mEcut(pEcut), mOutlierDeltaFactor(pOutlierDeltaFactor), mCLUEHitsSoA(pCLUEHitsSoA), mCLUEClustersSoA(pCLUEClustersSoA)
 {
-  mPadHits = calculate_padding(mNHits);
-  mPadClusters = calculate_padding(mNClusters);
+  mPadHits = calculate_padding( pCLUEHitsSoA.nhits );
+  mPadClusters = calculate_padding( pCLUEClustersSoA.nclusters );
 
   cudaMalloc(&mDevHist, sizeof(LayerTilesGPU) * NLAYERS);
   cudaMalloc(&mDevSeeds, sizeof(cms::cuda::VecArray<int,clue_gpu::maxNSeeds>) );
@@ -22,12 +20,11 @@ HGCalCLUEAlgoGPUBase::HGCalCLUEAlgoGPUBase(float pDc, float pKappa, float pEcut,
 }
 
 HGCalCLUEAlgoGPUBase::HGCalCLUEAlgoGPUBase(const HGCCLUEHitsSoA& pCLUEHitsSoAHost, const ConstHGCCLUEHitsSoA& pCLUEHitsSoADev,
-					   const HGCCLUEClustersSoA& pCLUEClustersSoAHost, const ConstHGCCLUEClustersSoA& pCLUEClustersSoADev,
-					   uint32_t nhits)
-  : mCLUEHitsSoAHost(pCLUESoAHost), mCLUEHitsSoADev(pCLUESoADev), mCLUEClustersSoAHost(pCLUESoAHost), mCLUEClustersSoADev(pCLUESoADev), mNHits(nhits)
+					   const HGCCLUEClustersSoA& pCLUEClustersSoAHost, const ConstHGCCLUEClustersSoA& pCLUEClustersSoADev)
+  : mCLUEHitsSoAHost(pCLUEHitsSoAHost), mCLUEHitsSoADev(pCLUEHitsSoADev), mCLUEClustersSoAHost(pCLUEClustersSoAHost), mCLUEClustersSoADev(pCLUEClustersSoADev)
 {
-  mPadHits = calculate_padding(mNHits);
-  mPadClusters = calculate_padding(mNClusters);
+  mPadHits = calculate_padding( pCLUEHitsSoAHost.nhits );
+  mPadClusters = calculate_padding( pCLUEClustersSoAHost.nclusters );
 
   was_memory_allocated = false;
 }

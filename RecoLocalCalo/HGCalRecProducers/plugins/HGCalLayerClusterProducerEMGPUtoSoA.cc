@@ -70,14 +70,13 @@ void HGCalLayerClusterProducerEMGPUtoSoA::acquire(edm::Event const& event,
   const unsigned nclusters(gpuCLUEClusters.nClusters());
   
   prodHitsPtr_ = std::make_unique<HGCCLUECPUHitsProduct>(nhits, ctx.stream());
-  prodClustersPtr_ = std::make_unique<HGCCLUECPUHitsProduct>(nhits, ctx.stream());
+  prodClustersPtr_ = std::make_unique<HGCCLUECPUClustersProduct>(nclusters, ctx.stream());
 
   HGCCLUECPUHitsProduct& prodHits_ = *prodHitsPtr_;
-  HGCCLUECPUHitsProduct& prodClusters_ = *prodClustersPtr_;
+  HGCCLUECPUClustersProduct& prodClusters_ = *prodClustersPtr_;
 
   mAlgo = std::make_unique<HGCalCLUEAlgoGPUEM>(prodHits_.get(), gpuCLUEHits.get(),
-					       prodClusters_.get(), gpuCLUEClusters.get(),
-					       nhits, nclusters);
+					       prodClusters_.get(), gpuCLUEClusters.get());
   mAlgo->copy_tohost(ctx.stream());
 }
 
