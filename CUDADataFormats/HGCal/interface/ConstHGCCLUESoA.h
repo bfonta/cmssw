@@ -10,6 +10,7 @@ public:
   float const *delta; //closest distance to a rechit with a higher density
   int32_t const *nearestHigher; //index of the nearest rechit with a higher density
   int32_t const *clusterIndex;  //cluster index the rechit belongs to
+  uint32_t const *id; //rechit detId
   bool const *isSeed; // is the rechit a cluster seed?
   //Note: isSeed is of type int in the CPU version to to std::vector optimizations
 };

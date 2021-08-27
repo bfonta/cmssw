@@ -22,8 +22,9 @@ namespace clue_gpu {
   //number of float pointers in the CLUE EM SoA
   constexpr unsigned float_hgcclue_inemsoa = 4;
   constexpr unsigned int32_hgcclue_inemsoa = 1;
+  constexpr unsigned uint32_hgcclue_inemsoa = 1;
   //number of different pointer types in the CLUE EM SoA
-  constexpr unsigned ntypes_hgcclue_inemsoa = 2;
+  constexpr unsigned ntypes_hgcclue_inemsoa = 3;
 
   class HGCCLUEInputSoAEM {
   public:
@@ -32,6 +33,7 @@ namespace clue_gpu {
     float *energy; //calibrated energy of the rechit
     float *sigmaNoise; //calibrated noise of the rechit cell
     int32_t *layer; //layer position of the calibrated rechit
+    uint32_t *id; //detid position of the calibrated rechit
     
     uint32_t pad; //pad of memory block (used for warp alignment, slightly larger than 'nhits_')
   };

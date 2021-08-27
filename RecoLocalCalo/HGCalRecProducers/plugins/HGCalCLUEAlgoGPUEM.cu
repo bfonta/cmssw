@@ -19,7 +19,8 @@ void HGCalCLUEAlgoGPUEM::copy_tohost(const cudaStream_t& s) {
 void HGCalCLUEAlgoGPUEM::set_input_SoA_layout(const cudaStream_t &stream) {
   const std::array<uint32_t, clue_gpu::ntypes_hgcclue_inemsoa> sizes_ = {
 		{clue_gpu::float_hgcclue_inemsoa * sizeof(float),
-		 clue_gpu::int32_hgcclue_inemsoa * sizeof(int32_t)}
+		 clue_gpu::int32_hgcclue_inemsoa * sizeof(int32_t),
+		 clue_gpu::int32_hgcclue_inemsoa * sizeof(uint32_t)}
   };
   const uint32_t size_tot = std::accumulate(sizes_.begin(), sizes_.end(), 0);
   mMem = allocate_soa_memory_block(size_tot, stream);
@@ -30,6 +31,7 @@ void HGCalCLUEAlgoGPUEM::set_input_SoA_layout(const cudaStream_t &stream) {
   mDevPoints.energy     = mDevPoints.y      + mPadHits;
   mDevPoints.sigmaNoise = mDevPoints.energy + mPadHits;
   mDevPoints.layer      = reinterpret_cast<int32_t *>(mDevPoints.sigmaNoise + mPadHits);
+  mDevPoints.id         = reinterpret_cast<uint32_t *>(mDevPoints.layer + mPadHits);
 
   mDevPoints.pad = mPadHits;
 }
