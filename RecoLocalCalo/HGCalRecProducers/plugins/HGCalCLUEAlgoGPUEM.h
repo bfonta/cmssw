@@ -20,10 +20,10 @@
 class HGCalCLUEAlgoGPUEM final: public HGCalCLUEAlgoGPUBase {
 public:
   HGCalCLUEAlgoGPUEM(float, float, float, float,
-		     const HGCCLUEHitsSoA&, const HGCCLUEClustersSoA&, uint32_t);
+		     const HGCCLUEHitsSoA&, const HGCCLUEClustersSoA&);
+  
   HGCalCLUEAlgoGPUEM(const HGCCLUEHitsSoA&, const ConstHGCCLUEHitsSoA&,
-		     const HGCCLUEClustersSoA&, const ConstHGCCLUEClustersSoA&,
-		     uint32_t, uint32_t);
+		     const HGCCLUEClustersSoA&, const ConstHGCCLUEClustersSoA&);
 
   ~HGCalCLUEAlgoGPUEM() = default;
 

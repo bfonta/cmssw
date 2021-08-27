@@ -9,24 +9,15 @@
 #include "RecoLocalCalo/HGCalRecProducers/plugins/HGCalCellPositionsKernelImpl.cuh"
 #include "CUDADataFormats/HGCal/interface/HGCConditions.h"
 
-#include <vector>
-#include <algorithm>  //std::swap
-#include <variant>
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-/*
-#ifdef __CUDA_ARCH__
-extern __constant__ uint32_t calo_rechit_masks[];
-#endif
-*/
+void fill_positions(unsigned, unsigned,
+		    const hgcal_conditions::HeterogeneousPositionsConditionsESProduct*,
+		    const cudaStream_t&);
 
-class KernelManagerHGCalCellPositions {
-public:
-  KernelManagerHGCalCellPositions(const size_t&);
-
-  void fill_positions(const hgcal_conditions::HeterogeneousPositionsConditionsESProduct*);
-  void test_cell_positions(unsigned, const hgcal_conditions::HeterogeneousPositionsConditionsESProduct*);
-};
+void test_cell_positions(unsigned, unsigned, unsigned,
+			 const hgcal_conditions::HeterogeneousPositionsConditionsESProduct*,
+			 const cudaStream_t&);
 
 #endif  //RecoLocalCalo_HGCalESProducers_KernelManagerHGCalCellPositions_h

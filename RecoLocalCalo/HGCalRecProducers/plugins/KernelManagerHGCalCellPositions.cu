@@ -4,21 +4,19 @@
 #include "RecoLocalCalo/HGCalRecProducers/plugins/KernelManagerHGCalCellPositions.h"
 #include "RecoLocalCalo/HGCalRecProducers/plugins/HGCalCellPositionsKernelImpl.cuh"
 
-namespace {  //kernel parameters
-  dim3 nb_celpos_;
-  constexpr dim3 nt_celpos_(1024);
-}  // namespace
+void fill_positions(unsigned nthreads, unsigned nblocks,
+		    const hgcal_conditions::HeterogeneousPositionsConditionsESProduct* d_conds,
+		    const cudaStream_t& stream) {
 
-KernelManagerHGCalCellPositions::KernelManagerHGCalCellPositions(const size_t& nelems) {
-  ::nb_celpos_ = (nelems + ::nt_celpos_.x - 1) / ::nt_celpos_.x;
+  dim3 nt(nthreads);
+  dim3 nb(nblocks);
+  fill_positions_from_detids<<<nb, nt, 0, stream>>>(d_conds);
 }
 
-void KernelManagerHGCalCellPositions::fill_positions(
-    const hgcal_conditions::HeterogeneousPositionsConditionsESProduct* d_conds) {
-  fill_positions_from_detids<<<::nb_celpos_, ::nt_celpos_>>>(d_conds);
-}
-
-void KernelManagerHGCalCellPositions::test_cell_positions(
-    unsigned id, const hgcal_conditions::HeterogeneousPositionsConditionsESProduct* d_conds) {
-  test<<<::nb_celpos_, ::nt_celpos_>>>(id, d_conds);
+void test_cell_positions(unsigned nthreads, unsigned nblocks,
+			 unsigned id, const hgcal_conditions::HeterogeneousPositionsConditionsESProduct* d_conds,
+			 const cudaStream_t& stream) {
+  dim3 nt(nthreads);
+  dim3 nb(nblocks);
+  test<<<nb, nt, 0, stream>>>(id, d_conds);
 }

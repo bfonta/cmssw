@@ -26,7 +26,7 @@ public:
   int32_t *clusterIndex;  //cluster index (matches the one from HGCCLUEHitsSoA)
     
   uint32_t nbytes;  //number of bytes of the SoA
-  uint32_t nclusters;   //number of hits stored in the SoA
+  uint32_t nclusters;   //number of hits clusters in the SoA
   uint32_t pad;     //pad of memory block (used for warp alignment, slightly larger than 'nclusters')
 };
 

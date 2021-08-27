@@ -3,14 +3,13 @@
 #include "RecoLocalCalo/HGCalRecProducers/plugins/HGCalCLUEAlgoGPUEM.h"
 
 HGCalCLUEAlgoGPUEM::HGCalCLUEAlgoGPUEM(float dc, float kappa, float ecut, float outlierDeltaFactor,
-				       const HGCCLUEHitsSoA& hits_soa, const HGCCLUEClustersSoA& clusters_soa, uint32_t nhits)
-  : HGCalCLUEAlgoGPUBase(dc, kappa, ecut, outlierDeltaFactor, hits_soa, clusters_soa, nhits)
+				       const HGCCLUEHitsSoA& hits_soa, const HGCCLUEClustersSoA& clusters_soa)
+  : HGCalCLUEAlgoGPUBase(dc, kappa, ecut, outlierDeltaFactor, hits_soa, clusters_soa)
 {}
 
 HGCalCLUEAlgoGPUEM::HGCalCLUEAlgoGPUEM(const HGCCLUEHitsSoA& clueHitsSoAHost, const ConstHGCCLUEHitsSoA& clueHitsSoADev,
-				       const HGCCLUEClustersSoA& clueClustersSoAHost, const ConstHGCCLUEClustersSoA& clueClustersSoADev,
-				       uint32_t nhits, uint32_t nclusters)
-  : HGCalCLUEAlgoGPUBase(clueClustersSoAHost, clueClustersSoADev, clueClustersSoAHost, clueClustersSoADev, nhits)
+				       const HGCCLUEClustersSoA& clueClustersSoAHost, const ConstHGCCLUEClustersSoA& clueClustersSoADev)
+  : HGCalCLUEAlgoGPUBase(clueHitsSoAHost, clueHitsSoADev, clueClustersSoAHost, clueClustersSoADev)
 {}
 
 void HGCalCLUEAlgoGPUEM::copy_tohost(const cudaStream_t& s) {
@@ -27,12 +26,12 @@ void HGCalCLUEAlgoGPUEM::set_input_SoA_layout(const cudaStream_t &stream) {
   
   //set input SoA memory view
   mDevPoints.x          = reinterpret_cast<float *>(mMem.get());
-  mDevPoints.y          = mDevPoints.x      + mPad;
-  mDevPoints.energy     = mDevPoints.y      + mPad;
-  mDevPoints.sigmaNoise = mDevPoints.energy + mPad;
-  mDevPoints.layer      = reinterpret_cast<int32_t *>(mDevPoints.sigmaNoise + mPad);
+  mDevPoints.y          = mDevPoints.x      + mPadHits;
+  mDevPoints.energy     = mDevPoints.y      + mPadHits;
+  mDevPoints.sigmaNoise = mDevPoints.energy + mPadHits;
+  mDevPoints.layer      = reinterpret_cast<int32_t *>(mDevPoints.sigmaNoise + mPadHits);
 
-  mDevPoints.pad = mPad;
+  mDevPoints.pad = mPadHits;
 }
 				  
 void HGCalCLUEAlgoGPUEM::populate(const ConstHGCRecHitSoA& hits,
