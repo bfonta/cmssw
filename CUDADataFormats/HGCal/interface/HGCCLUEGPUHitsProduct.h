@@ -30,7 +30,8 @@ public:
     soa.delta = soa.rho + pad_;
     soa.nearestHigher = reinterpret_cast<int32_t *>(soa.delta + pad_);
     soa.clusterIndex = soa.nearestHigher + pad_;
-    soa.isSeed = reinterpret_cast<bool *>(soa.clusterIndex + pad_);
+    soa.id = reinterpret_cast<uint32_t *>(soa.clusterIndex + pad_);
+    soa.isSeed = reinterpret_cast<bool *>(soa.id + pad_);
     soa.nbytes = size_tot_;
     soa.nhits = nhits_;
     soa.pad = pad_;
@@ -43,7 +44,8 @@ public:
     soa.delta = soa.rho + pad_;
     soa.nearestHigher = reinterpret_cast<int32_t const*>(soa.delta + pad_);
     soa.clusterIndex = soa.nearestHigher + pad_;
-    soa.isSeed = reinterpret_cast<bool const*>(soa.clusterIndex + pad_);
+    soa.id = reinterpret_cast<uint32_t const*>(soa.clusterIndex + pad_);
+    soa.isSeed = reinterpret_cast<bool const*>(soa.id + pad_);
     return soa;
   }
 
@@ -58,7 +60,8 @@ private:
   cms::cuda::device::unique_ptr<std::byte[]> mMemCLUEHitsDev;
   static constexpr std::array<uint32_t, memory::npointers::ntypes_hgccluehits_soa> sizes_ = {
       {memory::npointers::float_hgccluehits_soa * sizeof(float),
-       memory::npointers::int32_hgccluehits_soa * sizeof(uint32_t),
+       memory::npointers::int32_hgccluehits_soa * sizeof(int32_t),
+       memory::npointers::uint32_hgccluehits_soa * sizeof(uint32_t),
        memory::npointers::bool_hgccluehits_soa * sizeof(bool)}};
   uint32_t pad_;
   uint32_t nhits_;

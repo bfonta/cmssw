@@ -21,6 +21,7 @@ void kernel_fill_input_soa(ConstHGCRecHitSoA hits,
   int tid = blockIdx.x * blockDim.x + threadIdx.x;
   for (unsigned i = tid; i < hits.nhits; i += blockDim.x * gridDim.x) {
     in.sigmaNoise[i] = hits.sigmaNoise[i];
+    in.id[i] = hits.id[i];
     in.energy[i] = (hits.energy[i]<ecut*in.sigmaNoise[i]) ? clue_gpu::unphysicalEnergy : hits.energy[i];
 
     //logic in https://github.com/cms-sw/cmssw/blob/master/RecoLocalCalo/HGCalRecProducers/plugins/HGCalCellPositionsKernelImpl.cu

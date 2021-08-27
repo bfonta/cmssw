@@ -9,6 +9,7 @@ public:
   float *delta; //closest distance to a rechit with a higher density
   int32_t *nearestHigher; //index of the nearest rechit with a higher density
   int32_t *clusterIndex;  //cluster index the rechit belongs to
+  uint32_t *id; //rechit detId
   bool *isSeed; // is the rechit a cluster seed?
   //Note: isSeed is of type int in the CPU version to to std::vector optimizations
 
@@ -35,14 +36,17 @@ namespace memory {
     //number of float pointers in the clue SoAs
     constexpr unsigned float_hgccluehits_soa = 2;
     constexpr unsigned float_hgcclueclusters_soa = 3;
-    //number of int32 pointers in the clue SoAs
+    //number of int32_t pointers in the clue SoAs
     constexpr unsigned int32_hgccluehits_soa = 2;
     constexpr unsigned int32_hgcclueclusters_soa = 1;
+    //number of uint32_t pointers in the clue SoAs
+    constexpr unsigned uint32_hgccluehits_soa = 1;
+    constexpr unsigned uint32_hgcclueclusters_soa = 0;
     //number of bool pointers in the clue SoAs
     constexpr unsigned bool_hgccluehits_soa = 1;
     constexpr unsigned bool_hgcclueclusters_soa = 0;
     //number of different pointer types in the clue SoAs
-    constexpr unsigned ntypes_hgccluehits_soa = 3;
+    constexpr unsigned ntypes_hgccluehits_soa = 4;
     constexpr unsigned ntypes_hgcclueclusters_soa = 2;
   } // namespace npointers
 } // namespace memory
