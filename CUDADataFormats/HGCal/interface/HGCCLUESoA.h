@@ -23,7 +23,7 @@ public:
   float *energy; //energy of the cluster
   float *x; //x position of the cluster
   float *y; //y position of the cluster
-  float *z; //z position of the cluster
+  int32_t *layer; //z position of the cluster
   int32_t *clusterIndex;  //cluster index (matches the one from HGCCLUEHitsSoA)
     
   uint32_t nbytes;  //number of bytes of the SoA
@@ -38,7 +38,7 @@ namespace memory {
     constexpr unsigned float_hgcclueclusters_soa = 3;
     //number of int32_t pointers in the clue SoAs
     constexpr unsigned int32_hgccluehits_soa = 2;
-    constexpr unsigned int32_hgcclueclusters_soa = 1;
+    constexpr unsigned int32_hgcclueclusters_soa = 2;
     //number of uint32_t pointers in the clue SoAs
     constexpr unsigned uint32_hgccluehits_soa = 1;
     constexpr unsigned uint32_hgcclueclusters_soa = 0;

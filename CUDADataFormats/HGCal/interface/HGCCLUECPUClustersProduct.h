@@ -29,8 +29,8 @@ public:
     soa.energy = reinterpret_cast<float *>(mMemCLUEClustersHost.get());
     soa.x = soa.energy + pad_;
     soa.y = soa.x + pad_;
-    soa.z = soa.y + pad_;
-    soa.clusterIndex = reinterpret_cast<int32_t *>(soa.z + pad_);
+    soa.layer = reinterpret_cast<int32_t *>(soa.y + pad_);
+    soa.clusterIndex = soa.layer + pad_;
 
     soa.nbytes = size_tot_;
     soa.nclusters = nclusters_;
@@ -43,8 +43,8 @@ public:
     soa.energy = reinterpret_cast<float const*>(mMemCLUEClustersHost.get());
     soa.x = soa.energy + pad_;
     soa.y = soa.x + pad_;
-    soa.z = soa.y + pad_;
-    soa.clusterIndex = reinterpret_cast<int32_t const*>(soa.z + pad_);
+    soa.layer = reinterpret_cast<int32_t const*>(soa.y + pad_);
+    soa.clusterIndex = soa.layer + pad_;
     return soa;
   }
 

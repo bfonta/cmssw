@@ -45,10 +45,16 @@ void HGCalCLUEAlgoGPUBase::set_memory() {
   // condense into single memset??
   cudaMemset(mCLUEHitsSoA.rho,           0x00, sizeof(float)*mPadHits);
   cudaMemset(mCLUEHitsSoA.delta,         0x00, sizeof(float)*mPadHits);
-  cudaMemset(mCLUEHitsSoA.nearestHigher, 0x00, sizeof(int)*mPadHits);
-  cudaMemset(mCLUEHitsSoA.clusterIndex,  0x00, sizeof(int)*mPadHits);
-  cudaMemset(mCLUEHitsSoA.isSeed,        0x00, sizeof(int)*mPadHits);
-  
+  cudaMemset(mCLUEHitsSoA.nearestHigher, 0x00, sizeof(int32_t)*mPadHits);
+  cudaMemset(mCLUEHitsSoA.clusterIndex,  0x00, sizeof(int32_t)*mPadHits);
+  cudaMemset(mCLUEHitsSoA.isSeed,        0x00, sizeof(int32_t)*mPadHits);
+
+  cudaMemset(mCLUEClustersSoA.energy,    0x00, sizeof(float)*mPadClusters);
+  cudaMemset(mCLUEClustersSoA.x,         0x00, sizeof(float)*mPadClusters);
+  cudaMemset(mCLUEClustersSoA.y,         0x00, sizeof(float)*mPadClusters);
+  cudaMemset(mCLUEClustersSoA.layer,     0x00, sizeof(int32_t)*mPadClusters);
+  //cudaMemset(mCLUEClustersSoA.clusterIndex, 0x00, sizeof(int32_t)*mPadClusters);
+
   // algorithm internal variables
   cudaMemset(mDevHist, 0x00, sizeof(LayerTilesGPU) * NLAYERS);
   cudaMemset(mDevSeeds, 0x00, sizeof(GPU::VecArray<int,clue_gpu::maxNSeeds>));
