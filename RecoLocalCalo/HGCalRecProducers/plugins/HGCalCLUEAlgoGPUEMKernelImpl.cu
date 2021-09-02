@@ -190,8 +190,8 @@ void kernel_calculate_distanceToHigher(LayerTilesGPU* hist,
 
 
 __global__
-void kernel_find_clusters( cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* d_seeds,
-			   cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* d_followers,
+void kernel_find_clusters( cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* dSeeds,
+			   cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* dFollowers,
 			   clue_gpu::HGCCLUEInputSoAEM in,
 			   HGCCLUEHitsSoA out,
 			   float outlierDeltaFactor, float dc, float kappa,
@@ -216,12 +216,12 @@ void kernel_find_clusters( cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* d_seeds
 	if (isSeed) {
 	  // set isSeed as 1
 	  out.isSeed[i] = 1;
-	  d_seeds[0].push_back(i); // head of d_seeds
+	  dSeeds[0].push_back(i); // head of dSeeds
 	} else {
 	  if (!isOutlier) {
 	    assert(out.nearestHigher[i] < numberOfPoints);
 	    // register as follower of its nearest higher
-	    d_followers[out.nearestHigher[i]].push_back(i);  
+	    dFollowers[out.nearestHigher[i]].push_back(i);  
 	  }
 	}
       }
@@ -231,14 +231,14 @@ void kernel_find_clusters( cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* d_seeds
 
 
 __global__
-void kernel_assign_clusters( const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* d_seeds, 
-			     const cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* d_followers,
+void kernel_assign_clusters( const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* dSeeds, 
+			     const cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* dFollowers,
 			     HGCCLUEHitsSoA out)
 {
   
   int idxCls = blockIdx.x * blockDim.x + threadIdx.x;
 
-  const auto& seeds = d_seeds[0];
+  const auto& seeds = dSeeds[0];
   const auto nSeeds = seeds.size();
 
   for (unsigned i = idxCls; i < nSeeds; i += blockDim.x * gridDim.x)
@@ -249,7 +249,7 @@ void kernel_assign_clusters( const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>*
       // assign cluster to seed[i]
       int idxThisSeed = seeds[i];
       out.clusterIndex[idxThisSeed] = i;
-      // push_back idThisSeed to localStack
+      // push_back idxThisSeed to localStack
       localStack[localStackSize] = idxThisSeed;
       localStackSize++;
       // process all elements in localStack
@@ -263,8 +263,7 @@ void kernel_assign_clusters( const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>*
       	localStackSize--;
 	
 	// loop over followers of last element of localStack
-      	for( int j : d_followers[idxEndOflocalStack]){
-	//for( int j : d_followers[0]){
+      	for( int j : dFollowers[idxEndOflocalStack]){
       	  // pass id to follower
       	  out.clusterIndex[j] = temp_clusterIndex;
       	  // push_back follower to localStack
@@ -279,3 +278,125 @@ void kernel_assign_clusters( const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>*
     } // for
   
 } // kernel
+
+__device__
+void recursive_calculation(float& x, float& y, float& partialWeight,
+			   float totalWeight,
+			   float dc2,
+			   int seedId, int maxWeightId, 
+			   const clue_gpu::HGCCLUEInputSoAEM& in,
+			   const cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* dFollowers)
+{
+  //missing info from seed?
+
+  for( int f : dFollowers[seedId])
+    {
+      float en = in.energy[f];
+
+      if(distance2(f, maxWeightId, in) < dc2)
+	{
+	  float Wi = std::max(2.9 + std::log(en / totalWeight), 0.);
+	  //float Wi = std::max(thresholdW0_[thick] + std::log(en / totalWeight), 0.);
+	  x += in.x[f] * Wi;
+	  y += in.y[f] * Wi;
+	  partialWeight += Wi;
+		
+	  if( dFollowers[f].size()!=0 ) //hit has at least one follower
+	    recursive_calculation(x, y, partialWeight,
+				  totalWeight, dc2, seedId, maxWeightId,
+				  in, dFollowers);
+      
+	}
+    }
+
+  if(partialWeight != 0) {
+    x *= 1.f/partialWeight;
+    y *= 1.f/partialWeight;
+  }
+}
+
+//for the scintillator modify according to
+//https://github.com/b-fontana/cmssw/blob/clusters/RecoLocalCalo/HGCalRecProducers/plugins/HGCalCLUEAlgo.h#L216
+__device__
+float distance2(int id1, int id2, const clue_gpu::HGCCLUEInputSoAEM& in)
+{
+  const float dx = in.x[id1] - in.x[id2];
+  const float dy = in.y[id1] - in.y[id2];
+  return dx*dx + dy*dy;
+}
+
+__device__
+void get_total_cluster_weight(float& totalWeight, float& maxWeight, int& maxWeightId,
+			      int seedId,
+			      float dc2,
+			      const clue_gpu::HGCCLUEInputSoAEM& in,
+			      const cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* dFollowers)
+{
+  for( int f : dFollowers[seedId]) {
+    totalWeight += in.energy[f];
+
+    if(in.energy[f]>maxWeight)
+      maxWeightId = f;
+    
+    if( dFollowers[f].size()!=0 ) //hit has at least one follower
+      get_total_cluster_weight(totalWeight, maxWeight, maxWeightId,
+			       seedId, dc2, in, dFollowers);
+  }    
+}
+
+__global__
+void kernel_calculate_position(float dc2,
+			       const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* dSeeds,
+			       const cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* dFollowers,
+			       clue_gpu::HGCCLUEInputSoAEM hitsIn,
+			       HGCCLUEHitsSoA hitsOut,
+			       HGCCLUEClustersSoA clustersSoA,
+			       unsigned nClustersPerLayer)
+{
+  const auto& seeds = dSeeds[0];
+  const unsigned nseeds = seeds.size();
+  assert(seeds.size() <= clustersSoA.nclusters);
+  
+  int tid = blockIdx.x * blockDim.x + threadIdx.x;
+  for (unsigned i = tid; i < nseeds; i += blockDim.x * gridDim.x)
+    {
+      //each thread will take care of a single cluster
+      //the memory of the cluster SoA will be split into blocks, one per layer
+      //each block is further split into sub-blocks, one per cluster in that layer
+      unsigned layerIdx = i / nClustersPerLayer;
+      unsigned clusterIdx = i - layerIdx*nClustersPerLayer; //remainder
+
+      int thisSeed = seeds[i];
+
+      int maxEnergyIndex;
+      float maxWeight = 0.f;
+      float totalWeight = 0.f;
+      float partialWeight = 0.f;
+      float clusterX = 0.f;
+      float clusterY = 0.f;
+
+      //modifies totalWeight and maxEnergyIndex
+      get_total_cluster_weight(totalWeight, maxWeight, maxEnergyIndex,
+			       thisSeed,
+			       dc2,
+			       hitsIn,
+			       dFollowers);
+
+      //modifies clusterX, clusterY and partialWeight
+      recursive_calculation(clusterX, clusterY, partialWeight,
+			    totalWeight, 
+			    dc2,
+			    thisSeed,
+			    maxEnergyIndex,
+			    hitsIn,
+			    dFollowers );
+
+      unsigned soaIdx = layerIdx*nClustersPerLayer + clusterIdx;
+      clustersSoA.x[soaIdx] = clusterX;
+      clustersSoA.y[soaIdx] = clusterY;
+      clustersSoA.layer[soaIdx] = hitsIn.layer[maxEnergyIndex];
+      clustersSoA.clusterIndex[soaIdx] = hitsOut.clusterIndex[maxEnergyIndex];
+      assert(hitsOut.clusterIndex[maxEnergyIndex] == hitsOut.clusterIndex[thisSeed]);
+    }
+
+} //kernel

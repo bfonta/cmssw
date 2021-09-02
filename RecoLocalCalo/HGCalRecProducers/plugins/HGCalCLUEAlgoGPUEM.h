@@ -32,7 +32,7 @@ public:
 		const cudaStream_t&) override;
   void make_clusters(const cudaStream_t&) override;
   void copy_tohost(const cudaStream_t&);
-  void get_clusters(const cudaStream_t&) override;
+  void get_clusters(unsigned, const cudaStream_t&) override;
 
 private:
   static constexpr unsigned mNThreadsEM = 1;

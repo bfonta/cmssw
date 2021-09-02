@@ -79,7 +79,7 @@ private:
 			const hgcal_conditions::HeterogeneousPositionsConditionsESProduct*,
 			const cudaStream_t&) = 0;
   virtual void make_clusters(const cudaStream_t&) = 0;
-  virtual void get_clusters(const cudaStream_t&) = 0;
+  virtual void get_clusters(unsigned, const cudaStream_t&) = 0;
 
   bool was_memory_allocated;
 };

@@ -82,6 +82,27 @@ void HGCalCLUEAlgoGPUEM::make_clusters(const cudaStream_t &stream) {
   kernel_assign_clusters<<<gridSize_nseeds,blockSize,0,stream>>>(mDevSeeds, mDevFollowers, mCLUEHitsSoA);
 }
 
-void HGCalCLUEAlgoGPUEM::get_clusters(const cudaStream_t &stream) {
+void HGCalCLUEAlgoGPUEM::get_clusters(unsigned nlayers, const cudaStream_t &stream) {
+  const dim3 blockSize(mNThreadsEM,1,1);
+  //the number of clusters is given by mDevSeeds.size(), but by using mCLUEClustersSoa.nclusters I make
+  //sure there is enough room for all the clusters in each layer without actually counting them
+  //const dim3 gridSize( calculate_block_multiplicity(mCLUEClustersSoa.nclusters, blockSize.x), 1, 1 );
+  const dim3 gridSize( 1, 1, 1 );
 
+  //ceil: the last layer will end up having less entries than the others (idxThread < nclusters in kernel)
+  //the last layers are expected to have less clusters anyways, so this should not be a problem.
+  unsigned nClustersPerLayer = ( mCLUEClustersSoA.nclusters + nlayers -1 ) / nlayers;
+  
+  //(usar um shift do genero: nlayer*numero_clusters_por_layer + indice_cluster_nesta_layer)
+    
+  //mDevSeeds gives number of seeds, i.e., an upper estimate for the number of clusters
+  float dc2 = mDc * mDc;
+  kernel_calculate_position<<<gridSize,blockSize,0,stream>>>(dc2,
+							     mDevSeeds,
+							     mDevFollowers,
+							     mDevPoints,
+							     mCLUEHitsSoA,
+							     mCLUEClustersSoA,
+							     nClustersPerLayer);
+  //kernel_calculate_energy<<<gridSize,blockSize,0,stream>>>(mCLUEClustersSoA);
 }
