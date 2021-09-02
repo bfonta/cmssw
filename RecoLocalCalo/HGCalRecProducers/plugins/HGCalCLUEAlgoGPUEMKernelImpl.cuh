@@ -79,12 +79,12 @@ void kernel_assign_clusters( const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>*
 			     HGCCLUEHitsSoA out);
 
 __global__
-void kernel_calculate_position(float dc2,
-			       const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* dSeeds,
-			       const cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* dFollowers,
-			       clue_gpu::HGCCLUEInputSoAEM hitsIn,
-			       HGCCLUEHitsSoA hitsOut,
-			       HGCCLUEClustersSoA clustersSoA,
-			       unsigned nClustersPerLayer);
+void kernel_get_clusters(float dc2,
+			 const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* dSeeds,
+			 const cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* dFollowers,
+			 clue_gpu::HGCCLUEInputSoAEM hitsIn,
+			 HGCCLUEHitsSoA hitsOut,
+			 HGCCLUEClustersSoA clustersSoA,
+			 unsigned nClustersPerLayer);
 
 #endif //RecoLocalCalo_HGCalRecProducers_HGCalCLUEAlgoGPUEMKernelImpl_cuh
