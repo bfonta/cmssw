@@ -97,12 +97,11 @@ void HGCalCLUEAlgoGPUEM::get_clusters(unsigned nlayers, const cudaStream_t &stre
     
   //mDevSeeds gives number of seeds, i.e., an upper estimate for the number of clusters
   float dc2 = mDc * mDc;
-  kernel_calculate_position<<<gridSize,blockSize,0,stream>>>(dc2,
-							     mDevSeeds,
-							     mDevFollowers,
-							     mDevPoints,
-							     mCLUEHitsSoA,
-							     mCLUEClustersSoA,
-							     nClustersPerLayer);
-  //kernel_calculate_energy<<<gridSize,blockSize,0,stream>>>(mCLUEClustersSoA);
+  kernel_get_clusters<<<gridSize,blockSize,0,stream>>>(dc2,
+						       mDevSeeds,
+						       mDevFollowers,
+						       mDevPoints,
+						       mCLUEHitsSoA,
+						       mCLUEClustersSoA,
+						       nClustersPerLayer);
 }

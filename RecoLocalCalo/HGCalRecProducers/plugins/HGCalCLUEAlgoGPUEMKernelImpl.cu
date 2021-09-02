@@ -280,38 +280,43 @@ void kernel_assign_clusters( const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>*
 } // kernel
 
 __device__
-void recursive_calculation(float& x, float& y, float& partialWeight,
-			   float totalWeight,
-			   float dc2,
-			   int seedId, int maxWeightId, 
-			   const clue_gpu::HGCCLUEInputSoAEM& in,
-			   const cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* dFollowers)
+float max_w(float en, float totalWeight) {
+  //float Wi = std::max(thresholdW0_[thick] + std::log(en / totalWeight), 0.);
+  return std::max(2.9 + std::log(en / totalWeight), 0.);
+}
+	   
+__device__
+void calculate_position_and_energy(float& clusterX, float& clusterY, float& clusterEnergy, float& partialWeight,
+				   float totalWeight,
+				   float dc2,
+				   int seedId, int maxWeightId, 
+				   const clue_gpu::HGCCLUEInputSoAEM& in,
+				   const cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* dFollowers)
 {
-  //missing info from seed?
-
   for( int f : dFollowers[seedId])
     {
       float en = in.energy[f];
-
+      clusterEnergy += en;
+      
       if(distance2(f, maxWeightId, in) < dc2)
 	{
-	  float Wi = std::max(2.9 + std::log(en / totalWeight), 0.);
-	  //float Wi = std::max(thresholdW0_[thick] + std::log(en / totalWeight), 0.);
-	  x += in.x[f] * Wi;
-	  y += in.y[f] * Wi;
+	  float Wi = max_w(en, totalWeight);
+	  clusterX += in.x[f] * Wi;
+	  clusterY += in.y[f] * Wi;
 	  partialWeight += Wi;
 		
 	  if( dFollowers[f].size()!=0 ) //hit has at least one follower
-	    recursive_calculation(x, y, partialWeight,
-				  totalWeight, dc2, seedId, maxWeightId,
-				  in, dFollowers);
+	    calculate_position_and_energy(clusterX, clusterY, clusterEnergy, partialWeight,
+					  totalWeight, dc2, f, maxWeightId,
+					  in, dFollowers);
       
 	}
     }
 
   if(partialWeight != 0) {
-    x *= 1.f/partialWeight;
-    y *= 1.f/partialWeight;
+    float inv = 1.f/partialWeight;
+    clusterX *= inv;
+    clusterY *= inv;
   }
 }
 
@@ -340,18 +345,18 @@ void get_total_cluster_weight(float& totalWeight, float& maxWeight, int& maxWeig
     
     if( dFollowers[f].size()!=0 ) //hit has at least one follower
       get_total_cluster_weight(totalWeight, maxWeight, maxWeightId,
-			       seedId, dc2, in, dFollowers);
+			       f, dc2, in, dFollowers);
   }    
 }
 
 __global__
-void kernel_calculate_position(float dc2,
-			       const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* dSeeds,
-			       const cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* dFollowers,
-			       clue_gpu::HGCCLUEInputSoAEM hitsIn,
-			       HGCCLUEHitsSoA hitsOut,
-			       HGCCLUEClustersSoA clustersSoA,
-			       unsigned nClustersPerLayer)
+void kernel_get_clusters(float dc2,
+			 const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* dSeeds,
+			 const cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* dFollowers,
+			 clue_gpu::HGCCLUEInputSoAEM hitsIn,
+			 HGCCLUEHitsSoA hitsOut,
+			 HGCCLUEClustersSoA clustersSoA,
+			 unsigned nClustersPerLayer)
 {
   const auto& seeds = dSeeds[0];
   const unsigned nseeds = seeds.size();
@@ -368,12 +373,10 @@ void kernel_calculate_position(float dc2,
 
       int thisSeed = seeds[i];
 
-      int maxEnergyIndex;
-      float maxWeight = 0.f;
-      float totalWeight = 0.f;
+      int maxEnergyIndex  = -1;
+      float maxWeight     = 0.f;
+      float totalWeight   = 0.f;
       float partialWeight = 0.f;
-      float clusterX = 0.f;
-      float clusterY = 0.f;
 
       //modifies totalWeight and maxEnergyIndex
       get_total_cluster_weight(totalWeight, maxWeight, maxEnergyIndex,
@@ -382,19 +385,27 @@ void kernel_calculate_position(float dc2,
 			       hitsIn,
 			       dFollowers);
 
-      //modifies clusterX, clusterY and partialWeight
-      recursive_calculation(clusterX, clusterY, partialWeight,
-			    totalWeight, 
-			    dc2,
-			    thisSeed,
-			    maxEnergyIndex,
-			    hitsIn,
-			    dFollowers );
+      //the x, y and energy of the seed is not included in the function below
+      //its inclusion is not possible due to the recursion in the function below
+      float clusterEnergy = hitsIn.energy[thisSeed];
+      float Wi = max_w(clusterEnergy, totalWeight);
+      float clusterX = hitsIn.x[thisSeed] * Wi;
+      float clusterY = hitsIn.y[thisSeed] * Wi;
+
+      //modifies clusterX, clusterY, clusterEnergy and partialWeight
+      calculate_position_and_energy(clusterX, clusterY, clusterEnergy, partialWeight,
+				    totalWeight, 
+				    dc2,
+				    thisSeed,
+				    maxEnergyIndex,
+				    hitsIn,
+				    dFollowers );
 
       unsigned soaIdx = layerIdx*nClustersPerLayer + clusterIdx;
-      clustersSoA.x[soaIdx] = clusterX;
-      clustersSoA.y[soaIdx] = clusterY;
-      clustersSoA.layer[soaIdx] = hitsIn.layer[maxEnergyIndex];
+      clustersSoA.x[soaIdx]            = clusterX;
+      clustersSoA.y[soaIdx]            = clusterY;
+      clustersSoA.energy[soaIdx]       = clusterEnergy;
+      clustersSoA.layer[soaIdx]        = hitsIn.layer[maxEnergyIndex];
       clustersSoA.clusterIndex[soaIdx] = hitsOut.clusterIndex[maxEnergyIndex];
       assert(hitsOut.clusterIndex[maxEnergyIndex] == hitsOut.clusterIndex[thisSeed]);
     }
