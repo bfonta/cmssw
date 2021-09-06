@@ -65,6 +65,7 @@ process.HeterogeneousHGCalPositionsFiller = cms.ESProducer("HeterogeneousHGCalPo
 process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEERecHitGPU_cfi')
 process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEGPU_cfi')
 process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEGPUtoSoA_cfi')
+process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEFromSoA_cfi')
 
 #process.task = cms.Task( process.HeterogeneousHGCalPositionsFiller, process.HeterogeneousHGCalHEFRecHits )
 #process.task = cms.Task( process.HGCalRecHits, process.HeterogeneousHGCalHEFRecHits )
@@ -72,7 +73,7 @@ process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEGPUtoSoA_cfi')
 #process.HGCalRecHits = HGCalRecHit.clone()
 
 process.ee_task = cms.Task( process.EERecHitGPUProd,
-                            process.EMCLUEGPUProd, process.EMCLUEGPUtoSoAProd
+                            process.EMCLUEGPUProd, process.EMCLUEGPUtoSoAProd, process.EMCLUEFromSoAProd,
 )
 
 process.global_task = cms.Task( process.HeterogeneousHGCalPositionsFiller,
@@ -81,5 +82,5 @@ process.global_task = cms.Task( process.HeterogeneousHGCalPositionsFiller,
 process.path = cms.Path( process.global_task )
 
 process.consumer = cms.EDAnalyzer("GenericConsumer",                     
-                                  eventProducts = cms.untracked.vstring('EMCLUEGPUtoSoAProd',) )
+                                  eventProducts = cms.untracked.vstring('EMCLUEFromSoAProd',) )
 process.consume_step = cms.EndPath(process.consumer)

@@ -15,6 +15,7 @@ public:
   explicit HGCCLUEGPUClustersProduct(uint32_t nclusters, const cudaStream_t &stream) : nclusters_(nclusters) {
     size_tot_ = std::accumulate(sizes_.begin(), sizes_.end(), 0);
     pad_ = ((nclusters - 1) / 32 + 1) * 32; //align to warp boundary (assumption: warpSize = 32)
+    std::cout << "GPUClustersProduct: " << size_tot_ << ", " << pad_ << ", " << nclusters << std::endl;
     mMemCLUEClustersDev = cms::cuda::make_device_unique<std::byte[]>(pad_ * size_tot_, stream);
   }
   ~HGCCLUEGPUClustersProduct() = default;
@@ -31,6 +32,10 @@ public:
     soa.y = soa.x + pad_;
     soa.layer = reinterpret_cast<int32_t *>(soa.y + pad_);
     soa.clusterIndex = soa.layer + pad_;
+
+    soa.nbytes = size_tot_;
+    soa.nclusters = nclusters_;
+    soa.pad = pad_;
     return soa;
   }
 

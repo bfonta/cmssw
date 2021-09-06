@@ -113,6 +113,7 @@ void EERecHitGPU::produce(edm::Event &event, const edm::EventSetup &setup) {
 
   const auto &hits = event.get(uncalibRecHitCPUToken_);
   const unsigned nhits(hits.size());
+  std::cout << "EERecHitGPU: " << nhits << std::endl;
   rechits_ = std::make_unique<HGCRecHitCollection>();
 
   if (nhits == 0)
