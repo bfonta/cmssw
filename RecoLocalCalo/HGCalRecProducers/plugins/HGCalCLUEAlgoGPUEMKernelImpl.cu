@@ -380,10 +380,10 @@ void kernel_get_clusters(float dc2,
 
       //modifies totalWeight and maxEnergyIndex
       get_total_cluster_weight(totalWeight, maxWeight, maxEnergyIndex,
-			       thisSeed,
-			       dc2,
-			       hitsIn,
-			       dFollowers);
+  			       thisSeed,
+  			       dc2,
+  			       hitsIn,
+  			       dFollowers);
 
       //the x, y and energy of the seed is not included in the function below
       //its inclusion is not possible due to the recursion in the function below
@@ -394,12 +394,12 @@ void kernel_get_clusters(float dc2,
 
       //modifies clusterX, clusterY, clusterEnergy and partialWeight
       calculate_position_and_energy(clusterX, clusterY, clusterEnergy, partialWeight,
-				    totalWeight, 
-				    dc2,
-				    thisSeed,
-				    maxEnergyIndex,
-				    hitsIn,
-				    dFollowers );
+  				    totalWeight, 
+  				    dc2,
+  				    thisSeed,
+  				    maxEnergyIndex,
+  				    hitsIn,
+  				    dFollowers );
 
       unsigned soaIdx = layerIdx*nClustersPerLayer + clusterIdx;
       clustersSoA.x[soaIdx]            = clusterX;
@@ -408,6 +408,6 @@ void kernel_get_clusters(float dc2,
       clustersSoA.layer[soaIdx]        = hitsIn.layer[maxEnergyIndex];
       clustersSoA.clusterIndex[soaIdx] = hitsOut.clusterIndex[maxEnergyIndex];
       assert(hitsOut.clusterIndex[maxEnergyIndex] == hitsOut.clusterIndex[thisSeed]);
-    }
+  }
 
 } //kernel

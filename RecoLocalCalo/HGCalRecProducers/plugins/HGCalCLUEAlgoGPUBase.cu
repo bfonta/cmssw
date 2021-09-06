@@ -9,8 +9,11 @@ HGCalCLUEAlgoGPUBase::HGCalCLUEAlgoGPUBase(float pDc, float pKappa, float pEcut,
 					   const HGCCLUEClustersSoA& pCLUEClustersSoA)
   : mDc(pDc), mKappa(pKappa), mEcut(pEcut), mOutlierDeltaFactor(pOutlierDeltaFactor), mCLUEHitsSoA(pCLUEHitsSoA), mCLUEClustersSoA(pCLUEClustersSoA)
 {
-  mPadHits = calculate_padding( pCLUEHitsSoA.nhits );
-  mPadClusters = calculate_padding( pCLUEClustersSoA.nclusters );
+  mNHits = mCLUEHitsSoA.nhits;
+  mNClusters = mCLUEClustersSoA.nclusters;
+  
+  mPadHits = calculate_padding( mNHits );
+  mPadClusters = calculate_padding( mNClusters );
 
   cudaMalloc(&mDevHist, sizeof(LayerTilesGPU) * NLAYERS);
   cudaMalloc(&mDevSeeds, sizeof(cms::cuda::VecArray<int,clue_gpu::maxNSeeds>) );
@@ -23,8 +26,11 @@ HGCalCLUEAlgoGPUBase::HGCalCLUEAlgoGPUBase(const HGCCLUEHitsSoA& pCLUEHitsSoAHos
 					   const HGCCLUEClustersSoA& pCLUEClustersSoAHost, const ConstHGCCLUEClustersSoA& pCLUEClustersSoADev)
   : mCLUEHitsSoAHost(pCLUEHitsSoAHost), mCLUEHitsSoADev(pCLUEHitsSoADev), mCLUEClustersSoAHost(pCLUEClustersSoAHost), mCLUEClustersSoADev(pCLUEClustersSoADev)
 {
-  mPadHits = calculate_padding( pCLUEHitsSoAHost.nhits );
-  mPadClusters = calculate_padding( pCLUEClustersSoAHost.nclusters );
+  mNHits = mCLUEHitsSoA.nhits;
+  mNClusters = mCLUEClustersSoA.nclusters;
+
+  mPadHits = calculate_padding( mNHits );
+  mPadClusters = calculate_padding( mNClusters );
 
   was_memory_allocated = false;
 }
@@ -47,19 +53,21 @@ void HGCalCLUEAlgoGPUBase::set_memory() {
   cudaMemset(mCLUEHitsSoA.delta,         0x00, sizeof(float)*mPadHits);
   cudaMemset(mCLUEHitsSoA.nearestHigher, 0x00, sizeof(int32_t)*mPadHits);
   cudaMemset(mCLUEHitsSoA.clusterIndex,  0x00, sizeof(int32_t)*mPadHits);
-  cudaMemset(mCLUEHitsSoA.isSeed,        0x00, sizeof(int32_t)*mPadHits);
+  cudaMemset(mCLUEHitsSoA.id,  0x00, sizeof(uint32_t)*mPadHits);
+  cudaMemset(mCLUEHitsSoA.isSeed,        0x00, sizeof(bool)*mPadHits);
 
   cudaMemset(mCLUEClustersSoA.energy,    0x00, sizeof(float)*mPadClusters);
   cudaMemset(mCLUEClustersSoA.x,         0x00, sizeof(float)*mPadClusters);
   cudaMemset(mCLUEClustersSoA.y,         0x00, sizeof(float)*mPadClusters);
   cudaMemset(mCLUEClustersSoA.layer,     0x00, sizeof(int32_t)*mPadClusters);
-  //cudaMemset(mCLUEClustersSoA.clusterIndex, 0x00, sizeof(int32_t)*mPadClusters);
+  cudaMemset(mCLUEClustersSoA.clusterIndex, 0x00, sizeof(int32_t)*mPadClusters);
 
   // algorithm internal variables
   cudaMemset(mDevHist, 0x00, sizeof(LayerTilesGPU) * NLAYERS);
   cudaMemset(mDevSeeds, 0x00, sizeof(GPU::VecArray<int,clue_gpu::maxNSeeds>));
-  cudaMemset(mDevFollowers, 0x00, sizeof(GPU::VecArray<int,clue_gpu::maxNFollowers>)*mNHits);
+  cudaMemset(mDevFollowers, 0x00, sizeof(GPU::VecArray<int,clue_gpu::maxNFollowers>)*mNHits);  
 }
+
 
 void HGCalCLUEAlgoGPUBase::copy_tohost(const cudaStream_t& stream) {
   //the original standalone version transferred only the cluster index

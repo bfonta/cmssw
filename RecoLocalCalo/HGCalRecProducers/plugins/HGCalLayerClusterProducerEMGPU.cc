@@ -64,8 +64,8 @@ HGCalLayerClusterProducerEMGPU::HGCalLayerClusterProducerEMGPU(const edm::Parame
     mOutlierDeltaFactor(ps.getParameter<double>("outlierDeltaFactor")),
     gpuPositionsTok_(esConsumes<HeterogeneousHGCalPositionsConditions, HeterogeneousHGCalPositionsConditionsRecord>()),
     InEEToken{consumes<cms::cuda::Product<HGCRecHitGPUProduct>>(ps.getParameter<edm::InputTag>("EMInputRecHitsGPU"))},
-    OutEEHitsToken{produces<cms::cuda::Product<HGCCLUEGPUHitsProduct>>()},
-    OutEEClustersToken{produces<cms::cuda::Product<HGCCLUEGPUClustersProduct>>()}
+    OutEEHitsToken{produces<cms::cuda::Product<HGCCLUEGPUHitsProduct>>("Hits")},
+    OutEEClustersToken{produces<cms::cuda::Product<HGCCLUEGPUClustersProduct>>("Clusters")}
 {}
 
 // void HGCalLayerClusterProducerEMGPU::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
@@ -79,6 +79,7 @@ HGCalLayerClusterProducerEMGPU::HGCalLayerClusterProducerEMGPU(const edm::Parame
 void HGCalLayerClusterProducerEMGPU::acquire(edm::Event const& event,
 					   edm::EventSetup const& es,
 					   edm::WaitingTaskWithArenaHolder w) {
+  std::cout << "Acquire GPU" << std::endl;
   cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w), ctxState_};
   const auto& eeHits = ctx.get(event, InEEToken);
   const unsigned nhits(eeHits.nHits());
@@ -94,7 +95,8 @@ void HGCalLayerClusterProducerEMGPU::acquire(edm::Event const& event,
 
   //CLUE
   mAlgo = std::make_unique<HGCalCLUEAlgoGPUEM>(mDc, mKappa, mEcut, mOutlierDeltaFactor,
-					       mCLUEHits.get(), mCLUEClusters.get());
+  					       mCLUEHits.get(), mCLUEClusters.get());
+
   mAlgo->populate(eeHits.get(), gpuPositionsConds, ctx.stream());
   mAlgo->make_clusters(ctx.stream());
 
@@ -104,8 +106,10 @@ void HGCalLayerClusterProducerEMGPU::acquire(edm::Event const& event,
 
 void HGCalLayerClusterProducerEMGPU::produce(edm::Event& event,
 					     const edm::EventSetup& es) {
+  std::cout << "Produce GPU" << std::endl;
   cms::cuda::ScopedContextProduce ctx{ctxState_};
   ctx.emplace(event, OutEEHitsToken, std::move(mCLUEHits));
   ctx.emplace(event, OutEEClustersToken, std::move(mCLUEClusters));
 }
+
 #endif  //__RecoLocalCalo_HGCRecProducers_HGCalLayerClusterProducerEMGPU_H__

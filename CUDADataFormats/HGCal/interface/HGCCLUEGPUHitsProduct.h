@@ -15,6 +15,7 @@ public:
   explicit HGCCLUEGPUHitsProduct(uint32_t nhits, const cudaStream_t &stream) : nhits_(nhits) {
     size_tot_ = std::accumulate(sizes_.begin(), sizes_.end(), 0);
     pad_ = ((nhits - 1) / 32 + 1) * 32; //align to warp boundary (assumption: warpSize = 32)
+    std::cout << "GPUHitsProduct: " << size_tot_ << ", " << pad_ << std::endl;
     mMemCLUEHitsDev = cms::cuda::make_device_unique<std::byte[]>(pad_ * size_tot_, stream);
   }
   ~HGCCLUEGPUHitsProduct() = default;

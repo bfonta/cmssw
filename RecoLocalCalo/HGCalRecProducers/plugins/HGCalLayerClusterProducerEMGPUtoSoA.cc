@@ -54,8 +54,8 @@ HGCalLayerClusterProducerEMGPUtoSoA::HGCalLayerClusterProducerEMGPUtoSoA(const e
           ps.getParameter<edm::InputTag>("EMInputCLUEHitsGPU"))},
     clueGPUClustersToken_{consumes<cms::cuda::Product<HGCCLUEGPUClustersProduct>>(
           ps.getParameter<edm::InputTag>("EMInputCLUEClustersGPU"))},
-    clueCPUHitsSoAToken_(produces<HGCCLUECPUHitsProduct>()),
-    clueCPUClustersSoAToken_(produces<HGCCLUECPUClustersProduct>())
+    clueCPUHitsSoAToken_(produces<HGCCLUECPUHitsProduct>("Hits")),
+    clueCPUClustersSoAToken_(produces<HGCCLUECPUClustersProduct>("Clusters"))
 {}
 
 HGCalLayerClusterProducerEMGPUtoSoA::~HGCalLayerClusterProducerEMGPUtoSoA() {}
@@ -63,6 +63,7 @@ HGCalLayerClusterProducerEMGPUtoSoA::~HGCalLayerClusterProducerEMGPUtoSoA() {}
 void HGCalLayerClusterProducerEMGPUtoSoA::acquire(edm::Event const& event,
                                edm::EventSetup const& setup,
                                edm::WaitingTaskWithArenaHolder w) {
+  std::cout << "Acquire GPUtoSoA" << std::endl;
   cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w)};
   const auto& gpuCLUEHits = ctx.get(event, clueGPUHitsToken_);
   const auto& gpuCLUEClusters = ctx.get(event, clueGPUClustersToken_);
@@ -81,8 +82,9 @@ void HGCalLayerClusterProducerEMGPUtoSoA::acquire(edm::Event const& event,
 }
 
 void HGCalLayerClusterProducerEMGPUtoSoA::produce(edm::Event& event, const edm::EventSetup& setup) {
-  event.put(std::move(prodHitsPtr_));
-  event.put(std::move(prodClustersPtr_));
+  std::cout << "Produce GPUtoSoA" << std::endl;
+  event.put(std::move(prodHitsPtr_), "Hits");
+  event.put(std::move(prodClustersPtr_), "Clusters");
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"

@@ -3,12 +3,15 @@
 #include "RecoLocalCalo/HGCalRecProducers/plugins/HGCalCLUEAlgoGPUEM.h"
 
 HGCalCLUEAlgoGPUEM::HGCalCLUEAlgoGPUEM(float dc, float kappa, float ecut, float outlierDeltaFactor,
-				       const HGCCLUEHitsSoA& hits_soa, const HGCCLUEClustersSoA& clusters_soa)
+				       const HGCCLUEHitsSoA& hits_soa,
+				       const HGCCLUEClustersSoA& clusters_soa)
   : HGCalCLUEAlgoGPUBase(dc, kappa, ecut, outlierDeltaFactor, hits_soa, clusters_soa)
 {}
 
-HGCalCLUEAlgoGPUEM::HGCalCLUEAlgoGPUEM(const HGCCLUEHitsSoA& clueHitsSoAHost, const ConstHGCCLUEHitsSoA& clueHitsSoADev,
-				       const HGCCLUEClustersSoA& clueClustersSoAHost, const ConstHGCCLUEClustersSoA& clueClustersSoADev)
+HGCalCLUEAlgoGPUEM::HGCalCLUEAlgoGPUEM(const HGCCLUEHitsSoA& clueHitsSoAHost,
+				       const ConstHGCCLUEHitsSoA& clueHitsSoADev,
+				       const HGCCLUEClustersSoA& clueClustersSoAHost,
+				       const ConstHGCCLUEClustersSoA& clueClustersSoADev)
   : HGCalCLUEAlgoGPUBase(clueHitsSoAHost, clueHitsSoADev, clueClustersSoAHost, clueClustersSoADev)
 {}
 
@@ -52,8 +55,8 @@ void HGCalCLUEAlgoGPUEM::populate(const ConstHGCRecHitSoA& hits,
 
 void HGCalCLUEAlgoGPUEM::make_clusters(const cudaStream_t &stream) {
   const dim3 blockSize(mNThreadsEM,1,1);
-  //const dim3 gridSize( calculate_block_multiplicity(mNHits, blockSize.x), 1, 1 );
-  const dim3 gridSize( 1, 1, 1 );
+  const dim3 gridSize( calculate_block_multiplicity(mNHits, blockSize.x), 1, 1 );
+  //const dim3 gridSize( 1, 1, 1 );
 
   ////////////////////////////////////////////
   // calculate rho, delta and find seeds
@@ -77,31 +80,33 @@ void HGCalCLUEAlgoGPUEM::make_clusters(const cudaStream_t &stream) {
   // assign clusters
   // 1 point per seeds
   ////////////////////////////////////////////
-  // const dim3 gridSize_nseeds( calculate_block_multiplicity(clue_gpu::maxNSeeds, blockSize.x), 1, 1 );
-  const dim3 gridSize_nseeds( 1, 1, 1 );
+  const dim3 gridSize_nseeds( calculate_block_multiplicity(clue_gpu::maxNSeeds, blockSize.x), 1, 1 );
+  //const dim3 gridSize_nseeds( 1, 1, 1 );
   kernel_assign_clusters<<<gridSize_nseeds,blockSize,0,stream>>>(mDevSeeds, mDevFollowers, mCLUEHitsSoA);
 }
 
 void HGCalCLUEAlgoGPUEM::get_clusters(unsigned nlayers, const cudaStream_t &stream) {
-  const dim3 blockSize(mNThreadsEM,1,1);
+  //const dim3 blockSize(mNThreadsEM,1,1);
+  const dim3 blockSize(512,1,1);
   //the number of clusters is given by mDevSeeds.size(), but by using mCLUEClustersSoa.nclusters I make
   //sure there is enough room for all the clusters in each layer without actually counting them
-  //const dim3 gridSize( calculate_block_multiplicity(mCLUEClustersSoa.nclusters, blockSize.x), 1, 1 );
-  const dim3 gridSize( 1, 1, 1 );
+  const dim3 gridSize( calculate_block_multiplicity(mCLUEClustersSoA.nclusters, blockSize.x), 1, 1 );
+  //const dim3 gridSize( 1, 1, 1 );
 
   //ceil: the last layer will end up having less entries than the others (idxThread < nclusters in kernel)
   //the last layers are expected to have less clusters anyways, so this should not be a problem.
-  unsigned nClustersPerLayer = ( mCLUEClustersSoA.nclusters + nlayers -1 ) / nlayers;
-  
+  unsigned nClustersPerLayer = ( mCLUEClustersSoA.nclusters + nlayers - 1 ) / nlayers;
+  printf("nClustersperlayer: %d\n", nClustersPerLayer);
   //(usar um shift do genero: nlayer*numero_clusters_por_layer + indice_cluster_nesta_layer)
     
   //mDevSeeds gives number of seeds, i.e., an upper estimate for the number of clusters
   float dc2 = mDc * mDc;
   kernel_get_clusters<<<gridSize,blockSize,0,stream>>>(dc2,
-						       mDevSeeds,
-						       mDevFollowers,
-						       mDevPoints,
-						       mCLUEHitsSoA,
-						       mCLUEClustersSoA,
-						       nClustersPerLayer);
+  						       mDevSeeds,
+  						       mDevFollowers,
+  						       mDevPoints,
+  						       mCLUEHitsSoA,
+  						       mCLUEClustersSoA,
+  						       nClustersPerLayer);
+
 }
