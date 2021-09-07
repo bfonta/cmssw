@@ -80,6 +80,14 @@ void HGCalLayerClusterProducerEMGPUtoSoA::acquire(edm::Event const& event,
 					       prodHits_.get(), gpuCLUEHits.get(),
 					       prodClusters_.get(), gpuCLUEClusters.get());
   mAlgo->copy_tohost(ctx.stream());
+
+  for(unsigned i = 0; i<nclusters; ++i) 
+    {
+      if(i%10000==0) {
+	std::cout << prodHits_.get().rho[i] << ", " << prodHits_.get().delta[i] << ", " << prodHits_.get().id[i] << std::endl;
+	std::cout << prodClusters_.get().energy[i] << ", " << prodClusters_.get().x[i] << ", " << prodClusters_.get().layer[i] << std::endl;
+      }
+    }
 }
 
 void HGCalLayerClusterProducerEMGPUtoSoA::produce(edm::Event& event, const edm::EventSetup& setup) {
