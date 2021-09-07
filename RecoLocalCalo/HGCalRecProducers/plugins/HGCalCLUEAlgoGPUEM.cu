@@ -8,11 +8,12 @@ HGCalCLUEAlgoGPUEM::HGCalCLUEAlgoGPUEM(float dc, float kappa, float ecut, float 
   : HGCalCLUEAlgoGPUBase(dc, kappa, ecut, outlierDeltaFactor, hits_soa, clusters_soa)
 {}
 
-HGCalCLUEAlgoGPUEM::HGCalCLUEAlgoGPUEM(const HGCCLUEHitsSoA& clueHitsSoAHost,
+HGCalCLUEAlgoGPUEM::HGCalCLUEAlgoGPUEM(unsigned nhits, unsigned nclusters,
+				       const HGCCLUEHitsSoA& clueHitsSoAHost,
 				       const ConstHGCCLUEHitsSoA& clueHitsSoADev,
 				       const HGCCLUEClustersSoA& clueClustersSoAHost,
 				       const ConstHGCCLUEClustersSoA& clueClustersSoADev)
-  : HGCalCLUEAlgoGPUBase(clueHitsSoAHost, clueHitsSoADev, clueClustersSoAHost, clueClustersSoADev)
+  : HGCalCLUEAlgoGPUBase(nhits, nclusters, clueHitsSoAHost, clueHitsSoADev, clueClustersSoAHost, clueClustersSoADev)
 {}
 
 void HGCalCLUEAlgoGPUEM::copy_tohost(const cudaStream_t& s) {
@@ -96,7 +97,6 @@ void HGCalCLUEAlgoGPUEM::get_clusters(unsigned nlayers, const cudaStream_t &stre
   //ceil: the last layer will end up having less entries than the others (idxThread < nclusters in kernel)
   //the last layers are expected to have less clusters anyways, so this should not be a problem.
   unsigned nClustersPerLayer = ( mCLUEClustersSoA.nclusters + nlayers - 1 ) / nlayers;
-  printf("nClustersperlayer: %d\n", nClustersPerLayer);
   //(usar um shift do genero: nlayer*numero_clusters_por_layer + indice_cluster_nesta_layer)
     
   //mDevSeeds gives number of seeds, i.e., an upper estimate for the number of clusters

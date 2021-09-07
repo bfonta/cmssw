@@ -22,13 +22,11 @@ HGCalCLUEAlgoGPUBase::HGCalCLUEAlgoGPUBase(float pDc, float pKappa, float pEcut,
   was_memory_allocated = true;
 }
 
-HGCalCLUEAlgoGPUBase::HGCalCLUEAlgoGPUBase(const HGCCLUEHitsSoA& pCLUEHitsSoAHost, const ConstHGCCLUEHitsSoA& pCLUEHitsSoADev,
+HGCalCLUEAlgoGPUBase::HGCalCLUEAlgoGPUBase(unsigned nhits, unsigned nclusters,
+					   const HGCCLUEHitsSoA& pCLUEHitsSoAHost, const ConstHGCCLUEHitsSoA& pCLUEHitsSoADev,
 					   const HGCCLUEClustersSoA& pCLUEClustersSoAHost, const ConstHGCCLUEClustersSoA& pCLUEClustersSoADev)
-  : mCLUEHitsSoAHost(pCLUEHitsSoAHost), mCLUEHitsSoADev(pCLUEHitsSoADev), mCLUEClustersSoAHost(pCLUEClustersSoAHost), mCLUEClustersSoADev(pCLUEClustersSoADev)
+  : mNHits(nhits), mNClusters(nclusters), mCLUEHitsSoAHost(pCLUEHitsSoAHost), mCLUEHitsSoADev(pCLUEHitsSoADev), mCLUEClustersSoAHost(pCLUEClustersSoAHost), mCLUEClustersSoADev(pCLUEClustersSoADev)
 {
-  mNHits = mCLUEHitsSoA.nhits;
-  mNClusters = mCLUEClustersSoA.nclusters;
-
   mPadHits = calculate_padding( mNHits );
   mPadClusters = calculate_padding( mNClusters );
 
@@ -73,7 +71,6 @@ void HGCalCLUEAlgoGPUBase::copy_tohost(const cudaStream_t& stream) {
   //the original standalone version transferred only the cluster index
   cudaMemcpyAsync(mCLUEHitsSoAHost.rho, mCLUEHitsSoADev.rho,
 		  mPadHits*mCLUEHitsSoAHost.nbytes, cudaMemcpyDeviceToHost, stream);
-
   cudaMemcpyAsync(mCLUEClustersSoAHost.energy, mCLUEClustersSoADev.energy,
 		  mPadClusters*mCLUEClustersSoAHost.nbytes, cudaMemcpyDeviceToHost, stream);
 }

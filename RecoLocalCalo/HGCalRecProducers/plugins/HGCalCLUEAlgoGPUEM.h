@@ -22,7 +22,8 @@ public:
   HGCalCLUEAlgoGPUEM(float, float, float, float,
 		     const HGCCLUEHitsSoA&, const HGCCLUEClustersSoA&);
   
-  HGCalCLUEAlgoGPUEM(const HGCCLUEHitsSoA&, const ConstHGCCLUEHitsSoA&,
+  HGCalCLUEAlgoGPUEM(unsigned, unsigned,
+		     const HGCCLUEHitsSoA&, const ConstHGCCLUEHitsSoA&,
 		     const HGCCLUEClustersSoA&, const ConstHGCCLUEClustersSoA&);
 
   ~HGCalCLUEAlgoGPUEM() = default;

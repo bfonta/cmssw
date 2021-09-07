@@ -82,7 +82,7 @@ void HGCalLayerClusterProducerEMFromSoA::getClusters_(uint32_t nhits, uint32_t n
 
   for (unsigned i=0; i<nclusters; ++i) {
 
-    if(i%5000==0) {
+    if(i%50000==0) {
       std::cout << "WAFERZ: " << ddd->waferZ(clusters->layer[i], true) << std::endl;
       std::cout << "Layer: " << clusters->layer[i]  << std::endl;
      }
@@ -92,12 +92,13 @@ void HGCalLayerClusterProducerEMFromSoA::getClusters_(uint32_t nhits, uint32_t n
 
 
     //This code block is needed to match expected input from reco::BasicCluster
+    // 
+    // for (unsigned j=0; j<nhits; ++j) {
+    //   if(hits->clusterIndex[j] == clusters->clusterIndex[i])
+    // 	thisCluster.emplace_back(hits->id[j], 1.f);
+    // }
     std::vector<std::pair<DetId, float>> thisCluster;
-    for (unsigned j=0; j<nhits; ++j) {
-      if(hits->clusterIndex[j] == clusters->clusterIndex[i])
-	thisCluster.emplace_back(hits->id[j], 1.f);
-    }
-
+    
     coll[i] = reco::BasicCluster(clusters->energy[i],
 				 position,
 				 reco::CaloID::DET_HGCAL_ENDCAP,

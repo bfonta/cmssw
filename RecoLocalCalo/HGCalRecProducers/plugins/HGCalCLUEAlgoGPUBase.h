@@ -44,7 +44,8 @@ public:
   HGCalCLUEAlgoGPUBase(float, float, float, float,
 		       const HGCCLUEHitsSoA&, const HGCCLUEClustersSoA&);
   
-  HGCalCLUEAlgoGPUBase(const HGCCLUEHitsSoA&, const ConstHGCCLUEHitsSoA&,
+  HGCalCLUEAlgoGPUBase(unsigned, unsigned,
+		       const HGCCLUEHitsSoA&, const ConstHGCCLUEHitsSoA&,
 		       const HGCCLUEClustersSoA&, const ConstHGCCLUEClustersSoA&);
   
 protected:
