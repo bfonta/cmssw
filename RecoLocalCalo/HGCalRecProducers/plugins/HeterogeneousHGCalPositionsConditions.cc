@@ -1,5 +1,4 @@
-#include "KernelManagerHGCalCellPositions.h"
-#include "CondFormats/HGCalObjects/interface/HeterogeneousHGCalHEFCellPositionsConditions.h"
+#include "CondFormats/HGCalObjects/interface/HeterogeneousHGCalPositionsConditions.h"
 
 HeterogeneousHGCalPositionsConditions::HeterogeneousHGCalPositionsConditions(
     cpos::HGCalPositionsMapping* cpuPos) {
