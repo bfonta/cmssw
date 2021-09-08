@@ -1,5 +1,5 @@
-#ifndef _HGCalMaskResolutionAna_h_
-#define _HGCalMaskResolutionAna_h_
+#ifndef _HeterogeneousHGCalCLUEValidator_h
+#define _HeterogeneousHGCalCLUEValidator_h
 
 #include "FWCore/Framework/interface/one/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
@@ -22,7 +22,7 @@
 #include <iostream>
 #include <string>
 
-struct ValidRecHits {
+struct ValidCLUEHits {
   std::vector<float> energy;
   std::vector<float> time;
   std::vector<float> timeError;
@@ -31,10 +31,10 @@ struct ValidRecHits {
   std::vector<float> son;
 };
 
-class HeterogeneousHGCalRecHitsValidator : public edm::one::EDAnalyzer<edm::one::SharedResources> {
+class HeterogeneousHGCalCLUEValidator : public edm::one::EDAnalyzer<edm::one::SharedResources> {
 public:
-  explicit HeterogeneousHGCalRecHitsValidator(const edm::ParameterSet&);
-  ~HeterogeneousHGCalRecHitsValidator() override;
+  explicit HeterogeneousHGCalCLUEValidator(const edm::ParameterSet&);
+  ~HeterogeneousHGCalCLUEValidator() override;
   void analyze(const edm::Event&, const edm::EventSetup&) override;
   void endJob() override;
 
@@ -52,10 +52,10 @@ private:
 
   std::array<TTree*, nsubdetectors> trees_;
   std::array<std::string, nsubdetectors> treenames_;
-  std::array<ValidHitCollection, nsubdetectors> cpuValidRecHits, gpuValidRecHits, diffsValidRecHits;
+  std::array<ValidHitCollection, nsubdetectors> cpuValidCLUEHits, gpuValidCLUEHits, diffsValidCLUEHits;
   //std::vector< TH1F* > zhist;
 
   void set_geometry_(const edm::EventSetup&, const unsigned&);
 };
 
-#endif
+#endif //_HeterogeneousHGCalCLUEValidator_h

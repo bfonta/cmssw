@@ -1,6 +1,6 @@
-#include "Validation/HGCalValidation/plugins/HeterogeneousHGCalRecHitsValidator.h"
+#include "Validation/HGCalValidation/plugins/HeterogeneousHGCalCLUEValidator.h"
 
-HeterogeneousHGCalRecHitsValidator::HeterogeneousHGCalRecHitsValidator(const edm::ParameterSet &ps)
+HeterogeneousHGCalCLUEValidator::HeterogeneousHGCalCLUEValidator(const edm::ParameterSet &ps)
     : tokens_({{{{consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("cpuRecHitsEEToken")),
                   consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("gpuRecHitsEEToken"))}},
                 {{consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("cpuRecHitsHSiToken")),
@@ -14,21 +14,21 @@ HeterogeneousHGCalRecHitsValidator::HeterogeneousHGCalRecHitsValidator(const edm
   for (unsigned i(0); i < nsubdetectors; ++i) {
     estokens_[i] = esConsumes<HGCalGeometry, IdealGeometryRecord>(edm::ESInputTag{"", handles_str_[i]});
     trees_[i] = fs->make<TTree>(treenames_[i].c_str(), treenames_[i].c_str());
-    trees_[i]->Branch("cpu", "ValidHitCollection", &cpuValidRecHits[i]);
-    trees_[i]->Branch("gpu", "ValidHitCollection", &gpuValidRecHits[i]);
-    trees_[i]->Branch("diffs", "ValidHitCollection", &diffsValidRecHits[i]);
+    trees_[i]->Branch("cpu", "ValidHitCollection", &cpuValidCLUEHits[i]);
+    trees_[i]->Branch("gpu", "ValidHitCollection", &gpuValidCLUEHits[i]);
+    trees_[i]->Branch("diffs", "ValidHitCollection", &diffsValidCLUEHits[i]);
   }
 }
 
-HeterogeneousHGCalRecHitsValidator::~HeterogeneousHGCalRecHitsValidator() {}
+HeterogeneousHGCalCLUEValidator::~HeterogeneousHGCalCLUEValidator() {}
 
-void HeterogeneousHGCalRecHitsValidator::endJob() {}
+void HeterogeneousHGCalCLUEValidator::endJob() {}
 
-void HeterogeneousHGCalRecHitsValidator::set_geometry_(const edm::EventSetup &setup, const unsigned &detidx) {
+void HeterogeneousHGCalCLUEValidator::set_geometry_(const edm::EventSetup &setup, const unsigned &detidx) {
   edm::ESHandle<HGCalGeometry> handle = setup.getHandle(estokens_[detidx]);
 }
 
-void HeterogeneousHGCalRecHitsValidator::analyze(const edm::Event &event, const edm::EventSetup &setup) {
+void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm::EventSetup &setup) {
   recHitTools_.setGeometry(setup.getData(estokenGeom_));
 
   //future subdetector loop
@@ -74,13 +74,13 @@ void HeterogeneousHGCalRecHitsValidator::analyze(const edm::Event &event, const 
                       cpuFB - gpuFB,
                       cpuSoN - gpuSoN);
 
-      cpuValidRecHits[idet].push_back(vCPU);
-      gpuValidRecHits[idet].push_back(vGPU);
-      diffsValidRecHits[idet].push_back(vDiffs);
+      cpuValidCLUEHits[idet].push_back(vCPU);
+      gpuValidCLUEHits[idet].push_back(vGPU);
+      diffsValidCLUEHits[idet].push_back(vDiffs);
     }
     trees_[idet]->Fill();
   }
 }
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(HeterogeneousHGCalRecHitsValidator);
+DEFINE_FWK_MODULE(HeterogeneousHGCalCLUEValidator);

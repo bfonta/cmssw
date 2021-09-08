@@ -20,7 +20,4 @@ __device__
 unsigned hash_function(const uint32_t& detid,
 		       const hgcal_conditions::HeterogeneousPositionsConditionsESProduct* conds);
 
-__global__ void test(uint32_t detid_test,
-                     const hgcal_conditions::HeterogeneousHEFCellPositionsConditionsESProduct* conds);
-
 #endif  //RecoLocalCalo_HGCalESProducers_HGCalCellPositionsKernelImpl_cuh
