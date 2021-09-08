@@ -15,7 +15,7 @@ HGCalCLUEAlgoGPUBase::HGCalCLUEAlgoGPUBase(float pDc, float pKappa, float pEcut,
   mPadHits = calculate_padding( mNHits );
   mPadClusters = calculate_padding( mNClusters );
 
-  cudaMalloc(&mDevHist, sizeof(LayerTilesGPU) * NLAYERS);
+  cudaMalloc(&mDevHist, sizeof(HeterogeneousHGCalLayerTiles) * NLAYERS);
   cudaMalloc(&mDevSeeds, sizeof(cms::cuda::VecArray<int,clue_gpu::maxNSeeds>) );
   cudaMalloc(&mDevFollowers, sizeof(cms::cuda::VecArray<int,clue_gpu::maxNFollowers>)*mNHits);
 
@@ -61,7 +61,7 @@ void HGCalCLUEAlgoGPUBase::set_memory() {
   cudaMemset(mCLUEClustersSoA.clusterIndex, 0x00, sizeof(int32_t)*mPadClusters);
 
   // algorithm internal variables
-  cudaMemset(mDevHist, 0x00, sizeof(LayerTilesGPU) * NLAYERS);
+  cudaMemset(mDevHist, 0x00, sizeof(HeterogeneousHGCalLayerTiles) * NLAYERS);
   cudaMemset(mDevSeeds, 0x00, sizeof(GPU::VecArray<int,clue_gpu::maxNSeeds>));
   cudaMemset(mDevFollowers, 0x00, sizeof(GPU::VecArray<int,clue_gpu::maxNFollowers>)*mNHits);  
 }

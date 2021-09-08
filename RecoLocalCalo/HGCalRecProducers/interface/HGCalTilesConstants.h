@@ -4,6 +4,8 @@
 #ifndef RecoLocalCalo_HGCalRecProducer_HGCalTilesConstants_h
 #define RecoLocalCalo_HGCalRecProducer_HGCalTilesConstants_h
 
+#define NLAYERS 100
+
 #include "DataFormats/Math/interface/constexpr_cmath.h"
 #include <cstdint>
 #include <array>
@@ -26,6 +28,10 @@ struct HGCalTilesConstants {
   static constexpr int nColumnsEta = reco::ceil((maxEta - minEta) / tileSizeEtaPhi);
   static constexpr int nRowsPhi = reco::ceil((maxPhi - minPhi) / tileSizeEtaPhi);
   static constexpr int nTiles = nColumns * nRows + nColumnsEta * nRowsPhi;
+
+  static constexpr int maxTileDepth = 50;
+  static constexpr float rX = nColumns/(maxX-minX);
+  static constexpr float rY = nRows/(maxY-minY);
 };
 
 #endif
