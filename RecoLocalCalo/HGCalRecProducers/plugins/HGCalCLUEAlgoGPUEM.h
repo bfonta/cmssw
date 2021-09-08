@@ -9,7 +9,7 @@
 #include <cuda.h>
 
 #include "RecoLocalCalo/HGCalRecProducers/plugins/HGCalCLUEAlgoGPUBase.h"
-#include "RecoLocalCalo/HGCalRecProducers/interface/LayerTilesGPU.h"
+#include "RecoLocalCalo/HGCalRecProducers/interface/HeterogeneousHGCalLayerTiles.h"
 #include "RecoLocalCalo/HGCalRecProducers/plugins/HGCalCLUEAlgoGPUEMKernelImpl.cuh"
 
 #include "CUDADataFormats/HGCal/interface/ConstHGCRecHitSoA.h"

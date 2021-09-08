@@ -6,7 +6,7 @@
 
 #include "HeterogeneousCore/CUDAUtilities/interface/device_unique_ptr.h"
 #include "HeterogeneousCore/CUDAUtilities/interface/VecArray.h"
-#include "RecoLocalCalo/HGCalRecProducers/interface/LayerTilesGPU.h"
+#include "RecoLocalCalo/HGCalRecProducers/interface/HeterogeneousHGCalLayerTiles.h"
 #include "CUDADataFormats/HGCal/interface/HGCRecHitSoA.h"
 #include "CUDADataFormats/HGCal/interface/ConstHGCRecHitSoA.h"
 #include "CUDADataFormats/HGCal/interface/ConstHGCCLUESoA.h"
@@ -63,7 +63,7 @@ protected:
   HGCCLUEClustersSoA mCLUEClustersSoAHost, mCLUEClustersSoA;
   ConstHGCCLUEClustersSoA mCLUEClustersSoADev;
 
-  LayerTilesGPU *mDevHist;
+  HeterogeneousHGCalLayerTiles *mDevHist;
   cms::cuda::VecArray<int,clue_gpu::maxNSeeds> *mDevSeeds;
   cms::cuda::VecArray<int,clue_gpu::maxNFollowers> *mDevFollowers;
 

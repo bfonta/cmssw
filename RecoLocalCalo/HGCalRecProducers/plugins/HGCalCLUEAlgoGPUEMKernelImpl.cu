@@ -46,7 +46,7 @@ void kernel_fill_input_soa(ConstHGCRecHitSoA hits,
 
 
 __global__
-void kernel_compute_histogram( LayerTilesGPU *hist,
+void kernel_compute_histogram( HeterogeneousHGCalLayerTiles *hist,
 			       clue_gpu::HGCCLUEInputSoAEM in,
 			       int numberOfPoints
 			       )
@@ -62,7 +62,7 @@ void kernel_compute_histogram( LayerTilesGPU *hist,
 } // kernel
 
 __global__
-void kernel_calculate_density( LayerTilesGPU *hist, 
+void kernel_calculate_density( HeterogeneousHGCalLayerTiles *hist, 
 			       clue_gpu::HGCCLUEInputSoAEM in,
 			       HGCCLUEHitsSoA out,
 			       float dc,
@@ -119,7 +119,7 @@ void kernel_calculate_density( LayerTilesGPU *hist,
 
 
 __global__
-void kernel_calculate_distanceToHigher(LayerTilesGPU* hist, 
+void kernel_calculate_distanceToHigher(HeterogeneousHGCalLayerTiles* hist, 
 				       clue_gpu::HGCCLUEInputSoAEM in,
 				       HGCCLUEHitsSoA out,
 				       float outlierDeltaFactor,
