@@ -1,83 +1,65 @@
 #include "Validation/HGCalValidation/plugins/HeterogeneousHGCalCLUEValidator.h"
 
 HeterogeneousHGCalCLUEValidator::HeterogeneousHGCalCLUEValidator(const edm::ParameterSet &ps)
-    : tokens_({{{{consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("cpuRecHitsEEToken")),
-                  consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("gpuRecHitsEEToken"))}},
-                {{consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("cpuRecHitsHSiToken")),
-                  consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("gpuRecHitsHSiToken"))}},
-                {{consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("cpuRecHitsHSciToken")),
-                  consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("gpuRecHitsHSciToken"))}}}}),
-      treenames_({{"CEE", "CHSi", "CHSci"}}) {
+  : tokens_({{{{consumes<reco::BasicClusterCollection>(ps.getParameter<edm::InputTag>("cpuCLUEEMToken")),
+		consumes<reco::BasicClusterCollection>(ps.getParameter<edm::InputTag>("gpuCLUEEMToken"))}},
+      }}),
+    treenames_({{"EM" /*, HAD */}}) {
+  std::cout << "CONSTRUCTOR ========================" << std::endl;
   usesResource(TFileService::kSharedResource);
-  estokenGeom_ = esConsumes<CaloGeometry, CaloGeometryRecord>();
   edm::Service<TFileService> fs;
   for (unsigned i(0); i < nsubdetectors; ++i) {
-    estokens_[i] = esConsumes<HGCalGeometry, IdealGeometryRecord>(edm::ESInputTag{"", handles_str_[i]});
     trees_[i] = fs->make<TTree>(treenames_[i].c_str(), treenames_[i].c_str());
-    trees_[i]->Branch("cpu", "ValidHitCollection", &cpuValidCLUEHits[i]);
-    trees_[i]->Branch("gpu", "ValidHitCollection", &gpuValidCLUEHits[i]);
-    trees_[i]->Branch("diffs", "ValidHitCollection", &diffsValidCLUEHits[i]);
+    trees_[i]->Branch("cpu", "ValidCLUEClusterCollection", &cpuValidCLUEHits[i]);
+    trees_[i]->Branch("gpu", "ValidCLUEClusterCollection", &gpuValidCLUEHits[i]);
+    trees_[i]->Branch("diffs", "ValidCLUEClusterCollection", &diffsValidCLUEHits[i]);
   }
+  std::cout << "CONSTRUCTOR END ========================" << std::endl;
 }
 
 HeterogeneousHGCalCLUEValidator::~HeterogeneousHGCalCLUEValidator() {}
 
 void HeterogeneousHGCalCLUEValidator::endJob() {}
 
-void HeterogeneousHGCalCLUEValidator::set_geometry_(const edm::EventSetup &setup, const unsigned &detidx) {
-  edm::ESHandle<HGCalGeometry> handle = setup.getHandle(estokens_[detidx]);
-}
-
 void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm::EventSetup &setup) {
-  recHitTools_.setGeometry(setup.getData(estokenGeom_));
-
   //future subdetector loop
   for (size_t idet = 0; idet < nsubdetectors; ++idet) {
-    set_geometry_(setup, idet);
-
     //get hits produced with the CPU
-    const auto &cpuhits = event.get(tokens_[idet][0]);
+    const auto &cpuClusters = event.get(tokens_[idet][0]);
 
     //get hits produced with the GPU
-    const auto &gpuhits = event.get(tokens_[idet][1]);
+    const auto &gpuClusters = event.get(tokens_[idet][1]);
 
-    size_t nhits = cpuhits.size();
-    std::cout << nhits << ", " << gpuhits.size() << std::endl;
-    assert(nhits == gpuhits.size());
+    size_t nclusters = cpuClusters.size();
+    std::cout << nclusters << ", " << gpuClusters.size() << std::endl;
+    assert(nclusters == gpuClusters.size());
     //float sum_cpu = 0.f, sum_gpu = 0.f, sum_son_cpu = 0.f, sum_son_gpu = 0.f;
-    for (unsigned i(0); i < nhits; i++) {
-      const HGCRecHit &cpuHit = cpuhits[i];
-      const HGCRecHit &gpuHit = gpuhits[i];
+    for (unsigned i(0); i < nclusters; i++) {
+      const reco::BasicCluster &cpuCluster = cpuClusters[i];
+      const reco::BasicCluster &gpuCluster = gpuClusters[i];
 
-      const float cpuEn = cpuHit.energy();
-      const float gpuEn = gpuHit.energy();
-      //sum_cpu += cpuEn; sum_gpu += gpuEn;
+      const float cpuEn = cpuCluster.energy();
+      const float gpuEn = gpuCluster.energy();
 
-      const float cpuTime = cpuHit.time();
-      const float gpuTime = gpuHit.time();
-      const float cpuTimeErr = cpuHit.timeError();
-      const float gpuTimeErr = gpuHit.timeError();
-      const HGCalDetId cpuDetId = cpuHit.detid();
-      const HGCalDetId gpuDetId = gpuHit.detid();
-      const float cpuFB = cpuHit.flagBits();
-      const float gpuFB = gpuHit.flagBits();
-      const float cpuSoN = cpuHit.signalOverSigmaNoise();
-      const float gpuSoN = gpuHit.signalOverSigmaNoise();
-      //sum_son_cpu += cpuSoN; sum_son_gpu += gpuSoN;
+      const float cpuX = cpuCluster.x();
+      const float gpuX = gpuCluster.x();
+      const float cpuY = cpuCluster.y();
+      const float gpuY = gpuCluster.y();
+      const float cpuZ = cpuCluster.z();
+      const float gpuZ = gpuCluster.z();
 
-      ValidHit vCPU(cpuEn, cpuTime, cpuTimeErr, cpuDetId, cpuFB, cpuSoN);
-      ValidHit vGPU(gpuEn, gpuTime, gpuTimeErr, gpuDetId, gpuFB, gpuSoN);
-      ValidHit vDiffs(cpuEn - gpuEn,
-                      cpuTime - gpuTime,
-                      cpuTimeErr - gpuTimeErr,
-                      cpuDetId - gpuDetId,
-                      cpuFB - gpuFB,
-                      cpuSoN - gpuSoN);
+      ValidCLUECluster vCPU(cpuEn, cpuX, cpuY, cpuZ);
+      ValidCLUECluster vGPU(gpuEn, gpuX, gpuY, gpuZ);
+      ValidCLUECluster vDiffs(cpuEn - gpuEn,
+			      cpuX - gpuX,
+			      cpuY - gpuY,
+			      cpuZ - gpuZ);
 
       cpuValidCLUEHits[idet].push_back(vCPU);
       gpuValidCLUEHits[idet].push_back(vGPU);
       diffsValidCLUEHits[idet].push_back(vDiffs);
     }
+    std::cout << "CHECK" << std::endl;
     trees_[idet]->Fill();
   }
 }

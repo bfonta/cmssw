@@ -3,6 +3,7 @@ import FWCore.ParameterSet.Config as cms
 from Configuration.StandardSequences.Eras import eras
 from Configuration.ProcessModifiers.gpu_cff import gpu
 from RecoLocalCalo.HGCalRecProducers.HGCalRecHit_cfi import HGCalRecHit
+from RecoLocalCalo.HGCalRecProducers.hgcalLayerClusters_cff import hgcalLayerClusters
 
 def getHeterogeneousRecHitsSource(pu):
     indir = '/eos/user/b/bfontana/Samples/' #indir = '/home/bfontana/'
@@ -43,16 +44,16 @@ process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load('Configuration.Geometry.GeometryExtended2026D49Reco_cff')
 process.load('HeterogeneousCore.CUDAServices.CUDAService_cfi')
-process.load('RecoLocalCalo.HGCalRecProducers.HGCalRecHit_cfi')
+process.load('RecoLocalCalo.HGCalRecProducers.hgcalLayerClusters_cff')
 process.load('SimCalorimetry.HGCalSimProducers.hgcalDigitizer_cfi')
 
-from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic', '')
+# from Configuration.AlCa.GlobalTag import GlobalTag
+# process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic', '')
 
 #TFileService
 
 dirName = '/eos/user/b/bfontana/Samples/'
-fileName = 'validation' + str(F.PU) + '.root'
+fileName = 'validationCLUE' + str(F.PU) + '.root'
 process.TFileService = cms.Service("TFileService", 
                                    fileName = cms.string( os.path.join(dirName,fileName) ),
                                    closeFileFast = cms.untracked.bool(True)
@@ -63,39 +64,42 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10) )
 process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool( False )) #add option for edmStreams
 
+# Filling positions conditions data
+process.HeterogeneousHGCalPositionsFiller = cms.ESProducer("HeterogeneousHGCalPositionsFiller")
+
 process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEERecHitGPU_cfi')
-process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEERecHitGPUtoSoA_cfi')
-process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEERecHitFromSoA_cfi')
+#add this: process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousHEFRecHitGPU_cfi')
+process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEGPU_cfi')
+process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEGPUtoSoA_cfi')
+process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEFromSoA_cfi')
 
-process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousHEFRecHitGPU_cfi')
-process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousHEFRecHitGPUtoSoA_cfi')
-process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousHEFRecHitFromSoA_cfi')
+process.HGCalRecHit = HGCalRecHit.clone()
+process.hgcalLayerClusters = hgcalLayerClusters.clone()
 
-process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousHEBRecHitGPU_cfi')
-process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousHEBRecHitGPUtoSoA_cfi')
-process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousHEBRecHitFromSoA_cfi')
+process.valid = cms.EDAnalyzer( 'HeterogeneousHGCalCLUEValidator',
+                                cpuCLUEEMToken = cms.InputTag('hgcalLayerClusters'),
+                                gpuCLUEEMToken = cms.InputTag('EECLUEFromSoAProd', 'Clusters'))
 
-process.HGCalRecHits = HGCalRecHit.clone()
-
-process.valid = cms.EDAnalyzer( 'HeterogeneousHGCalRecHitsValidator',
-                                cpuRecHitsEEToken = cms.InputTag('HGCalRecHits', 'HGCEERecHits'),
-                                gpuRecHitsEEToken = cms.InputTag('EERecHitFromSoAProd'),
-                                cpuRecHitsHSiToken = cms.InputTag('HGCalRecHits', 'HGCHEFRecHits'),
-                                gpuRecHitsHSiToken = cms.InputTag('HEFRecHitFromSoAProd'),
-                                cpuRecHitsHSciToken = cms.InputTag('HGCalRecHits', 'HGCHEBRecHits'),
-                                gpuRecHitsHSciToken = cms.InputTag('HEBRecHitFromSoAProd')
+process.em_task = cms.Task( process.EERecHitGPUProd,
+                            process.EMCLUEGPUProd, process.EMCLUEGPUtoSoAProd, process.EMCLUEFromSoAProd,
 )
 
-process.ee_t = cms.Task( process.EERecHitGPUProd, process.EERecHitGPUtoSoAProd, process.EERecHitFromSoAProd )
-process.hef_t = cms.Task( process.HEFRecHitGPUProd, process.HEFRecHitGPUtoSoAProd, process.HEFRecHitFromSoAProd )
-process.heb_t = cms.Task( process.HEBRecHitGPUProd, process.HEBRecHitGPUtoSoAProd, process.HEBRecHitFromSoAProd )
-process.gpu_t = cms.Task( process.ee_t, process.hef_t, process.heb_t )
-process.cpu_t = cms.Task( process.HGCalRecHits )
+process.gpu_t = cms.Task( process.HeterogeneousHGCalPositionsFiller,
+                          process.em_task
+)
+
+process.cpu_t = cms.Task( process.HGCalRecHit, process.hgcalLayerClusters )
+
 process.path = cms.Path( process.valid, process.gpu_t, process.cpu_t )
+#process.path = cms.Path( process.valid, process.gpu_t )
 
 
-process.out = cms.OutputModule( "PoolOutputModule", 
-                                fileName = cms.untracked.string( os.path.join(dirName, 'out.root') ),
-                                outputCommands = cms.untracked.vstring('drop *') )
+process.consumer = cms.EDAnalyzer("GenericConsumer",                     
+                                  eventProducts = cms.untracked.vstring('EMCLUEFromSoAProd',) )
+process.consume_step = cms.EndPath(process.consumer)
 
-process.outpath = cms.EndPath(process.out)
+# process.out = cms.OutputModule( "PoolOutputModule", 
+#                                 fileName = cms.untracked.string( os.path.join(dirName, 'out.root') ),
+#                                 outputCommands = cms.untracked.vstring('drop *') )
+
+# process.outpath = cms.EndPath(process.out)

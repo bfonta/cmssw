@@ -1,5 +1,9 @@
 import FWCore.ParameterSet.Config as cms
 import os, glob
+from Configuration.ProcessModifiers.gpu_cff import gpu
+from RecoLocalCalo.HGCalRecProducers.HGCalRecHit_cfi import HGCalRecHit
+from SimCalorimetry.HGCalSimProducers.hgcalDigitizer_cfi import HGCAL_noise_fC, HGCAL_chargeCollectionEfficiencies
+
 
 def getHeterogeneousRecHitsSource(pu):
     indir = '/eos/user/b/bfontana/Samples/' #indir = '/home/bfontana/'
@@ -21,10 +25,6 @@ def getHeterogeneousRecHitsSource(pu):
                       duplicateCheckMode = cms.untracked.string("noDuplicateCheck"))
 
 enableGPU = True
-from Configuration.ProcessModifiers.gpu_cff import gpu
-
-from RecoLocalCalo.HGCalRecProducers.HGCalRecHit_cfi import HGCalRecHit
-from SimCalorimetry.HGCalSimProducers.hgcalDigitizer_cfi import HGCAL_noise_fC, HGCAL_chargeCollectionEfficiencies
 
 #arguments parsing
 from FWCore.ParameterSet.VarParsing import VarParsing
@@ -53,7 +53,6 @@ process.TFileService = cms.Service("TFileService",
                                    closeFileFast = cms.untracked.bool(True)
                                )
 
-    
 process.source = getHeterogeneousRecHitsSource(F.PU)
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(5) )
 process.options = cms.untracked.PSet(
@@ -66,11 +65,6 @@ process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEERecHitGPU_cfi')
 process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEGPU_cfi')
 process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEGPUtoSoA_cfi')
 process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEFromSoA_cfi')
-
-#process.task = cms.Task( process.HeterogeneousHGCalPositionsFiller, process.HeterogeneousHGCalHEFRecHits )
-#process.task = cms.Task( process.HGCalRecHits, process.HeterogeneousHGCalHEFRecHits )
-
-#process.HGCalRecHits = HGCalRecHit.clone()
 
 process.ee_task = cms.Task( process.EERecHitGPUProd,
                             process.EMCLUEGPUProd, process.EMCLUEGPUtoSoAProd, process.EMCLUEFromSoAProd,

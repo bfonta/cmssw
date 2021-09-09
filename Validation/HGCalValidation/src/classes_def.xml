@@ -2,4 +2,8 @@
   <class name="ValidHit" />
   <class name="std::vector<ValidHit>" />
   <class name="edm::Wrapper<std::vector<ValidHit> >" />
+
+  <class name="ValidCLUECluster" />
+  <class name="std::vector<ValidCLUECluster>" />
+  <class name="edm::Wrapper<std::vector<ValidCLUECluster> >" />
 </lcgdict>

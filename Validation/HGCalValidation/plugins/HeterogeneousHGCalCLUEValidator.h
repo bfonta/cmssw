@@ -7,29 +7,19 @@
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
-#include "DataFormats/HGCRecHit/interface/HGCRecHit.h"
-#include "DataFormats/HGCRecHit/interface/HGCRecHitCollections.h"
+#include "DataFormats/EgammaReco/interface/BasicCluster.h"
 #include "Geometry/Records/interface/CaloGeometryRecord.h"
 #include "Geometry/Records/interface/IdealGeometryRecord.h"
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
 #include "Geometry/HGCalGeometry/interface/HGCalGeometry.h"
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
-#include "Validation/HGCalValidation/interface/ValidHit.h"
+#include "Validation/HGCalValidation/interface/ValidCLUECluster.h"
 
 #include "TTree.h"
 #include "TH1F.h"
 
 #include <iostream>
 #include <string>
-
-struct ValidCLUEHits {
-  std::vector<float> energy;
-  std::vector<float> time;
-  std::vector<float> timeError;
-  std::vector<unsigned> detid;
-  std::vector<unsigned> flagBits;
-  std::vector<float> son;
-};
 
 class HeterogeneousHGCalCLUEValidator : public edm::one::EDAnalyzer<edm::one::SharedResources> {
 public:
@@ -39,23 +29,16 @@ public:
   void endJob() override;
 
 private:
-  static const unsigned nsubdetectors = 3;      //ce-e, ce-h-fine, ce-h-coarse
+  static const unsigned nsubdetectors = 1;      //EM e/ou HAD
   static const unsigned ncomputingdevices = 2;  //cpu, gpu
   //cpu amd gpu tokens and handles for the 3 subdetectors, cpu and gpu
-  std::array<std::array<edm::EDGetTokenT<HGChefRecHitCollection>, ncomputingdevices>, nsubdetectors> tokens_;
-  std::array<edm::ESGetToken<HGCalGeometry, IdealGeometryRecord>, nsubdetectors> estokens_;
-  edm::ESGetToken<CaloGeometry, CaloGeometryRecord> estokenGeom_;
+  std::array<std::array<edm::EDGetTokenT<reco::BasicClusterCollection>, ncomputingdevices>, nsubdetectors> tokens_;
 
-  std::array<std::string, nsubdetectors> handles_str_ = {
-      {"HGCalEESensitive", "HGCalHESiliconSensitive", "HGCalHEScintillatorSensitive"}};
   hgcal::RecHitTools recHitTools_;
 
   std::array<TTree*, nsubdetectors> trees_;
   std::array<std::string, nsubdetectors> treenames_;
-  std::array<ValidHitCollection, nsubdetectors> cpuValidCLUEHits, gpuValidCLUEHits, diffsValidCLUEHits;
-  //std::vector< TH1F* > zhist;
-
-  void set_geometry_(const edm::EventSetup&, const unsigned&);
+  std::array<ValidCLUEClusterCollection, nsubdetectors> cpuValidCLUEHits, gpuValidCLUEHits, diffsValidCLUEHits;
 };
 
 #endif //_HeterogeneousHGCalCLUEValidator_h
