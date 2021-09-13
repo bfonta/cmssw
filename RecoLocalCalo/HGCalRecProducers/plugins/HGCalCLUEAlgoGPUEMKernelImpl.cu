@@ -402,9 +402,9 @@ void kernel_get_clusters(float dc2,
   				    dFollowers );
 
       unsigned soaIdx = layerIdx*nClustersPerLayer + clusterIdx;
+      clustersSoA.energy[soaIdx]       = clusterEnergy;
       clustersSoA.x[soaIdx]            = clusterX;
       clustersSoA.y[soaIdx]            = clusterY;
-      clustersSoA.energy[soaIdx]       = clusterEnergy;
       clustersSoA.layer[soaIdx]        = hitsIn.layer[maxEnergyIndex];
       clustersSoA.clusterIndex[soaIdx] = hitsOut.clusterIndex[maxEnergyIndex];
       assert(hitsOut.clusterIndex[maxEnergyIndex] == hitsOut.clusterIndex[thisSeed]);

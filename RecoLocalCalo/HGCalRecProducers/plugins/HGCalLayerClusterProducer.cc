@@ -182,15 +182,14 @@ void HGCalLayerClusterProducer::produce(edm::Event& evt, const edm::EventSetup& 
     default:
       break;
   }
+
   algo->makeClusters();
   *clusters = algo->getClusters(false);
   if (doSharing)
     *clusters_sharing = algo->getClusters(true);
 
-  std::cout << "PRODUCE LAYERCLUSTER CPU before" << std::endl;
   auto clusterHandle = evt.put(std::move(clusters));
   auto clusterHandleSharing = evt.put(std::move(clusters_sharing), "sharing");
-  std::cout << "PRODUCE LAYERCLUSTER CPU after" << std::endl;
 
   //Keep the density
   *density = algo->getDensity();

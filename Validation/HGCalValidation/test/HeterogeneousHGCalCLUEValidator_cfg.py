@@ -78,7 +78,7 @@ process.hgcalLayerClusters = hgcalLayerClusters.clone()
 
 process.valid = cms.EDAnalyzer( 'HeterogeneousHGCalCLUEValidator',
                                 cpuCLUEEMToken = cms.InputTag('hgcalLayerClusters'),
-                                gpuCLUEEMToken = cms.InputTag('EECLUEFromSoAProd', 'Clusters'))
+                                gpuCLUEEMToken = cms.InputTag('EMCLUEFromSoAProd', 'Clusters'))
 
 process.em_task = cms.Task( process.EERecHitGPUProd,
                             process.EMCLUEGPUProd, process.EMCLUEGPUtoSoAProd, process.EMCLUEFromSoAProd,
@@ -91,15 +91,12 @@ process.gpu_t = cms.Task( process.HeterogeneousHGCalPositionsFiller,
 process.cpu_t = cms.Task( process.HGCalRecHit, process.hgcalLayerClusters )
 
 process.path = cms.Path( process.valid, process.gpu_t, process.cpu_t )
-#process.path = cms.Path( process.valid, process.gpu_t )
 
+# process.consumer = cms.EDAnalyzer("GenericConsumer",                     
+#                                   eventProducts = cms.untracked.vstring('EMCLUEFromSoAProd',) )
+# process.consume_step = cms.EndPath(process.consumer)
 
-process.consumer = cms.EDAnalyzer("GenericConsumer",                     
-                                  eventProducts = cms.untracked.vstring('EMCLUEFromSoAProd',) )
-process.consume_step = cms.EndPath(process.consumer)
-
-# process.out = cms.OutputModule( "PoolOutputModule", 
-#                                 fileName = cms.untracked.string( os.path.join(dirName, 'out.root') ),
-#                                 outputCommands = cms.untracked.vstring('drop *') )
-
-# process.outpath = cms.EndPath(process.out)
+process.out = cms.OutputModule( "PoolOutputModule", 
+                                fileName = cms.untracked.string( os.path.join(dirName, 'out.root') ),
+                                outputCommands = cms.untracked.vstring('drop *') )
+process.outpath = cms.EndPath(process.out)

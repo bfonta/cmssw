@@ -63,7 +63,6 @@ HGCalLayerClusterProducerEMGPUtoSoA::~HGCalLayerClusterProducerEMGPUtoSoA() {}
 void HGCalLayerClusterProducerEMGPUtoSoA::acquire(edm::Event const& event,
                                edm::EventSetup const& setup,
                                edm::WaitingTaskWithArenaHolder w) {
-  std::cout << "Acquire GPUtoSoA" << std::endl;
   cms::cuda::ScopedContextAcquire ctx{event.streamID(), std::move(w)};
   const auto& gpuCLUEHits = ctx.get(event, clueGPUHitsToken_);
   const auto& gpuCLUEClusters = ctx.get(event, clueGPUClustersToken_);
@@ -80,18 +79,9 @@ void HGCalLayerClusterProducerEMGPUtoSoA::acquire(edm::Event const& event,
 					       prodHits_.get(), gpuCLUEHits.get(),
 					       prodClusters_.get(), gpuCLUEClusters.get());
   mAlgo->copy_tohost(ctx.stream());
-
-  for(unsigned i = 0; i<nclusters; ++i) 
-    {
-      if(i%10000==0) {
-	std::cout << prodHits_.get().rho[i] << ", " << prodHits_.get().delta[i] << ", " << prodHits_.get().id[i] << std::endl;
-	std::cout << prodClusters_.get().energy[i] << ", " << prodClusters_.get().x[i] << ", " << prodClusters_.get().layer[i] << std::endl;
-      }
-    }
 }
 
 void HGCalLayerClusterProducerEMGPUtoSoA::produce(edm::Event& event, const edm::EventSetup& setup) {
-  std::cout << "Produce GPUtoSoA" << std::endl;
   event.put(std::move(prodHitsPtr_), "Hits");
   event.put(std::move(prodClustersPtr_), "Clusters");
 }

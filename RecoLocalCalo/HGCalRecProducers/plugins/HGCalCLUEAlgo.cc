@@ -84,7 +84,7 @@ void HGCalCLUEAlgoT<T>::prepareDataStructures(unsigned int l) {
   cells_[l].clusterIndex.resize(cellsSize, -1);
   cells_[l].followers.resize(cellsSize);
   cells_[l].isSeed.resize(cellsSize, false);
-  if (!rhtools_.isOnlySilicon(l)) {
+  if (rhtools_.isOnlySilicon(l)) {
     cells_[l].isSi.resize(cellsSize, true);
     cells_[l].eta.resize(cellsSize, 0.f);
     cells_[l].phi.resize(cellsSize, 0.f);
@@ -113,6 +113,7 @@ void HGCalCLUEAlgoT<T>::makeClusters() {
       else
         delta_c = vecDeltas_[2];
       float delta_r = vecDeltas_[3];
+
       LogDebug("HGCalCLUEAlgo") << "maxlayer: " << maxlayer_ << " lastLayerEE: " << lastLayerEE_
                                 << " firstLayerBH: " << firstLayerBH_ << "\n";
 

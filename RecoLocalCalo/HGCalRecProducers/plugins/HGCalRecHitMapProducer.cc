@@ -39,9 +39,9 @@ HGCalRecHitMapProducer::HGCalRecHitMapProducer(const edm::ParameterSet& ps)
 
 void HGCalRecHitMapProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
-  desc.add<edm::InputTag>("EEInput", {"HGCalRecHit", "HGCEERecHits"});
-  desc.add<edm::InputTag>("FHInput", {"HGCalRecHit", "HGCHEFRecHits"});
-  desc.add<edm::InputTag>("BHInput", {"HGCalRecHit", "HGCHEBRecHits"});
+  desc.add<edm::InputTag>("EEInput", {"validRecHits", "HGCEERecHits"});
+  desc.add<edm::InputTag>("FHInput", {"validRecHits", "HGCHEFRecHits"});
+  desc.add<edm::InputTag>("BHInput", {"validRecHits", "HGCHEBRecHits"});
   descriptions.add("hgcalRecHitMapProducer", desc);
 }
 

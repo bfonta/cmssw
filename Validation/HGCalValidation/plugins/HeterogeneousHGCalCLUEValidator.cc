@@ -5,7 +5,6 @@ HeterogeneousHGCalCLUEValidator::HeterogeneousHGCalCLUEValidator(const edm::Para
 		consumes<reco::BasicClusterCollection>(ps.getParameter<edm::InputTag>("gpuCLUEEMToken"))}},
       }}),
     treenames_({{"EM" /*, HAD */}}) {
-  std::cout << "CONSTRUCTOR ========================" << std::endl;
   usesResource(TFileService::kSharedResource);
   edm::Service<TFileService> fs;
   for (unsigned i(0); i < nsubdetectors; ++i) {
@@ -14,7 +13,6 @@ HeterogeneousHGCalCLUEValidator::HeterogeneousHGCalCLUEValidator(const edm::Para
     trees_[i]->Branch("gpu", "ValidCLUEClusterCollection", &gpuValidCLUEHits[i]);
     trees_[i]->Branch("diffs", "ValidCLUEClusterCollection", &diffsValidCLUEHits[i]);
   }
-  std::cout << "CONSTRUCTOR END ========================" << std::endl;
 }
 
 HeterogeneousHGCalCLUEValidator::~HeterogeneousHGCalCLUEValidator() {}
@@ -32,7 +30,7 @@ void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm
 
     size_t nclusters = cpuClusters.size();
     std::cout << nclusters << ", " << gpuClusters.size() << std::endl;
-    assert(nclusters == gpuClusters.size());
+    //assert(nclusters == gpuClusters.size());
     //float sum_cpu = 0.f, sum_gpu = 0.f, sum_son_cpu = 0.f, sum_son_gpu = 0.f;
     for (unsigned i(0); i < nclusters; i++) {
       const reco::BasicCluster &cpuCluster = cpuClusters[i];
@@ -59,7 +57,6 @@ void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm
       gpuValidCLUEHits[idet].push_back(vGPU);
       diffsValidCLUEHits[idet].push_back(vDiffs);
     }
-    std::cout << "CHECK" << std::endl;
     trees_[idet]->Fill();
   }
 }

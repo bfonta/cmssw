@@ -34,8 +34,6 @@ private:
   //cpu amd gpu tokens and handles for the 3 subdetectors, cpu and gpu
   std::array<std::array<edm::EDGetTokenT<reco::BasicClusterCollection>, ncomputingdevices>, nsubdetectors> tokens_;
 
-  hgcal::RecHitTools recHitTools_;
-
   std::array<TTree*, nsubdetectors> trees_;
   std::array<std::string, nsubdetectors> treenames_;
   std::array<ValidCLUEClusterCollection, nsubdetectors> cpuValidCLUEHits, gpuValidCLUEHits, diffsValidCLUEHits;
