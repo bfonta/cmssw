@@ -23,7 +23,6 @@ float distance2(int id1, int id2, const clue_gpu::HGCCLUEInputSoAEM& in);
 __device__
 void get_total_cluster_weight(float& totalWeight, float& maxWeight, int& maxWeightId,
 			      int seedId,
-			      float dc2,
 			      const clue_gpu::HGCCLUEInputSoAEM& in,
 			      const cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* dFollowers);
 

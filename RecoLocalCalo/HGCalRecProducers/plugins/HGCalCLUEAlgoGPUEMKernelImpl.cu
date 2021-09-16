@@ -12,6 +12,11 @@ bool is_energy_valid(float en) {
   return en != clue_gpu::unphysicalEnergy;
 } // kernel
 
+__device__
+int32_t shift_layer(int32_t l) {
+  return l + static_cast<int32_t>(NLAYERS)/2;
+}
+
 __global__
 void kernel_fill_input_soa(ConstHGCRecHitSoA hits,
 			   clue_gpu::HGCCLUEInputSoAEM in,
@@ -33,13 +38,13 @@ void kernel_fill_input_soa(ConstHGCRecHitSoA hits,
     //   printf("[HGCalCLUEAlgoKernelImpl.cu] shift=%u, x=%f, y=%f, in_detid=%u, map_detid=%u, nelemsposmap=%d\n", shift, conds->posmap.x[i], conds->posmap.y[i], hits.id[i], conds->posmap.detid[shift], conds->nelems_posmap);
     // }
     
-    if(shift<static_cast<unsigned>(conds->posmap.nCellsTot)) { //silicon
+    if(shift < static_cast<unsigned>(conds->posmap.nCellsTot)) { //silicon
       HeterogeneousHGCSiliconDetId did(hits.id[i]);
-      in.layer[i] = abs(did.layer());  //remove abs if both endcaps are considered for x and y
+      in.layer[i] = shift_layer( did.layer() );  //remove abs if both endcaps are considered for x and y
     }
     else { //scintillator
       HeterogeneousHGCScintillatorDetId did(hits.id[i]);
-      in.layer[i] = abs(did.layer());  //remove abs if both endcaps are considered for x and y
+      in.layer[i] = shift_layer( did.layer() );  //remove abs if both endcaps are considered for x and y
     }
   }
 } // kernel
@@ -282,6 +287,7 @@ void kernel_assign_clusters( const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>*
 __device__
 float max_w(float en, float totalWeight) {
   //float Wi = std::max(thresholdW0_[thick] + std::log(en / totalWeight), 0.);
+  assert(en<=totalWeight);
   return std::max(2.9 + std::log(en / totalWeight), 0.);
 }
 	   
@@ -333,7 +339,6 @@ float distance2(int id1, int id2, const clue_gpu::HGCCLUEInputSoAEM& in)
 __device__
 void get_total_cluster_weight(float& totalWeight, float& maxWeight, int& maxWeightId,
 			      int seedId,
-			      float dc2,
 			      const clue_gpu::HGCCLUEInputSoAEM& in,
 			      const cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* dFollowers)
 {
@@ -345,7 +350,7 @@ void get_total_cluster_weight(float& totalWeight, float& maxWeight, int& maxWeig
     
     if( dFollowers[f].size()!=0 ) //hit has at least one follower
       get_total_cluster_weight(totalWeight, maxWeight, maxWeightId,
-			       f, dc2, in, dFollowers);
+			       f, in, dFollowers);
   }    
 }
 
@@ -375,13 +380,12 @@ void kernel_get_clusters(float dc2,
 
       int maxEnergyIndex  = -1;
       float maxWeight     = 0.f;
-      float totalWeight   = 0.f;
-      float partialWeight = 0.f;
+      float totalWeight   = hitsIn.energy[thisSeed];
+      float partialWeight = totalWeight;
 
       //modifies totalWeight and maxEnergyIndex
       get_total_cluster_weight(totalWeight, maxWeight, maxEnergyIndex,
   			       thisSeed,
-  			       dc2,
   			       hitsIn,
   			       dFollowers);
 
@@ -394,12 +398,12 @@ void kernel_get_clusters(float dc2,
 
       //modifies clusterX, clusterY, clusterEnergy and partialWeight
       calculate_position_and_energy(clusterX, clusterY, clusterEnergy, partialWeight,
-  				    totalWeight, 
-  				    dc2,
-  				    thisSeed,
-  				    maxEnergyIndex,
-  				    hitsIn,
-  				    dFollowers );
+      				    totalWeight, 
+      				    dc2,
+      				    thisSeed,
+      				    maxEnergyIndex,
+      				    hitsIn,
+      				    dFollowers );
 
       unsigned soaIdx = layerIdx*nClustersPerLayer + clusterIdx;
       clustersSoA.energy[soaIdx]       = clusterEnergy;

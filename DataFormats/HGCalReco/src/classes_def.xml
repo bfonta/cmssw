@@ -1,5 +1,9 @@
 
 <lcgdict>
+  <class name="CellsOnLayer" />
+  <class name="std::vector<CellsOnLayer>" />
+  <class name="edm::Wrapper<std::vector<CellsOnLayer> >" />
+
   <class name="ticl::Trackster" ClassVersion="9">
     <version ClassVersion="9" checksum="1001808235"/>
     <version ClassVersion="8" checksum="749412802"/>

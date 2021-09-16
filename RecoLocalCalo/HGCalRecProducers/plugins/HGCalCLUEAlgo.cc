@@ -566,6 +566,12 @@ Density HGCalCLUEAlgoT<T>::getDensity() {
   return density_;
 }
 
+//USED FOR TESTING!!!!!!!!!
+template <typename T>
+std::vector<CellsOnLayer> HGCalCLUEAlgoT<T>::getCells() {
+  return cells_;
+}
+
 // explicit template instantiation
 template class HGCalCLUEAlgoT<HGCalLayerTiles>;
 template class HGCalCLUEAlgoT<HFNoseLayerTiles>;

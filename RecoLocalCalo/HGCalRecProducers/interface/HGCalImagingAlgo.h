@@ -21,6 +21,8 @@
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
 #include "CommonTools/RecoAlgos/interface/KDTreeLinkerAlgo.h"
 
+#include "DataFormats/HGCalReco/interface/CellsOnLayer.h"
+
 // C/C++ headers
 #include <string>
 #include <vector>
@@ -62,6 +64,8 @@ public:
 
   // this is the method to get the cluster collection out
   std::vector<reco::BasicCluster> getClusters(bool) override;
+  
+  std::vector<CellsOnLayer> getCells() override;
 
   // use this if you want to reuse the same cluster object but don't want to accumulate clusters (hardly useful?)
   void reset() override {

@@ -10,6 +10,8 @@
 
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
 
+#include "DataFormats/HGCalReco/interface/CellsOnLayer.h"
+
 // C/C++ headers
 #include <vector>
 #include <numeric>
@@ -56,9 +58,11 @@ public:
   virtual void populate(const HGCRecHitCollection &hits) = 0;
   virtual void makeClusters() = 0;
   virtual std::vector<reco::BasicCluster> getClusters(bool) = 0;
+  virtual std::vector<CellsOnLayer> getCells() = 0;
   virtual void reset() = 0;
   virtual hgcal_clustering::Density getDensity() = 0;
   virtual void getEventSetupPerAlgorithm(const edm::EventSetup &es) {}
+
 
   inline void getEventSetup(const edm::EventSetup &es) {
     edm::ESHandle<CaloGeometry> geom = es.getHandle(caloGeomToken_);

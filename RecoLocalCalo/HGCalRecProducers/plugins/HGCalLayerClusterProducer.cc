@@ -27,6 +27,8 @@
 #include "Geometry/Records/interface/IdealGeometryRecord.h"
 #include "Geometry/HGCalGeometry/interface/HGCalGeometry.h"
 
+#include "RecoLocalCalo/HGCalRecProducers/plugins/HGCalCLUEAlgo.h"
+
 #include "DataFormats/ParticleFlowReco/interface/PFCluster.h"
 #include "DataFormats/Common/interface/ValueMap.h"
 
@@ -102,6 +104,9 @@ HGCalLayerClusterProducer::HGCalLayerClusterProducer(const edm::ParameterSet& ps
   produces<Density>();
   //time for layer clusters
   produces<edm::ValueMap<std::pair<float, float>>>(timeClname);
+
+  //ADDED FOR TESTING
+  produces<std::vector<CellsOnLayer>>();
 }
 
 void HGCalLayerClusterProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
@@ -134,6 +139,8 @@ void HGCalLayerClusterProducer::produce(edm::Event& evt, const edm::EventSetup& 
       clusters_sharing(new std::vector<reco::BasicCluster>);
   auto density = std::make_unique<Density>();
 
+  std::unique_ptr<std::vector<CellsOnLayer>> hits(new std::vector<CellsOnLayer>);
+    
   algo->getEventSetup(es);
 
   //make a map detid-rechit
@@ -185,9 +192,11 @@ void HGCalLayerClusterProducer::produce(edm::Event& evt, const edm::EventSetup& 
 
   algo->makeClusters();
   *clusters = algo->getClusters(false);
+  *hits = algo->getCells();
   if (doSharing)
     *clusters_sharing = algo->getClusters(true);
 
+  evt.put(std::move(hits));
   auto clusterHandle = evt.put(std::move(clusters));
   auto clusterHandleSharing = evt.put(std::move(clusters_sharing), "sharing");
 

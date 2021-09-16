@@ -77,8 +77,10 @@ process.HGCalRecHit = HGCalRecHit.clone()
 process.hgcalLayerClusters = hgcalLayerClusters.clone()
 
 process.valid = cms.EDAnalyzer( 'HeterogeneousHGCalCLUEValidator',
-                                cpuCLUEEMToken = cms.InputTag('hgcalLayerClusters'),
-                                gpuCLUEEMToken = cms.InputTag('EMCLUEFromSoAProd', 'Clusters'))
+                                cpuHitsEMToken = cms.InputTag('hgcalLayerClusters'),
+                                gpuHitsEMToken = cms.InputTag('EMCLUEGPUtoSoAProd', 'Hits'),
+                                cpuClustersEMToken = cms.InputTag('hgcalLayerClusters'),
+                                gpuClustersEMToken = cms.InputTag('EMCLUEFromSoAProd', 'Clusters'))
 
 process.em_task = cms.Task( process.EERecHitGPUProd,
                             process.EMCLUEGPUProd, process.EMCLUEGPUtoSoAProd, process.EMCLUEFromSoAProd,

@@ -13,7 +13,14 @@
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
 #include "Geometry/HGCalGeometry/interface/HGCalGeometry.h"
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
+#include "Validation/HGCalValidation/interface/ValidCLUEHit.h"
 #include "Validation/HGCalValidation/interface/ValidCLUECluster.h"
+
+#include "RecoLocalCalo/HGCalRecProducers/plugins/HGCalCLUEAlgo.h"
+
+#include "CUDADataFormats/HGCal/interface/HGCCLUECPUHitsProduct.h"
+
+#include "DataFormats/HGCalReco/interface/CellsOnLayer.h"
 
 #include "TTree.h"
 #include "TH1F.h"
@@ -22,6 +29,16 @@
 #include <string>
 
 class HeterogeneousHGCalCLUEValidator : public edm::one::EDAnalyzer<edm::one::SharedResources> {
+  template <typename T, size_t SIZE>
+  using Arr = std::array<T, SIZE>;
+
+  using InClustersCPU = reco::BasicClusterCollection;
+  using InClustersGPU = reco::BasicClusterCollection;
+  using InHitsCPU = std::vector<CellsOnLayer>;
+  using InHitsGPU = HGCCLUECPUHitsProduct;
+  using OutCCol = ValidCLUEClusterCollection;
+  using OutHCol = ValidCLUEHitCollection;
+    
 public:
   explicit HeterogeneousHGCalCLUEValidator(const edm::ParameterSet&);
   ~HeterogeneousHGCalCLUEValidator() override;
@@ -29,14 +46,19 @@ public:
   void endJob() override;
 
 private:
-  static const unsigned nsubdetectors = 1;      //EM e/ou HAD
-  static const unsigned ncomputingdevices = 2;  //cpu, gpu
+  static const unsigned nReg = 1;      //EM e/ou HAD
+  
   //cpu amd gpu tokens and handles for the 3 subdetectors, cpu and gpu
-  std::array<std::array<edm::EDGetTokenT<reco::BasicClusterCollection>, ncomputingdevices>, nsubdetectors> tokens_;
+  Arr<edm::EDGetTokenT<InHitsCPU>, nReg> tokHitsCPU_;
+  Arr<edm::EDGetTokenT<InHitsGPU>, nReg> tokHitsGPU_;
+  Arr<edm::EDGetTokenT<InClustersCPU>, nReg> tokClustersCPU_;
+  Arr<edm::EDGetTokenT<InClustersGPU>, nReg> tokClustersGPU_;
 
-  std::array<TTree*, nsubdetectors> trees_;
-  std::array<std::string, nsubdetectors> treenames_;
-  std::array<ValidCLUEClusterCollection, nsubdetectors> cpuValidCLUEHits, gpuValidCLUEHits, diffsValidCLUEHits;
+
+  Arr<TTree*, nReg> treesH_, treesC_;
+  Arr<std::string, nReg> treenamesH_, treenamesC_;
+  Arr<OutCCol, nReg> cpuValidClusters, gpuValidClusters, diffsValidClusters;
+  Arr<OutHCol, nReg> cpuValidHits, gpuValidHits, diffsValidHits;
 };
 
 #endif //_HeterogeneousHGCalCLUEValidator_h

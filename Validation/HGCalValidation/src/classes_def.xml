@@ -6,4 +6,8 @@
   <class name="ValidCLUECluster" />
   <class name="std::vector<ValidCLUECluster>" />
   <class name="edm::Wrapper<std::vector<ValidCLUECluster> >" />
+
+  <class name="ValidCLUEHit" />
+  <class name="std::vector<ValidCLUEHit>" />
+  <class name="edm::Wrapper<std::vector<ValidCLUEHit> >" />
 </lcgdict>

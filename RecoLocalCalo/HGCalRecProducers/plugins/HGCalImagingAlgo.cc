@@ -666,3 +666,9 @@ void HGCalImagingAlgo::setDensity(const std::vector<KDNode> &nd) {
 
 //Density
 Density HGCalImagingAlgo::getDensity() { return density_; }
+
+//ADDED FOR TESTING
+std::vector<CellsOnLayer> HGCalImagingAlgo::getCells() {
+  printf("========= DUMMY FUNCTION =======\n");
+  return std::vector<CellsOnLayer>();
+}

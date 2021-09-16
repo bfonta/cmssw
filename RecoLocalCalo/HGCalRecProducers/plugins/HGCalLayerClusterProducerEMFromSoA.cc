@@ -83,11 +83,12 @@ void HGCalLayerClusterProducerEMFromSoA::getClusters_(uint32_t nhits, uint32_t n
   coll.reserve(nclusters);
   for (unsigned i=0; i<nclusters; ++i) {
 
-    if( clusters->energy[i] != 0.f) { //get rid of excess empty GPU clusters
+    if( clusters->energy[i] > 0.) { //get rid of excess empty GPU clusters
 
       math::XYZPoint position = math::XYZPoint(clusters->x[i],
 					       clusters->y[i],
-					       ddd->waferZ(clusters->layer[i], true) );
+					       //ddd->waferZ(clusters->layer[i], true) );
+					       clusters->layer[i] );
 
 
       //This code block is needed to match expected input from reco::BasicCluster
