@@ -20,6 +20,7 @@
 
 #include "CUDADataFormats/HGCal/interface/HGCCLUECPUHitsProduct.h"
 
+#include "DataFormats/ForwardDetId/interface/HGCSiliconDetId.h"
 #include "DataFormats/HGCalReco/interface/CellsOnLayer.h"
 
 #include "TTree.h"

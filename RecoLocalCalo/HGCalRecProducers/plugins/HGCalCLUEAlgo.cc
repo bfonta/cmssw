@@ -79,7 +79,7 @@ template <typename T>
 void HGCalCLUEAlgoT<T>::prepareDataStructures(unsigned int l) {
   auto cellsSize = cells_[l].detid.size();
   cells_[l].rho.resize(cellsSize, 0.f);
-  cells_[l].delta.resize(cellsSize, 9999999);
+  cells_[l].delta.resize(cellsSize, std::numeric_limits<float>::max());
   cells_[l].nearestHigher.resize(cellsSize, -1);
   cells_[l].clusterIndex.resize(cellsSize, -1);
   cells_[l].followers.resize(cellsSize);

@@ -36,78 +36,96 @@ void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm
     ConstHGCCLUEHitsSoA gpuHits = gpuProd.get();
     const auto &gpuClusters = event.get(tokClustersGPU_[idet]);
 
-    size_t nclusters = cpuClusters.size();
-    std::cout << nclusters << ", " << gpuClusters.size() << std::endl;
+    size_t nClustersCPU = cpuClusters.size();
+    size_t nClustersGPU = gpuClusters.size();
+    std::cout << nClustersCPU << ", " << nClustersGPU << std::endl;
 
     //assers(nclusters == gpuClusters.size());
     //float sum_cpu = 0.f, sum_gpu = 0.f, sum_son_cpu = 0.f, sum_son_gpu = 0.f;
 
-    //Clusters loop
-    for (unsigned i(0); i < nclusters; i++) {
+    //CPU clusters loop
+    for (unsigned i(0); i < nClustersCPU; i++) {
       const reco::BasicCluster &cpuCluster = cpuClusters[i];
+
+      if(cpuCluster.algo() == reco::CaloCluster::hgcal_em)
+	{  
+	  const float cpuEn = cpuCluster.energy();
+	  const float cpuX = cpuCluster.x();
+	  const float cpuY = cpuCluster.y();
+	  const float cpuZ = cpuCluster.z();
+
+	  ValidCLUECluster vCPU(cpuEn, cpuX, cpuY, cpuZ);
+
+	  cpuValidClusters[idet].emplace_back(cpuEn, cpuX, cpuY, cpuZ);
+	}
+      else if(cpuCluster.algo() != reco::CaloCluster::hgcal_em)
+	std::cout << "cpu Cluster ERROR: " << cpuCluster.algo() << std::endl;
+    }
+    
+    //GPU clusters loop
+    for (unsigned i(0); i < nClustersGPU; i++) {
       const reco::BasicCluster &gpuCluster = gpuClusters[i];
 
-      const float cpuEn = cpuCluster.energy();
       const float gpuEn = gpuCluster.energy();
-
-      const float cpuX = cpuCluster.x();
       const float gpuX = gpuCluster.x();
-      const float cpuY = cpuCluster.y();
       const float gpuY = gpuCluster.y();
-      const float cpuZ = cpuCluster.z();
       const float gpuZ = gpuCluster.z();
 
-      ValidCLUECluster vCPU(cpuEn, cpuX, cpuY, cpuZ);
       ValidCLUECluster vGPU(gpuEn, gpuX, gpuY, gpuZ);
-      ValidCLUECluster vDiffs(cpuEn - gpuEn,
-			      cpuX - gpuX,
-			      cpuY - gpuY,
-			      cpuZ - gpuZ);
 
-      cpuValidClusters[idet].push_back(vCPU);
-      gpuValidClusters[idet].push_back(vGPU);
-      diffsValidClusters[idet].push_back(vDiffs);
+      gpuValidClusters[idet].emplace_back(gpuEn, gpuX, gpuY, gpuZ);
     }
     treesC_[idet]->Fill();
 
     //Hits loop
     size_t nlayers = cpuHits.size();
-    std::cout << nlayers << std::endl;
+    std::cout << "NLAYERS: " << nlayers << std::endl;
 
     for (unsigned i(0); i<nlayers; i++) {
       const CellsOnLayer &cpuHitsOnLayer = cpuHits[i];
 
       for (unsigned j(0); j<cpuHitsOnLayer.detid.size(); j++) {
-      
-	const float cpuRho = cpuHitsOnLayer.rho[i];
-	const float cpuDelta = cpuHitsOnLayer.delta[i];
-	const float cpuNH = cpuHitsOnLayer.nearestHigher[i];
-	const float cpuClusterIndex = cpuHitsOnLayer.clusterIndex[i];
+
 	const float cpuId = cpuHitsOnLayer.detid[i];
-	const float cpuIsSeed = cpuHitsOnLayer.isSeed[i];
 
-	cpuValidHits[idet].emplace_back(cpuRho,
-					cpuDelta,
-					cpuNH,
-					cpuClusterIndex,
-					cpuId,
-					cpuIsSeed);
+	if(DetId(cpuId).det()==DetId::HGCalEE or DetId(cpuId).det()==DetId::HGCalHSi)
+	  {
+	    const float cpuRho = cpuHitsOnLayer.rho[j];
+	    const float cpuDelta = cpuHitsOnLayer.delta[j];
+	    const float cpuNH = cpuHitsOnLayer.nearestHigher[j];
+	    const float cpuClusterIndex = cpuHitsOnLayer.clusterIndex[j];
+	    const float cpuLayer = i;
+	    const float cpuIsSeed = cpuHitsOnLayer.isSeed[j];
 
+	    cpuValidHits[idet].emplace_back(cpuRho,
+					    cpuDelta,
+					    cpuNH,
+					    cpuClusterIndex,
+					    cpuLayer,
+					    cpuId,
+					    cpuIsSeed);
+
+	  }
+	else if(DetId(cpuId).det()!=DetId::HGCalHSc)
+	  std::cout << "cpu Hits ERROR: " << DetId(cpuId).det() << std::endl;
       }
     }
 
     for (unsigned i(0); i<gpuProd.nHits(); i++) {
       const float gpuRho = gpuHits.rho[i];
       const float gpuDelta = gpuHits.delta[i];
-      const float gpuNH = gpuHits.nearestHigher[i];
-      const float gpuClusterIndex = gpuHits.clusterIndex[i];
-      const float gpuId = gpuHits.id[i];
-      const float gpuIsSeed = gpuHits.isSeed[i];
+      const int32_t gpuNH = gpuHits.nearestHigher[i];
+      const int32_t gpuClusterIndex = gpuHits.clusterIndex[i];
+      const uint32_t gpuId = gpuHits.id[i];
+      HGCSiliconDetId thisId(gpuId); //HGCalDetId.h is obsolete and should be removed!!!
+      const int32_t gpuLayer = thisId.zside()*thisId.layer();
+      const bool gpuIsSeed = gpuHits.isSeed[i];
 
       gpuValidHits[idet].emplace_back(gpuRho,
 				      gpuDelta,
 				      gpuNH,
 				      gpuClusterIndex,
+				      gpuLayer,
 				      gpuId,
 				      gpuIsSeed);
 
@@ -118,9 +136,11 @@ void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm
 				      0,
 				      0,
 				      0,
+				      0,
 				      false);
     treesH_[idet]->Fill();
   }
+  
 }
 
 //define this as a plug-in

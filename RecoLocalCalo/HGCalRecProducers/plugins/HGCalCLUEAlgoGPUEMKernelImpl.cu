@@ -12,9 +12,11 @@ bool is_energy_valid(float en) {
   return en != clue_gpu::unphysicalEnergy;
 } // kernel
 
+template <class T>
 __device__
-int32_t shift_layer(int32_t l) {
-  return l + static_cast<int32_t>(NLAYERS)/2;
+int32_t shift_layer(T id) {
+  T did(id);
+  return did.zside() == -1 ? did.layer() : did.layer() + static_cast<int32_t>(NLAYERS)/2;
 }
 
 __global__
@@ -38,14 +40,11 @@ void kernel_fill_input_soa(ConstHGCRecHitSoA hits,
     //   printf("[HGCalCLUEAlgoKernelImpl.cu] shift=%u, x=%f, y=%f, in_detid=%u, map_detid=%u, nelemsposmap=%d\n", shift, conds->posmap.x[i], conds->posmap.y[i], hits.id[i], conds->posmap.detid[shift], conds->nelems_posmap);
     // }
     
-    if(shift < static_cast<unsigned>(conds->posmap.nCellsTot)) { //silicon
-      HeterogeneousHGCSiliconDetId did(hits.id[i]);
-      in.layer[i] = shift_layer( did.layer() );  //remove abs if both endcaps are considered for x and y
-    }
-    else { //scintillator
-      HeterogeneousHGCScintillatorDetId did(hits.id[i]);
-      in.layer[i] = shift_layer( did.layer() );  //remove abs if both endcaps are considered for x and y
-    }
+    if(shift < static_cast<unsigned>(conds->posmap.nCellsTot)) //silicon
+      in.layer[i] = shift_layer<HeterogeneousHGCSiliconDetId>( hits.id[i] );
+    else //scintillator
+      in.layer[i] = shift_layer<HeterogeneousHGCScintillatorDetId>(hits.id[i]);
+    
   }
 } // kernel
 
@@ -119,6 +118,7 @@ void kernel_calculate_density( HeterogeneousHGCalLayerTiles *hist,
     }
     
     out.rho[i] = (float)rhoi;
+    out.id[i] = in.id[i];
   }
 } //kernel
 
@@ -139,57 +139,59 @@ void kernel_calculate_distanceToHigher(HeterogeneousHGCalLayerTiles* hist,
   for (unsigned i = tid; i < numberOfPoints; i += blockDim.x * gridDim.x)
     {
 
-    float deltai = std::numeric_limits<float>::max();
-    int nearestHigheri = -1;
+      float deltai = std::numeric_limits<float>::max();
+      int nearestHigheri = -1;
 
-    if( is_energy_valid(in.energy[i]) ) {
+      if( is_energy_valid(in.energy[i]) ) {
       
-      int layeri = in.layer[i];
-      float xi = in.x[i];
-      float yi = in.y[i];
-      float rhoi = out.rho[i];
+	int layeri = in.layer[i];
+	float xi = in.x[i];
+	float yi = in.y[i];
+	float rhoi = out.rho[i];
 
-      // get search box 
-      int4 search_box = hist[layeri].searchBox(xi-dm, xi+dm, yi-dm, yi+dm);
+	// get search box 
+	int4 search_box = hist[layeri].searchBox(xi-dm, xi+dm, yi-dm, yi+dm);
 
-      // loop over all bins in the search box
-      for(int xBin = search_box.x; xBin < search_box.y+1; ++xBin) {
-	for(int yBin = search_box.z; yBin < search_box.w+1; ++yBin) {
-	  // get the id of this bin
-	  int binId = hist[layeri].getGlobalBinByBin(xBin,yBin);
-	  // get the size of this bin
-	  int binSize  = hist[layeri][binId].size();
+	// loop over all bins in the search box
+	for(int xBin = search_box.x; xBin < search_box.y+1; ++xBin) {
+	  for(int yBin = search_box.z; yBin < search_box.w+1; ++yBin) {
+	    // get the id of this bin
+	    int binId = hist[layeri].getGlobalBinByBin(xBin,yBin);
+	    // get the size of this bin
+	    int binSize  = hist[layeri][binId].size();
 
-	  // interate inside this bin
-	  for (int binIter = 0; binIter < binSize; binIter++) {
-	    int j = hist[layeri][binId][binIter];
+	    // interate inside this bin
+	    for (int binIter = 0; binIter < binSize; binIter++) {
+	      int j = hist[layeri][binId][binIter];
 
-	    if( is_energy_valid(in.energy[j]) ) {
-	      // query N'_{dm}(i)
-	      float xj = in.x[j];
-	      float yj = in.y[j];
-	      float dist_ij = std::sqrt((xi-xj)*(xi-xj) + (yi-yj)*(yi-yj));
-	      bool foundHigher = (out.rho[j] > rhoi);
-	      // in the rare case where rho is the same, use detid
-	      foundHigher = foundHigher || ( (out.rho[j] == rhoi) && (j>i));
-	      if(foundHigher && dist_ij <= dm) { // definition of N'_{dm}(i)
-		// find the nearest point within N'_{dm}(i)
-		if (dist_ij<deltai) {
-		  // update deltai and nearestHigheri
-		  deltai = dist_ij;
-		  nearestHigheri = j;
+	      if( is_energy_valid(in.energy[j]) ) {
+		// query N'_{dm}(i)
+		float xj = in.x[j];
+		float yj = in.y[j];
+		float dist_ij = std::sqrt((xi-xj)*(xi-xj) + (yi-yj)*(yi-yj));
+		bool foundHigher = (out.rho[j] > rhoi);
+		// in the rare case where rho is the same, use detid
+		foundHigher = foundHigher || ( (out.rho[j] == rhoi) && (j>i));
+		if(foundHigher && dist_ij <= dm) { // definition of N'_{dm}(i)
+		  // find the nearest point within N'_{dm}(i)
+		  if (dist_ij<deltai) {
+		    // update deltai and nearestHigheri
+		    deltai = dist_ij;
+		    nearestHigheri = j;
+		  }
 		}
 	      }
-	    }
-	  } // end of interate inside this bin
-	}
-      } // end of loop over bins in search box
+	    } // end of interate inside this bin
+	  }
+	} // end of loop over bins in search box
 
-    }
+      }
     
-    out.delta[i] = deltai;
-    out.nearestHigher[i] = nearestHigheri;
-  }
+      out.delta[i] = deltai;
+      out.nearestHigher[i] = nearestHigheri;
+
+    } //  for (unsigned i = tid; i < numberOfPoints; i += blockDim.x * gridDim.x)
+  
 } //kernel
 
 
@@ -208,9 +210,12 @@ void kernel_find_clusters( cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* dSeeds,
 
   for (unsigned i = tid; i < numberOfPoints; i += blockDim.x * gridDim.x)
     {
+      // initialize clusterIndex
+      out.clusterIndex[i] = -1;
+
       if (is_energy_valid(in.energy[i])) {
-	// initialize clusterIndex
-	out.clusterIndex[i] = -1;
+	assert(out.nearestHigher[i] > -1);
+	  
 	// determine seed or outlier
 	float deltai = out.delta[i];
 	float rhoi = out.rho[i];
@@ -360,24 +365,19 @@ void kernel_get_clusters(float dc2,
 			 const cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* dFollowers,
 			 clue_gpu::HGCCLUEInputSoAEM hitsIn,
 			 HGCCLUEHitsSoA hitsOut,
-			 HGCCLUEClustersSoA clustersSoA,
-			 unsigned nClustersPerLayer)
+			 HGCCLUEClustersSoA clustersSoA)
 {
   const auto& seeds = dSeeds[0];
   const unsigned nseeds = seeds.size();
-  assert(seeds.size() <= clustersSoA.nclusters);
+  assert(nseeds <= clustersSoA.nclusters);
   
   int tid = blockIdx.x * blockDim.x + threadIdx.x;
   for (unsigned i = tid; i < nseeds; i += blockDim.x * gridDim.x)
     {
       //each thread will take care of a single cluster
-      //the memory of the cluster SoA will be split into blocks, one per layer
-      //each block is further split into sub-blocks, one per cluster in that layer
-      unsigned layerIdx = i / nClustersPerLayer;
-      unsigned clusterIdx = i - layerIdx*nClustersPerLayer; //remainder
-
       int thisSeed = seeds[i];
-
+      assert(thisSeed != -1);
+      
       int maxEnergyIndex  = -1;
       float maxWeight     = 0.f;
       float totalWeight   = hitsIn.energy[thisSeed];
@@ -405,12 +405,11 @@ void kernel_get_clusters(float dc2,
       				    hitsIn,
       				    dFollowers );
 
-      unsigned soaIdx = layerIdx*nClustersPerLayer + clusterIdx;
-      clustersSoA.energy[soaIdx]       = clusterEnergy;
-      clustersSoA.x[soaIdx]            = clusterX;
-      clustersSoA.y[soaIdx]            = clusterY;
-      clustersSoA.layer[soaIdx]        = hitsIn.layer[maxEnergyIndex];
-      clustersSoA.clusterIndex[soaIdx] = hitsOut.clusterIndex[maxEnergyIndex];
+      clustersSoA.energy[i]       = clusterEnergy;
+      clustersSoA.x[i]            = clusterX;
+      clustersSoA.y[i]            = clusterY;
+      clustersSoA.layer[i]        = hitsIn.layer[maxEnergyIndex];
+      clustersSoA.clusterIndex[i] = hitsOut.clusterIndex[maxEnergyIndex];
       assert(hitsOut.clusterIndex[maxEnergyIndex] == hitsOut.clusterIndex[thisSeed]);
   }
 

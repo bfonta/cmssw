@@ -28,7 +28,7 @@ void HGCalCLUEAlgoGPUHAD::make_clusters(const cudaStream_t &stream) {
   
 }
 
-void HGCalCLUEAlgoGPUHAD::get_clusters(unsigned nClustersPerLayer, const cudaStream_t &stream) {
+void HGCalCLUEAlgoGPUHAD::get_clusters(const cudaStream_t &stream) {
   
 }
 

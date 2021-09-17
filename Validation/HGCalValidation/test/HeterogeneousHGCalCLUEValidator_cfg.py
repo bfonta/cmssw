@@ -60,7 +60,7 @@ process.TFileService = cms.Service("TFileService",
                                )
 
 process.source = getHeterogeneousRecHitsSource(F.PU)
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(5) )
 process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool( False )) #add option for edmStreams
 
@@ -74,7 +74,7 @@ process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEGPUtoSoA_cfi')
 process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEFromSoA_cfi')
 
 process.HGCalRecHit = HGCalRecHit.clone()
-process.hgcalLayerClusters = hgcalLayerClusters.clone()
+process.hgcalLayerClusters = hgcalLayerClusters.clone(detector='EE')
 
 process.valid = cms.EDAnalyzer( 'HeterogeneousHGCalCLUEValidator',
                                 cpuHitsEMToken = cms.InputTag('hgcalLayerClusters'),

@@ -83,7 +83,6 @@ void kernel_get_clusters(float dc2,
 			 const cms::cuda::VecArray<int,clue_gpu::maxNFollowers>* dFollowers,
 			 clue_gpu::HGCCLUEInputSoAEM hitsIn,
 			 HGCCLUEHitsSoA hitsOut,
-			 HGCCLUEClustersSoA clustersSoA,
-			 unsigned nClustersPerLayer);
+			 HGCCLUEClustersSoA clustersSoA);
 
 #endif //RecoLocalCalo_HGCalRecProducers_HGCalCLUEAlgoGPUEMKernelImpl_cuh

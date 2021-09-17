@@ -83,8 +83,7 @@ void HGCalLayerClusterProducerEMGPU::acquire(edm::Event const& event,
   const auto& eeHits = ctx.get(event, InEEToken);
   const unsigned nhits(eeHits.nHits());
   unsigned nclusters(clue_gpu::maxNSeeds);
-  unsigned nlayersEM(28); //upper value; we could use the geometry + rechittools, but it seems an overkill just for a single number
-  
+
   mCLUEHits = HGCCLUEGPUHitsProduct(nhits, ctx.stream());
   mCLUEClusters = HGCCLUEGPUClustersProduct(nclusters, ctx.stream());
   
@@ -100,7 +99,7 @@ void HGCalLayerClusterProducerEMGPU::acquire(edm::Event const& event,
   mAlgo->make_clusters(ctx.stream());
 
   //Clusters
-  mAlgo->get_clusters(nlayersEM, ctx.stream());
+  mAlgo->get_clusters(ctx.stream());
 }
 
 void HGCalLayerClusterProducerEMGPU::produce(edm::Event& event,
