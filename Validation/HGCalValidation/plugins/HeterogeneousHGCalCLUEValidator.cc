@@ -86,17 +86,16 @@ void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm
 
       for (unsigned j(0); j<cpuHitsOnLayer.detid.size(); j++) {
 
-	const float cpuId = cpuHitsOnLayer.detid[i];
+	const DetId cpuId = cpuHitsOnLayer.detid[j];
+	const float cpuRho = cpuHitsOnLayer.rho[j];
+	const float cpuDelta = cpuHitsOnLayer.delta[j];
+	const int32_t cpuNH = cpuHitsOnLayer.nearestHigher[j];
+	const int32_t cpuClusterIndex = cpuHitsOnLayer.clusterIndex[j];
+	const int32_t cpuLayer = i;
+	const bool cpuIsSeed = cpuHitsOnLayer.isSeed[j];
 
-	if(DetId(cpuId).det()==DetId::HGCalEE or DetId(cpuId).det()==DetId::HGCalHSi)
+	if(cpuId.det()==DetId::HGCalEE or cpuId.det()==DetId::HGCalHSi)
 	  {
-	    const float cpuRho = cpuHitsOnLayer.rho[j];
-	    const float cpuDelta = cpuHitsOnLayer.delta[j];
-	    const float cpuNH = cpuHitsOnLayer.nearestHigher[j];
-	    const float cpuClusterIndex = cpuHitsOnLayer.clusterIndex[j];
-	    const float cpuLayer = i;
-	    const float cpuIsSeed = cpuHitsOnLayer.isSeed[j];
-
 	    cpuValidHits[idet].emplace_back(cpuRho,
 					    cpuDelta,
 					    cpuNH,
@@ -106,8 +105,41 @@ void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm
 					    cpuIsSeed);
 
 	  }
-	else if(DetId(cpuId).det()!=DetId::HGCalHSc)
-	  std::cout << "cpu Hits ERROR: " << DetId(cpuId).det() << std::endl;
+	else if(cpuId.det()!=DetId::HGCalHSc)
+	  std::cout << "cpu Hits ERROR: " << cpuId.det() << std::endl;
+
+	//matching with GPU hits
+	bool found_match = false;
+	for (unsigned k(0); k<gpuProd.nHits(); k++) {
+
+	  if(cpuId.rawId() == gpuHits.id[k]) {
+	    if(found_match == true)
+	      std::cout << "Duplication ERROR: Hit " << cpuId.rawId() << " found multiple times in the GPU!" << std::endl;
+	    
+	    found_match = true;
+
+	    //filter only "good" hits for comparison
+	    if(gpuHits.nearestHigher[k] > -1 and gpuHits.clusterIndex[k] > -1) {
+	      
+	      if(cpuNH <= -1 or cpuClusterIndex <= -1) {
+		std::cout << "ERROR: Quality " << cpuNH << ", " << cpuClusterIndex << ", "
+			  << gpuHits.nearestHigher[k] << ", " << gpuHits.clusterIndex[k]
+			  << " Ids: " << gpuHits.id[k] << ", " << cpuId.rawId()
+			  << std::endl;
+	      }
+	    }
+	    diffsValidHits[idet].emplace_back(cpuRho - gpuHits.rho[k],
+					      cpuDelta - gpuHits.delta[k],
+					      0,
+					      0,
+					      0,
+					      0,
+					      cpuIsSeed == gpuHits.isSeed[k]);
+	  }
+	}
+
+	if(found_match == false)
+	  std::cout << "ERROR: Hit " << cpuId.rawId() << " not found in the GPU!" << std::endl;
       }
     }
 
@@ -131,13 +163,6 @@ void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm
 
     }
     
-    diffsValidHits[idet].emplace_back(0.f,
-				      0.f,
-				      0,
-				      0,
-				      0,
-				      0,
-				      false);
     treesH_[idet]->Fill();
   }
   

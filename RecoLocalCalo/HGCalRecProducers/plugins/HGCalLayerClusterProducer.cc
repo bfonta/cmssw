@@ -191,8 +191,8 @@ void HGCalLayerClusterProducer::produce(edm::Event& evt, const edm::EventSetup& 
   }
 
   algo->makeClusters();
-  *clusters = algo->getClusters(false);
   *hits = algo->getCells();
+  *clusters = algo->getClusters(false);
   if (doSharing)
     *clusters_sharing = algo->getClusters(true);
 
