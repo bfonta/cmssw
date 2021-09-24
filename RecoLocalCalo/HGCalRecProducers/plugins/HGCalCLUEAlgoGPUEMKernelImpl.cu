@@ -9,7 +9,7 @@
 
 __device__
 bool is_energy_valid(float en) {
-  return en != clue_gpu::unphysicalEnergy;
+  return en >= 0.;
 } // kernel
 
 template <class T>
@@ -29,7 +29,7 @@ void kernel_fill_input_soa(ConstHGCRecHitSoA hits,
   for (unsigned i = tid; i < hits.nhits; i += blockDim.x * gridDim.x) {
     in.sigmaNoise[i] = hits.sigmaNoise[i];
     in.id[i] = hits.id[i];
-    in.energy[i] = (hits.energy[i]<ecut*in.sigmaNoise[i]) ? clue_gpu::unphysicalEnergy : hits.energy[i];
+    in.energy[i] = (hits.energy[i]<ecut*in.sigmaNoise[i]) ? -1.f : hits.energy[i];
 
     //logic in https://github.com/cms-sw/cmssw/blob/master/RecoLocalCalo/HGCalRecProducers/plugins/HGCalCellPositionsKernelImpl.cu
     const unsigned shift = hash_function(hits.id[i], conds);
@@ -246,12 +246,12 @@ void kernel_assign_clusters( const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>*
 			     HGCCLUEHitsSoA out)
 {
   
-  int idxCls = blockIdx.x * blockDim.x + threadIdx.x;
+  int idxCluster = blockIdx.x * blockDim.x + threadIdx.x;
 
   const auto& seeds = dSeeds[0];
   const auto nSeeds = seeds.size();
 
-  for (unsigned i = idxCls; i < nSeeds; i += blockDim.x * gridDim.x)
+  for (unsigned i = idxCluster; i < nSeeds; i += blockDim.x * gridDim.x)
     {
       int localStack[clue_gpu::localStackSizePerSeed] = {-1};
       int localStackSize = 0;

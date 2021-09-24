@@ -119,22 +119,32 @@ void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm
 	    found_match = true;
 
 	    //filter only "good" hits for comparison
-	    if(gpuHits.nearestHigher[k] > -1 and gpuHits.clusterIndex[k] > -1) {
+	    if(gpuHits.nearestHigher[k] > -1 and gpuHits.clusterIndex[k] > -1 and gpuHits.rho[k] > 0) {
 	      
-	      if(cpuNH <= -1 or cpuClusterIndex <= -1) {
+	      if(cpuNH <= -1 or cpuClusterIndex <= -1 or cpuRho==0) {
 		std::cout << "ERROR: Quality " << cpuNH << ", " << cpuClusterIndex << ", "
-			  << gpuHits.nearestHigher[k] << ", " << gpuHits.clusterIndex[k]
+			  << gpuHits.nearestHigher[k] << ", " << gpuHits.clusterIndex[k] << " :: "
+			  << cpuRho << " :: " << gpuHits.rho[k]
 			  << " Ids: " << gpuHits.id[k] << ", " << cpuId.rawId()
 			  << std::endl;
 	      }
+	      else {
+		if(std::abs(cpuDelta-gpuHits.delta[k])>0.01) {
+		  std::cout  << "INSPECTION: << "<< cpuDelta << ", " << gpuHits.delta[k] << " :: "
+		  << cpuRho << ", " << gpuHits.rho[k] << " :: "
+		  << cpuNH << ", " << gpuHits.nearestHigher[k] << " :: "
+		  << cpuClusterIndex << ", " << gpuHits.clusterIndex[k] << std::endl;
+		}
+
+		diffsValidHits[idet].emplace_back(cpuRho - gpuHits.rho[k],
+						  cpuDelta - gpuHits.delta[k],
+						  0,
+						  0,
+						  0,
+						  0,
+						  cpuIsSeed == gpuHits.isSeed[k]);
+	      }
 	    }
-	    diffsValidHits[idet].emplace_back(cpuRho - gpuHits.rho[k],
-					      cpuDelta - gpuHits.delta[k],
-					      0,
-					      0,
-					      0,
-					      0,
-					      cpuIsSeed == gpuHits.isSeed[k]);
 	  }
 	}
 
