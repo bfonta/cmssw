@@ -88,6 +88,8 @@ void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm
 
 	const DetId cpuId = cpuHitsOnLayer.detid[j];
 	const float cpuRho = cpuHitsOnLayer.rho[j];
+	const float cpuX = cpuHitsOnLayer.x[j];
+	const float cpuY = cpuHitsOnLayer.y[j];
 	const float cpuDelta = cpuHitsOnLayer.delta[j];
 	const int32_t cpuNH = cpuHitsOnLayer.nearestHigher[j];
 	const int32_t cpuClusterIndex = cpuHitsOnLayer.clusterIndex[j];
@@ -98,6 +100,8 @@ void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm
 	  {
 	    cpuValidHits[idet].emplace_back(cpuRho,
 					    cpuDelta,
+					    cpuX,
+					    cpuY,
 					    cpuNH,
 					    cpuClusterIndex,
 					    cpuLayer,
@@ -114,35 +118,44 @@ void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm
 
 	  if(cpuId.rawId() == gpuHits.id[k]) {
 	    if(found_match == true)
-	      std::cout << "Duplication ERROR: Hit " << cpuId.rawId() << " found multiple times in the GPU!" << std::endl;
+	      std::cout << "Duplication ERROR: Hit " << cpuId.rawId()
+			<< " found multiple times in the GPU!" << std::endl;
 	    
 	    found_match = true;
-
+	
 	    //filter only "good" hits for comparison
-	    if(gpuHits.nearestHigher[k] > -1 and gpuHits.clusterIndex[k] > -1 and gpuHits.rho[k] > 0) {
-	      
-	      if(cpuNH <= -1 or cpuClusterIndex <= -1 or cpuRho==0) {
-		std::cout << "ERROR: Quality " << cpuNH << ", " << cpuClusterIndex << ", "
-			  << gpuHits.nearestHigher[k] << ", " << gpuHits.clusterIndex[k] << " :: "
-			  << cpuRho << " :: " << gpuHits.rho[k]
-			  << " Ids: " << gpuHits.id[k] << ", " << cpuId.rawId()
+	    if(gpuHits.nearestHigher[k] > -1 and gpuHits.clusterIndex[k] > -1) {
+
+	      if(j%1500==0) {
+		std::cout << "Y: " << cpuY << ", " << gpuHits.y[k] << " ::: "
+			  << cpuY-gpuHits.y[k] << ", " << std::abs(cpuY-gpuHits.y[k])
 			  << std::endl;
 	      }
-	      else {
-		if(std::abs(cpuDelta-gpuHits.delta[k])>0.01) {
-		  std::cout  << "INSPECTION: << "<< cpuDelta << ", " << gpuHits.delta[k] << " :: "
-		  << cpuRho << ", " << gpuHits.rho[k] << " :: "
-		  << cpuNH << ", " << gpuHits.nearestHigher[k] << " :: "
-		  << cpuClusterIndex << ", " << gpuHits.clusterIndex[k] << std::endl;
-		}
+	      
+	      diffsValidHits[idet].emplace_back(cpuRho - gpuHits.rho[k],
+						cpuDelta - gpuHits.delta[k],
+						cpuX - gpuHits.x[k],
+						cpuY - gpuHits.y[k],
+						0,
+						0,
+						0,
+						0,
+						cpuIsSeed == gpuHits.isSeed[k]);
 
-		diffsValidHits[idet].emplace_back(cpuRho - gpuHits.rho[k],
-						  cpuDelta - gpuHits.delta[k],
-						  0,
-						  0,
-						  0,
-						  0,
-						  cpuIsSeed == gpuHits.isSeed[k]);
+
+	      if(cpuNH <= -1 or cpuClusterIndex <= -1) {
+	      	std::cout << "ERROR: Quality " << cpuNH << ", " << cpuClusterIndex << ", "
+	      		  << gpuHits.nearestHigher[k] << ", " << gpuHits.clusterIndex[k] << " :: "
+	      		  << cpuRho << " :: " << gpuHits.rho[k]
+	      		  << " Ids: " << gpuHits.id[k] << ", " << cpuId.rawId()
+	      		  << std::endl;
+	      }
+	      else {
+	      	if(std::abs(cpuDelta-gpuHits.delta[k])>0.01) {
+	      	  std::cout << cpuRho << ", " << gpuHits.rho[k] << " :: "
+	      		    << cpuNH << ", " << gpuHits.nearestHigher[k] << " :: "
+	      		    << cpuClusterIndex << ", " << gpuHits.clusterIndex[k] << std::endl;
+	      	}
 	      }
 	    }
 	  }
@@ -156,6 +169,8 @@ void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm
     for (unsigned i(0); i<gpuProd.nHits(); i++) {
       const float gpuRho = gpuHits.rho[i];
       const float gpuDelta = gpuHits.delta[i];
+      const float gpuX = gpuHits.x[i];
+      const float gpuY = gpuHits.y[i];
       const int32_t gpuNH = gpuHits.nearestHigher[i];
       const int32_t gpuClusterIndex = gpuHits.clusterIndex[i];
       const uint32_t gpuId = gpuHits.id[i];
@@ -165,6 +180,8 @@ void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm
 
       gpuValidHits[idet].emplace_back(gpuRho,
 				      gpuDelta,
+				      gpuX,
+				      gpuY,
 				      gpuNH,
 				      gpuClusterIndex,
 				      gpuLayer,

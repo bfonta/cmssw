@@ -88,6 +88,7 @@ void HeterogeneousHGCalPositionsConditions::transfer_data_to_heterogeneous_vars_
   this->posmap_.waferSize        = cpuPos->waferSize;
   this->posmap_.sensorSeparation = cpuPos->sensorSeparation;
   this->posmap_.nCellsTot        = cpuPos->nCellsTot;
+  this->posmap_.nCellsNegEndcap  = cpuPos->nCellsNegEndcap;
   this->posmap_.firstLayerEE     = cpuPos->firstLayerEE;
   this->posmap_.firstLayerHEF    = cpuPos->firstLayerHEF;
   this->posmap_.firstLayerHEB    = cpuPos->firstLayerHEB;
@@ -244,6 +245,7 @@ HeterogeneousHGCalPositionsConditions::getHeterogeneousConditionsESProductAsync(
     data.host->posmap.waferSize        = this->posmap_.waferSize;
     data.host->posmap.sensorSeparation = this->posmap_.sensorSeparation;
     data.host->posmap.nCellsTot        = this->posmap_.nCellsTot;
+    data.host->posmap.nCellsNegEndcap  = this->posmap_.nCellsNegEndcap;
     data.host->posmap.firstLayerEE     = this->posmap_.firstLayerEE;
     data.host->posmap.firstLayerHEF    = this->posmap_.firstLayerHEF;
     data.host->posmap.firstLayerHEB    = this->posmap_.firstLayerHEB;

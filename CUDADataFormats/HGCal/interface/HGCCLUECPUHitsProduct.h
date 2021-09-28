@@ -28,7 +28,9 @@ public:
     HGCCLUEHitsSoA soa;
     soa.rho = reinterpret_cast<float *>(mMemCLUEHitsHost.get());
     soa.delta = soa.rho + pad_;
-    soa.nearestHigher = reinterpret_cast<int32_t *>(soa.delta + pad_);
+    soa.x = soa.delta + pad_;
+    soa.y = soa.x + pad_;
+    soa.nearestHigher = reinterpret_cast<int32_t *>(soa.y + pad_);
     soa.clusterIndex = soa.nearestHigher + pad_;
     soa.id = reinterpret_cast<uint32_t *>(soa.clusterIndex + pad_);
     soa.isSeed = reinterpret_cast<bool *>(soa.id + pad_);
@@ -42,7 +44,9 @@ public:
     ConstHGCCLUEHitsSoA soa;
     soa.rho = reinterpret_cast<float const*>(mMemCLUEHitsHost.get());
     soa.delta = soa.rho + pad_;
-    soa.nearestHigher = reinterpret_cast<int32_t const*>(soa.delta + pad_);
+    soa.x = soa.delta + pad_;
+    soa.y = soa.x + pad_;
+    soa.nearestHigher = reinterpret_cast<int32_t const*>(soa.y + pad_);
     soa.clusterIndex = soa.nearestHigher + pad_;
     soa.id = reinterpret_cast<uint32_t const*>(soa.clusterIndex + pad_);
     soa.isSeed = reinterpret_cast<bool const*>(soa.id + pad_);

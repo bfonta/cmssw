@@ -155,6 +155,7 @@ namespace hgcal_conditions {
       float sensorSeparation;
       //variables required for the mapping of detid -> cell in the geometry
       int32_t nCellsTot;
+      int32_t nCellsNegEndcap;
       int32_t firstLayerEE;
       int32_t firstLayerHEF;
       int32_t firstLayerHEB;
@@ -181,6 +182,7 @@ namespace hgcal_conditions {
       float sensorSeparation;
       //variables required for the mapping of detid -> cell in the geometry
       int32_t nCellsTot;
+      int32_t nCellsNegEndcap;
       int32_t firstLayerEE;
       int32_t firstLayerHEF;
       int32_t firstLayerHEB;

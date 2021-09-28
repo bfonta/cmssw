@@ -8,6 +8,8 @@ class ConstHGCCLUEHitsSoA {
 public:
   float const *rho; //energy density of the calibrated rechit
   float const *delta; //closest distance to a rechit with a higher density
+  float const *x; //x hit position
+  float const *y; //y hit position
   int32_t const *nearestHigher; //index of the nearest rechit with a higher density
   int32_t const *clusterIndex;  //cluster index the rechit belongs to
   uint32_t const *id; //rechit detId

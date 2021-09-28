@@ -51,7 +51,7 @@ void HGCalCLUEAlgoGPUBase::set_memory() {
   cudaMemset(mCLUEHitsSoA.delta,         0x00, sizeof(float)*mPadHits);
   cudaMemset(mCLUEHitsSoA.nearestHigher, 0x00, sizeof(int32_t)*mPadHits);
   cudaMemset(mCLUEHitsSoA.clusterIndex,  0x00, sizeof(int32_t)*mPadHits);
-  cudaMemset(mCLUEHitsSoA.id,  0x00, sizeof(uint32_t)*mPadHits);
+  cudaMemset(mCLUEHitsSoA.id,            0x00, sizeof(uint32_t)*mPadHits);
   cudaMemset(mCLUEHitsSoA.isSeed,        0x00, sizeof(bool)*mPadHits);
 
   cudaMemset(mCLUEClustersSoA.energy,    0x00, sizeof(float)*mPadClusters);

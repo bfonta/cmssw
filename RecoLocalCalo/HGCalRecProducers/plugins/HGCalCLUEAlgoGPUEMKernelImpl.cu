@@ -7,13 +7,13 @@
 #include "HeterogeneousCore/CUDAUtilities/interface/VecArray.h"
 #include "HeterogeneousCore/CUDAUtilities/interface/cuda_assert.h"
 
-__device__
+__inline__ __device__
 bool is_energy_valid(float en) {
   return en >= 0.;
 } // kernel
 
 template <class T>
-__device__
+__inline__ __device__
 int32_t shift_layer(T id) {
   T did(id);
   return did.zside() == -1 ? did.layer() : did.layer() + static_cast<int32_t>(NLAYERS)/2;
@@ -43,7 +43,7 @@ void kernel_fill_input_soa(ConstHGCRecHitSoA hits,
     if(shift < static_cast<unsigned>(conds->posmap.nCellsTot)) //silicon
       in.layer[i] = shift_layer<HeterogeneousHGCSiliconDetId>( hits.id[i] );
     else //scintillator
-      in.layer[i] = shift_layer<HeterogeneousHGCScintillatorDetId>(hits.id[i]);
+      in.layer[i] = shift_layer<HeterogeneousHGCScintillatorDetId>( hits.id[i] );
     
   }
 } // kernel
@@ -77,49 +77,54 @@ void kernel_calculate_density( HeterogeneousHGCalLayerTiles *hist,
 
   for (unsigned i = tid; i < numberOfPoints; i += blockDim.x * gridDim.x)
     {
-    double rhoi{0.};
+      double rhoi{0.};
 
-    if( is_energy_valid(in.energy[i]) ) {
+      if( is_energy_valid(in.energy[i]) ) {
       
-      int layeri = in.layer[i];
-      float xi = in.x[i];
-      float yi = in.y[i];
+	int layeri = in.layer[i];
+	float xi = in.x[i];
+	float yi = in.y[i];
       
-      // get search box 
-      int4 search_box = hist[layeri].searchBox(xi-dc, xi+dc, yi-dc, yi+dc);
+	// get search box 
+	int4 search_box = hist[layeri].searchBox(xi-dc, xi+dc, yi-dc, yi+dc);
 
-      // loop over bins in the search box
-      for(int xBin = search_box.x; xBin < search_box.y+1; ++xBin) {
-	for(int yBin = search_box.z; yBin < search_box.w+1; ++yBin) {
+	// loop over bins in the search box
+	for(int xBin = search_box.x; xBin < search_box.y+1; ++xBin) {
+	  for(int yBin = search_box.z; yBin < search_box.w+1; ++yBin) {
 
-	  // get the id of this bin
-	  int binId = hist[layeri].getGlobalBinByBin(xBin,yBin);
-	  // get the size of this bin
-	  int binSize  = hist[layeri][binId].size();
+	    // get the id of this bin
+	    int binId = hist[layeri].getGlobalBinByBin(xBin,yBin);
+	    // get the size of this bin
+	    int binSize  = hist[layeri][binId].size();
 
-	  // interate inside this bin
-	  for (int binIter = 0; binIter < binSize; binIter++) {
-	    int j = hist[layeri][binId][binIter];
+	    // interate inside this bin
+	    for (int binIter = 0; binIter < binSize; binIter++) {
+	      int j = hist[layeri][binId][binIter];
 
-	    if( is_energy_valid(in.energy[j]) ) {
-	      // query N_{mDc}(i)
-	      float xj = in.x[j];
-	      float yj = in.y[j];
-	      float dist_ij = std::sqrt((xi-xj)*(xi-xj) + (yi-yj)*(yi-yj));
-	      if(dist_ij <= dc) { 
-		// sum weights within N_{mDc}(i)
-		rhoi += (i == j ? 1.f : 0.5f) * in.energy[j];
+	      if( is_energy_valid(in.energy[j]) ) {
+		// query N_{mDc}(i)
+		float xj = in.x[j];
+		float yj = in.y[j];
+		float dist_ij = std::sqrt((xi-xj)*(xi-xj) + (yi-yj)*(yi-yj));
+		if(dist_ij <= dc) { 
+		  // sum weights within N_{mDc}(i)
+		  rhoi += (i == j ? 1.f : 0.5f) * in.energy[j];
+		}
 	      }
-	    }
 	  
-	  } // end of interate inside this bin
-	}
-      } // end of loop over bins in search box
+	    } // end of interate inside this bin
+	  }
+	} // end of loop over bins in search box
+      }
+
+      out.rho[i] = (float)rhoi;
+      //out.delta[i] = 2.f;//in.y[i];
+      out.id[i] = in.id[i];
+
+      //for testing only
+      out.x[i] = in.x[i];
+      out.y[i] = in.y[i];
     }
-    
-    out.rho[i] = (float)rhoi;
-    out.id[i] = in.id[i];
-  }
 } //kernel
 
 
@@ -289,7 +294,7 @@ void kernel_assign_clusters( const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>*
   
 } // kernel
 
-__device__
+__inline__ __device__
 float max_w(float en, float totalWeight) {
   //float Wi = std::max(thresholdW0_[thick] + std::log(en / totalWeight), 0.);
   assert(en<=totalWeight);
@@ -333,7 +338,7 @@ void calculate_position_and_energy(float& clusterX, float& clusterY, float& clus
 
 //for the scintillator modify according to
 //https://github.com/b-fontana/cmssw/blob/clusters/RecoLocalCalo/HGCalRecProducers/plugins/HGCalCLUEAlgo.h#L216
-__device__
+__inline__ __device__
 float distance2(int id1, int id2, const clue_gpu::HGCCLUEInputSoAEM& in)
 {
   const float dx = in.x[id1] - in.x[id2];

@@ -3,6 +3,7 @@
 #include <inttypes.h>
 #include "DataFormats/DetId/interface/DetId.h"
 #include "RecoLocalCalo/HGCalRecProducers/plugins/HGCalCellPositionsKernelImpl.cuh"
+#include "HeterogeneousCore/CUDAUtilities/interface/cuda_assert.h"
 
 __global__ void fill_positions_from_detids(
     const hgcal_conditions::HeterogeneousPositionsConditionsESProduct* conds) {
@@ -35,13 +36,14 @@ __global__ void fill_positions_from_detids(
       const float r1_x2 = R1 * sqrt3;
       xpos += (1.5f * (cV - ncells) + 1.f) * R1;
       ypos += (cU - 0.5f * cV - n2) * r1_x2;
-      conds->posmap.x[i] =
-        xpos;  // times side; multiply by -1 if one wants to obtain the position from the opposite endcap. CAREFUL WITH LATER DETECTOR ALIGNMENT!!!
-      conds->posmap.y[i] = ypos;
 
-      // if(i==0 or i==100 or i==200 or i==300 or i==400) {
-      // 	printf("[HGCalCLUEAlgoKernelImpl.cu] x=%f, y=%f\n", conds->posmap.x[i], conds->posmap.y[i]);
-      // }
+      conds->posmap.y[i] = ypos;
+      //Detector alignment could imply that the two endcaps are not completely symmetric
+      conds->posmap.x[i] = xpos * static_cast<float>(did.zside());
+
+      if(i==0 or i==500 or i==1000 or i==1500 or i==2000) {
+      	printf("[HGCalCLUEAlgoKernelImpl.cu] x=%f, y=%f, zside=%d\n", conds->posmap.x[i], conds->posmap.y[i], did.zside());
+      }
 
       cudaDeviceSynchronize();
     }
@@ -127,6 +129,7 @@ unsigned get_nlayers_ee(const hgcal_conditions::HeterogeneousPositionsConditions
 
 //returns the index of the positions of a specific cell
 //performs several geometry-related shifts, and adds them at the end:
+//   0) number of cells up to the endcap side being inspected
 //   1) number of cells up to the layer being inspected
 //   2) number of cells up to the waferUchunk in question, only in the layer being inspected
 //   3) number of cells up to the waferV in question, only in the layer and waferUchunk being inspected
@@ -143,9 +146,11 @@ __device__ unsigned hash_function(const uint32_t& detid,
       const bool isEE = basedid.det()==DetId::HGCalEE ? true : false;
       const int32_t wU = did.waferU();
       const int32_t wV = did.waferV();
-      const int32_t l = abs(did.layer());  //remove abs in case both endcaps are considered for x and y
 
-      const unsigned thislayer = isEE ? l - conds->posmap.firstLayerEE
+      const int32_t l = did.layer();
+      assert(l == std::abs(did.layer()));
+
+      const unsigned thisLayer = isEE ? l - conds->posmap.firstLayerEE
 	: l - conds->posmap.firstLayerHEF; //refers to HEF only, starting one layer after conds->posmap.lastLayerEE
       const unsigned thisUwafer = isEE ? wU - conds->posmap.waferMinEE : wU - conds->posmap.waferMinHEF;
       const unsigned thisVwafer = isEE ? wV - conds->posmap.waferMinEE : wV - conds->posmap.waferMinHEF;
@@ -153,31 +158,34 @@ __device__ unsigned hash_function(const uint32_t& detid,
       const unsigned nwafers1DEE =  conds->posmap.waferMaxEE  - conds->posmap.waferMinEE;
       const unsigned nwafers1DHEF = conds->posmap.waferMaxHEF - conds->posmap.waferMinHEF;
 
+      //side shift in terms of cell number
+      unsigned ncells_up_to_this_side = (did.zside() == -1) ? 0 : conds->posmap.nCellsNegEndcap;
+      
       //layer shift in terms of cell number
-      unsigned ncells_up_to_thislayer = 0;
-      for (unsigned q = 0; q < thislayer; ++q)
-	ncells_up_to_thislayer += conds->posmap.nCellsLayer[q];
+      unsigned ncells_up_to_this_layer = 0;
+      for (unsigned q = 0; q < thisLayer; ++q)
+	ncells_up_to_this_layer += conds->posmap.nCellsLayer[q];
 
       //waferU shift in terms of cell number
       unsigned ncells_up_to_thisUwafer = 0;
-      unsigned nwaferUchunks_up_to_this_layer = isEE ? thislayer * nwafers1DEE
+      unsigned nwaferUchunks_up_to_this_layer = isEE ? thisLayer * nwafers1DEE
 	: get_nlayers_ee(conds) * nwafers1DEE //#waferU chunks in EE
-	+ thislayer * nwafers1DHEF;           //#waferU chunks in HEF
+	+ thisLayer * nwafers1DHEF;           //#waferU chunks in HEF
       for (unsigned q = 0; q < thisUwafer; ++q)
 	ncells_up_to_thisUwafer += conds->posmap.nCellsWaferUChunk[nwaferUchunks_up_to_this_layer + q];
 
       //waferV shift in terms of cell number
       unsigned ncells_up_to_thisVwafer = 0;
-      const unsigned nwafers_up_to_thisLayer = isEE ? thislayer * nwafers1DEE * nwafers1DEE
+      const unsigned nwafers_up_to_thisLayer = isEE ? thisLayer * nwafers1DEE * nwafers1DEE
 	: get_nlayers_ee(conds) * nwafers1DEE * nwafers1DEE
-	+ thislayer * nwafers1DHEF * nwafers1DHEF;
+	+ thisLayer * nwafers1DHEF * nwafers1DHEF;
       const unsigned nwafers_up_to_thisUwafer = thisUwafer * (isEE ? nwafers1DEE : nwafers1DHEF);
       for (unsigned q = 0; q < thisVwafer; ++q)
 	ncells_up_to_thisVwafer += conds->posmap.nCellsHexagon[nwafers_up_to_thisLayer + nwafers_up_to_thisUwafer + q];
 
       //cell shift in terms of cell number
       const unsigned cell_shift = map_cell_index(did.cellU(), did.cellV(), did.nCellsSide());
-      shift_total = ncells_up_to_thislayer + ncells_up_to_thisUwafer + ncells_up_to_thisVwafer + cell_shift;
+      shift_total = ncells_up_to_this_side + ncells_up_to_this_layer + ncells_up_to_thisUwafer + ncells_up_to_thisVwafer + cell_shift;
       //printf("isEE=%d, thislayer=%d, thisU=%d, thisV=%d, cellU=%d, cellV=%d, nCellsSide=%d, shift_total=%d, ncells_up_this_layer=%d, ncells_up_to_thisUwafer=%d, cell_shift=%d\n", isEE, thislayer, thisUwafer, thisVwafer, did.cellU(), did.cellV(), did.nCellsSide(), shift_total, ncells_up_to_thislayer, ncells_up_to_thisUwafer, cell_shift);
     }
   else if(basedid.det() == DetId::HGCalHSc)

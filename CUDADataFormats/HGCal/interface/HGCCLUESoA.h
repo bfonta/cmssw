@@ -7,6 +7,8 @@ class HGCCLUEHitsSoA {
 public:
   float *rho; //energy density of the calibrated rechit
   float *delta; //closest distance to a rechit with a higher density
+  float *x; //x hit position
+  float *y; //y hit position
   int32_t *nearestHigher; //index of the nearest rechit with a higher density
   int32_t *clusterIndex;  //cluster index the rechit belongs to
   uint32_t *id; //rechit detId
@@ -34,7 +36,7 @@ public:
 namespace memory {
   namespace npointers {
     //number of float pointers in the clue SoAs
-    constexpr unsigned float_hgccluehits_soa = 2;
+    constexpr unsigned float_hgccluehits_soa = 4;
     constexpr unsigned float_hgcclueclusters_soa = 3;
     //number of int32_t pointers in the clue SoAs
     constexpr unsigned int32_hgccluehits_soa = 2;
