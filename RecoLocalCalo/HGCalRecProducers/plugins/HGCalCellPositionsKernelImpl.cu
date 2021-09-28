@@ -28,8 +28,14 @@ __global__ void fill_positions_from_detids(
       const float rsqrt3 = __frsqrt_rn(3.f);  //rsqrt: 1 / sqrt
       const float R = r_x2 * rsqrt3;
       const float n2 = ncells / 2.f;
-      const float yoff_abs = rsqrt3 * r_x2;
-      const float yoff = (layer % 2 == 1) ? yoff_abs : -1.f * yoff_abs;  //CHANGE according to Sunanda's reply
+
+      float yoff = 0.f;
+      DetId basedid(conds->posmap.detid[i]);
+      if(basedid.det() == DetId::HGCalHSi) { //divergence only affects one warp at most
+	const float yoff_abs = rsqrt3 * r_x2;
+	yoff = (layer % 2 == 1) ? yoff_abs : -1.f * yoff_abs;
+      }
+      
       float xpos = (-2.f * wU + wV) * r;
       float ypos = yoff + (1.5f * wV * R);
       const float R1 = __fdividef(conds->posmap.waferSize, 3.f * ncells);

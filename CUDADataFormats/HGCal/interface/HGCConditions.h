@@ -33,7 +33,7 @@ public:
     const int32_t N = nCellsSide();
     return (2 * cellU() - (N + cellV()));
   }
-
+  
 private:
   std::uint32_t id_;
   enum waferType { HGCalFine = 0, HGCalCoarseThin = 1, HGCalCoarseThick = 2 };
