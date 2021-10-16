@@ -214,6 +214,7 @@ math::XYZPoint HGCalCLUEAlgoT<T>::calculatePosition(const std::vector<int>& v, c
     float total_weight_log = 0.f;
     float x_log = 0.f;
     float y_log = 0.f;
+     
     for (auto i : v) {
       //for silicon only just use 1+6 cells = 1.3cm for all thicknesses
       if (distance2(i, maxEnergyIndex, layerId, false) > positionDeltaRho2_)

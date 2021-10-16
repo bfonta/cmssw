@@ -85,6 +85,8 @@ void HGCalLayerClusterProducerEMFromSoA::getClusters_(uint32_t nhits, uint32_t n
 
     if( clusters->energy[i] > 0.) { //get rid of excess empty GPU clusters
 
+      // if(i%1000==0)
+      // 	std::cout << "Position check: " << clusters->x[i] << ", " << i << std::endl;
       math::XYZPoint position = math::XYZPoint(clusters->x[i],
 					       clusters->y[i],
 					       //ddd->waferZ(clusters->layer[i], true) );

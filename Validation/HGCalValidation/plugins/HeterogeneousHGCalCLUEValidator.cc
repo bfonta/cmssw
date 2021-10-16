@@ -125,12 +125,6 @@ void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm
 	
 	    //filter only "good" hits for comparison
 	    if(gpuHits.nearestHigher[k] > -1 and gpuHits.clusterIndex[k] > -1) {
-
-	      if(j%1500==0) {
-		std::cout << "Y: " << cpuY << ", " << gpuHits.y[k] << " ::: "
-			  << cpuY-gpuHits.y[k] << ", " << std::abs(cpuY-gpuHits.y[k])
-			  << std::endl;
-	      }
 	      
 	      diffsValidHits[idet].emplace_back(cpuRho - gpuHits.rho[k],
 						cpuDelta - gpuHits.delta[k],
