@@ -57,8 +57,7 @@ void HGCalCLUEAlgoGPUBase::set_memory() {
   cudaMemset(mCLUEClustersSoA.energy,    0x00, sizeof(float)*mPadClusters);
   cudaMemset(mCLUEClustersSoA.x,         0x00, sizeof(float)*mPadClusters);
   cudaMemset(mCLUEClustersSoA.y,         0x00, sizeof(float)*mPadClusters);
-  cudaMemset(mCLUEClustersSoA.layer,     0x00, sizeof(int32_t)*mPadClusters);
-  cudaMemset(mCLUEClustersSoA.clusterIndex, 0x00, sizeof(int32_t)*mPadClusters);
+  cudaMemset(mCLUEClustersSoA.seedId,    0x00, sizeof(uint32_t)*mPadClusters);
 
   // algorithm internal variables
   cudaMemset(mDevHist, 0x00, sizeof(HeterogeneousHGCalLayerTiles) * NLAYERS);

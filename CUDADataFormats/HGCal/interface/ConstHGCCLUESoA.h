@@ -23,8 +23,7 @@ public:
   float const *energy; //energy of the cluster
   float const *x; //x position of the cluster
   float const *y; //y position of the cluster
-  int32_t const *layer; //z position of the cluster
-  int32_t const *clusterIndex;  //cluster index (matches the one from HGCCLUEHitsSoA)
+  uint32_t const *seedId;  //detid of the custer seed
 };
 
 #endif  //CUDADataFormats_HGCal_ConstHGCCLUESoA_h

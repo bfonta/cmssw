@@ -405,9 +405,7 @@ void kernel_get_clusters(float dc2,
       
       if( std::abs(maxLog) > 1e-10 ) {
 	float inv = 1.f/maxLog;
-	//printf("Inv: %f, ClusterX: %f\n", inv, clusterX);
 	clusterX *= inv;
-	//printf("Inv: %f, ClusterX: %f\n", inv, clusterX);
 	clusterY *= inv;
       }
       else {
@@ -421,9 +419,8 @@ void kernel_get_clusters(float dc2,
       clustersSoA.energy[i]       = clusterEnergy;
       clustersSoA.x[i]            = clusterX;
       clustersSoA.y[i]            = clusterY;
-      clustersSoA.layer[i]        = hitsIn.layer[maxEnergyIndex];
-      clustersSoA.clusterIndex[i] = hitsOut.clusterIndex[maxEnergyIndex];
-      assert(hitsOut.clusterIndex[maxEnergyIndex] == hitsOut.clusterIndex[thisSeed]);
+      clustersSoA.seedId[i]       = hitsOut.id[maxEnergyIndex];
+      assert(hitsOut.id[maxEnergyIndex] == hitsOut.id[thisSeed]);
   }
 
 } //kernel

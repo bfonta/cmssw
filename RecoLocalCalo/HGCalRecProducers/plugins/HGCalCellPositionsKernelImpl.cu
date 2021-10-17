@@ -47,10 +47,6 @@ __global__ void fill_positions_from_detids(
       //Detector alignment could imply that the two endcaps are not completely symmetric
       conds->posmap.x[i] = xpos * static_cast<float>(did.zside());
 
-      if(i==0 or i==500 or i==1000 or i==1500 or i==2000) {
-      	printf("[HGCalCLUEAlgoKernelImpl.cu] x=%f, y=%f, zside=%d\n", conds->posmap.x[i], conds->posmap.y[i], did.zside());
-      }
-
       cudaDeviceSynchronize();
     }
 
@@ -97,7 +93,6 @@ __global__ void print_positions_from_detids(
     }
 
     float posz = conds->posmap.zLayer[layer - 1];
-    printf("PosX: %lf\t PosY: %lf\t Posz: %lf\n", conds->posmap.x[i], conds->posmap.y[i], posz);
   }
 }
 
