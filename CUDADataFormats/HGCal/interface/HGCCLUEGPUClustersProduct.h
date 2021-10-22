@@ -57,7 +57,7 @@ private:
   cms::cuda::device::unique_ptr<std::byte[]> mMemCLUEClustersDev;
   static constexpr std::array<uint32_t, memory::npointers::ntypes_hgcclueclusters_soa> sizes_ = {
       {memory::npointers::float_hgcclueclusters_soa * sizeof(float),
-       memory::npointers::int32_hgcclueclusters_soa * sizeof(uint32_t)}};
+       memory::npointers::uint32_hgcclueclusters_soa * sizeof(uint32_t)}};
   uint32_t pad_;
   uint32_t nclusters_;
   uint32_t size_tot_;

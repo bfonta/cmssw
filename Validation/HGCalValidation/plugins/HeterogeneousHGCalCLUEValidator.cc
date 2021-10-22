@@ -20,6 +20,14 @@ HeterogeneousHGCalCLUEValidator::HeterogeneousHGCalCLUEValidator(const edm::Para
     treesH_[i]->Branch("gpu", "ValidCLUEHitCollection", &gpuValidHits[i]);
     treesH_[i]->Branch("diffs", "ValidCLUEHitCollection", &diffsValidHits[i]);
   }
+
+  for(unsigned i = 0; i<nTechnologies; ++i) {
+    std::string s = std::to_string(nTechnologies);
+    histosEn[i] = fs->make<TH1F>(("Energy" + s).c_str(),    "En", 200,  0., 2. );
+    histosX[i]  = fs->make<TH1F>(("PositionX" + s).c_str(), "X", 500,  -160, 160 );
+    histosY[i]  = fs->make<TH1F>(("PositionY" + s).c_str(), "Y", 500,  -160, 160 );
+    histosZ[i]  = fs->make<TH1F>(("PositionY" + s).c_str(), "Y", 5000,  -400, 400 );
+  }
 }
 
 HeterogeneousHGCalCLUEValidator::~HeterogeneousHGCalCLUEValidator() {}
@@ -50,9 +58,13 @@ void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm
       if(cpuCluster.algo() == reco::CaloCluster::hgcal_em)
 	{  
 	  const float cpuEn = cpuCluster.energy();
+	  histosEn[0]->Fill(cpuEn);
 	  const float cpuX = cpuCluster.x();
+	  histosX[0]->Fill(cpuX);
 	  const float cpuY = cpuCluster.y();
+	  histosY[0]->Fill(cpuY);
 	  const float cpuZ = cpuCluster.z();
+	  histosZ[0]->Fill(cpuZ);
 
 	  ValidCLUECluster vCPU(cpuEn, cpuX, cpuY, cpuZ);
 
@@ -67,10 +79,14 @@ void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm
       const reco::BasicCluster &gpuCluster = gpuClusters[i];
 
       const float gpuEn = gpuCluster.energy();
+      histosEn[1]->Fill(gpuEn);
       const float gpuX = gpuCluster.x();
+      histosX[1]->Fill(gpuX);
       const float gpuY = gpuCluster.y();
+      histosY[1]->Fill(gpuY);
       const float gpuZ = gpuCluster.z();
-
+      histosZ[1]->Fill(gpuZ);
+      
       ValidCLUECluster vGPU(gpuEn, gpuX, gpuY, gpuZ);
 
       gpuValidClusters[idet].emplace_back(gpuEn, gpuX, gpuY, gpuZ);

@@ -68,9 +68,8 @@ void HGCalLayerClusterProducerEMFromSoA::beginRun(edm::Run const&, edm::EventSet
   SubDet_ = ForwardSubdetector::ForwardEmpty;
   const CaloSubdetectorGeometry* g = geom_->getSubdetectorGeometry(Det_.first, SubDet_);
   geomEE_ = dynamic_cast<const HGCalGeometry*>(g);
-  std::cout << "============== CHECK0" << std::endl;
+
   const CaloGeometry& geom = es.getData(caloGeometry_token_);
-  std::cout << "============== CHECK1" << std::endl;
   rhtools_.setGeometry(geom);
 }
 
@@ -79,8 +78,6 @@ void HGCalLayerClusterProducerEMFromSoA::produce(edm::Event& event, const edm::E
   const HGCCLUECPUClustersProduct& clueClusters = event.get(clueClustersSoAToken_);
   ConstHGCCLUEHitsSoA clueHitsSoA = clueHits.get();
   ConstHGCCLUEClustersSoA clueClustersSoA = clueClusters.get();
-
-  std::cout << "============== CHECK2" << std::endl;
   
   out_ = std::make_unique<reco::BasicClusterCollection>();
 
@@ -99,13 +96,10 @@ void HGCalLayerClusterProducerEMFromSoA::getClusters_(uint32_t nhits, uint32_t n
 
     if( clusters->energy[i] > 0.) { //get rid of excess empty GPU clusters
 
-      std::cout << "============== CHECK3" << std::endl;
       math::XYZPoint position = math::XYZPoint(clusters->x[i],
 					       clusters->y[i],
+					       //rhtools_.getPosition( 2416969935 ).z() );
 					       rhtools_.getPosition( clusters->seedId[i] ).z() );
-      
-      std::cout << "POS: " << rhtools_.getPosition( clusters->seedId[i] ).z() << std::endl;
-			
 
       //This code block is needed to match expected input from reco::BasicCluster
       // 

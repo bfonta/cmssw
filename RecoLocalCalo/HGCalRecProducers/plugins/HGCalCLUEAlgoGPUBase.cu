@@ -57,7 +57,7 @@ void HGCalCLUEAlgoGPUBase::set_memory() {
   cudaMemset(mCLUEClustersSoA.energy,    0x00, sizeof(float)*mPadClusters);
   cudaMemset(mCLUEClustersSoA.x,         0x00, sizeof(float)*mPadClusters);
   cudaMemset(mCLUEClustersSoA.y,         0x00, sizeof(float)*mPadClusters);
-  cudaMemset(mCLUEClustersSoA.seedId,    0x00, sizeof(uint32_t)*mPadClusters);
+  cudaMemset(mCLUEClustersSoA.seedId,    0x02, sizeof(uint32_t)*mPadClusters);
 
   // algorithm internal variables
   cudaMemset(mDevHist, 0x00, sizeof(HeterogeneousHGCalLayerTiles) * NLAYERS);
@@ -70,6 +70,8 @@ void HGCalCLUEAlgoGPUBase::copy_tohost(const cudaStream_t& stream) {
   //the original standalone version transferred only the cluster index
   cudaMemcpyAsync(mCLUEHitsSoAHost.rho, mCLUEHitsSoADev.rho,
 		  mPadHits*mCLUEHitsSoAHost.nbytes, cudaMemcpyDeviceToHost, stream);
+
+  std::cout << "AlgoBase: " << mPadClusters << ", " << mCLUEClustersSoAHost.nbytes << std::endl;
   cudaMemcpyAsync(mCLUEClustersSoAHost.energy, mCLUEClustersSoADev.energy,
 		  mPadClusters*mCLUEClustersSoAHost.nbytes, cudaMemcpyDeviceToHost, stream);
 }

@@ -26,7 +26,7 @@ void kernel_fill_input_soa(ConstHGCRecHitSoA hits,
 			   float ecut)
 {
   int tid = blockIdx.x * blockDim.x + threadIdx.x;
-  for (unsigned i = tid; i < hits.nhits; i += blockDim.x * gridDim.x) {
+  for (int i = tid; i < hits.nhits; i += blockDim.x * gridDim.x) {
     in.sigmaNoise[i] = hits.sigmaNoise[i];
     in.id[i] = hits.id[i];
     in.energy[i] = (hits.energy[i]<ecut*in.sigmaNoise[i]) ? -1.f : hits.energy[i];
@@ -54,7 +54,7 @@ void kernel_compute_histogram( HeterogeneousHGCalLayerTiles *hist,
 {
   int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
-  for (unsigned i = tid; i < numberOfPoints; i += blockDim.x * gridDim.x)
+  for (int i = tid; i < numberOfPoints; i += blockDim.x * gridDim.x)
     {
       if( is_energy_valid(in.energy[i]) )
 	// push index of points into tiles
@@ -72,7 +72,7 @@ void kernel_calculate_density( HeterogeneousHGCalLayerTiles *hist,
 { 
   int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
-  for (unsigned i = tid; i < numberOfPoints; i += blockDim.x * gridDim.x)
+  for (int i = tid; i < numberOfPoints; i += blockDim.x * gridDim.x)
     {
       double rhoi{0.};
 
@@ -137,7 +137,7 @@ void kernel_calculate_distanceToHigher(HeterogeneousHGCalLayerTiles* hist,
 
   float dm = outlierDeltaFactor * dc;
 
-  for (unsigned i = tid; i < numberOfPoints; i += blockDim.x * gridDim.x)
+  for (int i = tid; i < numberOfPoints; i += blockDim.x * gridDim.x)
     {
 
       float deltai = std::numeric_limits<float>::max();
@@ -209,7 +209,7 @@ void kernel_find_clusters( cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* dSeeds,
   int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
 
-  for (unsigned i = tid; i < numberOfPoints; i += blockDim.x * gridDim.x)
+  for (int i = tid; i < numberOfPoints; i += blockDim.x * gridDim.x)
     {
       // initialize clusterIndex
       out.clusterIndex[i] = -1;
@@ -252,7 +252,7 @@ void kernel_assign_clusters( const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>*
   const auto& seeds = dSeeds[0];
   const auto nSeeds = seeds.size();
 
-  for (unsigned i = idxCluster; i < nSeeds; i += blockDim.x * gridDim.x)
+  for (int i = idxCluster; i < nSeeds; i += blockDim.x * gridDim.x)
     {
       int localStack[clue_gpu::localStackSizePerSeed] = {-1};
       int localStackSize = 0;
@@ -369,7 +369,7 @@ void kernel_get_clusters(float dc2,
   assert(nseeds <= clustersSoA.nclusters);
   
   int tid = blockIdx.x * blockDim.x + threadIdx.x;
-  for (unsigned i = tid; i < nseeds; i += blockDim.x * gridDim.x)
+  for (int i = tid; i < nseeds; i += blockDim.x * gridDim.x)
     {
       //each thread will take care of a single cluster
       int thisSeed = seeds[i];
@@ -385,6 +385,10 @@ void kernel_get_clusters(float dc2,
   			       hitsIn,
   			       dFollowers);
 
+      // if(i % 10000 == 0) {
+      // 	printf("ThreadId (bef): %u ::: hitsOutId=%u, maxWeight=%f, maxEnIndex=%d\n", i, hitsOut.id[maxEnergyIndex], maxWeight, maxEnergyIndex);
+      // }
+      
       //the x, y and energy of the seed is not included in 'calculate_position_and_energy()'
       //its inclusion is not possible due to the recursive approach
       float clusterEnergy = hitsIn.energy[thisSeed];
@@ -409,17 +413,23 @@ void kernel_get_clusters(float dc2,
 	clusterY *= inv;
       }
       else {
-	printf("ZERO!\n");
+	printf("ZERO! (clusterEnergy=%f, totalWeight=%f, nFollowers=%u)\n",
+	       clusterEnergy, totalWeight, dFollowers[thisSeed].size());
 	clusterX = 0.f;
 	clusterY = 0.f;
       }
-      
+
       //printf("Apres: nFollowers: %d, totalWeight: %f, maxLog: %f, hitsX: %f, hitsY: %f, Wi: %f, clusterEnergy: %f, thisSeed %d, clusterX: %f, clusterY: %f\n", totalWeight, maxLog, hitsIn.x[thisSeed], hitsIn.y[thisSeed], Wi, clusterEnergy, thisSeed, clusterX, clusterY);
       //printf("---------------------\n");
-      clustersSoA.energy[i]       = clusterEnergy;
-      clustersSoA.x[i]            = clusterX;
-      clustersSoA.y[i]            = clusterY;
-      clustersSoA.seedId[i]       = hitsOut.id[maxEnergyIndex];
+      clustersSoA.energy[i] = clusterEnergy;
+      clustersSoA.x[i]      = clusterX;
+      clustersSoA.y[i]      = clusterY;
+      clustersSoA.seedId[i] = (maxEnergyIndex==-1) ? hitsOut.id[thisSeed] : hitsOut.id[maxEnergyIndex];
+
+      // if(i % 10000 == 0) {
+      // 	printf("ThreadID (aft): %u ::: clusterSeedId=%u, hitsOutId=%u, hitOutsId=%u, thisSeed=%d, maxWeight=%f, maxEnIndex=%d, nFollowers=%u\n", i, clustersSoA.seedId[i], hitsOut.id[maxEnergyIndex], hitsOut.id[thisSeed], thisSeed, maxWeight, maxEnergyIndex, dFollowers[thisSeed].size());
+      // 	printf("=========================\n");
+      // }
       assert(hitsOut.id[maxEnergyIndex] == hitsOut.id[thisSeed]);
   }
 

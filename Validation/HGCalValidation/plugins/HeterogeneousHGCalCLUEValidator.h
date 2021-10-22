@@ -48,6 +48,7 @@ public:
 
 private:
   static const unsigned nReg = 1;      //EM e/ou HAD
+  static const unsigned nTechnologies = 2;      //CPU and GPU
   
   //cpu amd gpu tokens and handles for the 3 subdetectors, cpu and gpu
   Arr<edm::EDGetTokenT<InHitsCPU>, nReg> tokHitsCPU_;
@@ -56,7 +57,9 @@ private:
   Arr<edm::EDGetTokenT<InClustersGPU>, nReg> tokClustersGPU_;
 
 
+  TFile *outFile_;
   Arr<TTree*, nReg> treesH_, treesC_;
+  Arr<TH1F*, nTechnologies> histosEn, histosX, histosY, histosZ;
   Arr<std::string, nReg> treenamesH_, treenamesC_;
   Arr<OutCCol, nReg> cpuValidClusters, gpuValidClusters, diffsValidClusters;
   Arr<OutHCol, nReg> cpuValidHits, gpuValidHits, diffsValidHits;
