@@ -12,6 +12,16 @@ F.register('outName',
            'Output file name.')
 F.parseArguments()
 
+#arguments parsing                                                                 
+from FWCore.ParameterSet.VarParsing import VarParsing
+F=VarParsing('analysis')
+F.register('outName',
+           'default',
+           F.multiplicity.singleton,
+           F.varType.string,
+           'Output file name.')
+F.parseArguments()
+
 process = cms.Process('RECO', eras.Run2_2018)
 
 # import of standard configurations
