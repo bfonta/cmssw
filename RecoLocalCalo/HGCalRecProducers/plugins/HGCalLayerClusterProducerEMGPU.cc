@@ -84,22 +84,22 @@ void HGCalLayerClusterProducerEMGPU::acquire(edm::Event const& event,
   const unsigned nhits(eeHits.nHits());
   unsigned nclusters(clue_gpu::maxNSeeds);
 
-  mCLUEHits = HGCCLUEGPUHitsProduct(nhits, ctx.stream());
-  mCLUEClusters = HGCCLUEGPUClustersProduct(nclusters, ctx.stream());
+  //mCLUEHits = HGCCLUEGPUHitsProduct(nhits, ctx.stream());
+  //mCLUEClusters = HGCCLUEGPUClustersProduct(nclusters, ctx.stream());
   
   //retrieve HGCAL positions conditions data
   auto hPosConds = es.getHandle(gpuPositionsTok_);
   const auto* gpuPositionsConds = hPosConds->getHeterogeneousConditionsESProductAsync(ctx.stream());
 
   //CLUE
-  mAlgo = std::make_unique<HGCalCLUEAlgoGPUEM>(mDc, mKappa, mEcut, mOutlierDeltaFactor,
-  					       mCLUEHits.get(), mCLUEClusters.get());
+  //mAlgo = std::make_unique<HGCalCLUEAlgoGPUEM>(mDc, mKappa, mEcut, mOutlierDeltaFactor,
+  //					       mCLUEHits.get(), mCLUEClusters.get());
 
-  mAlgo->populate(eeHits.get(), gpuPositionsConds, ctx.stream());
-  mAlgo->make_clusters(ctx.stream());
+  //mAlgo->populate(eeHits.get(), gpuPositionsConds, ctx.stream());
+  //mAlgo->make_clusters(ctx.stream());
 
   //Clusters
-  mAlgo->get_clusters(ctx.stream());
+  //mAlgo->get_clusters(ctx.stream());
 }
 
 void HGCalLayerClusterProducerEMGPU::produce(edm::Event& event,

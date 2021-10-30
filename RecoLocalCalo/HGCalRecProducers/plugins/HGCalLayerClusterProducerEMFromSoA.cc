@@ -109,12 +109,14 @@ void HGCalLayerClusterProducerEMFromSoA::getClusters_(uint32_t nhits, uint32_t n
       // }
       std::vector<std::pair<DetId, float>> thisCluster;
 
-      coll.emplace_back( clusters->energy[i],
-			 position,
-			 reco::CaloID::DET_HGCAL_ENDCAP,
-			 thisCluster,
-			 reco::CaloCluster::hgcal_em //reco::CaloCluster::hgcal_had for HAD section
-			 );
+      reco::BasicCluster tmpCluster( clusters->energy[i],
+				     position,
+				     reco::CaloID::DET_HGCAL_ENDCAP,
+				     thisCluster,
+				     reco::CaloCluster::hgcal_em //reco::CaloCluster::hgcal_had for HAD section
+				     );
+      tmpCluster.setSeed( clusters->seedId[i] );
+      coll.emplace_back( tmpCluster );
     }
   }
 }

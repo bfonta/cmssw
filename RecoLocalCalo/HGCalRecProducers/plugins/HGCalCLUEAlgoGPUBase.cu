@@ -71,7 +71,6 @@ void HGCalCLUEAlgoGPUBase::copy_tohost(const cudaStream_t& stream) {
   cudaMemcpyAsync(mCLUEHitsSoAHost.rho, mCLUEHitsSoADev.rho,
 		  mPadHits*mCLUEHitsSoAHost.nbytes, cudaMemcpyDeviceToHost, stream);
 
-  std::cout << "AlgoBase: " << mPadClusters << ", " << mCLUEClustersSoAHost.nbytes << std::endl;
   cudaMemcpyAsync(mCLUEClustersSoAHost.energy, mCLUEClustersSoADev.energy,
 		  mPadClusters*mCLUEClustersSoAHost.nbytes, cudaMemcpyDeviceToHost, stream);
 }

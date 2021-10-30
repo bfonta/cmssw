@@ -50,7 +50,7 @@ void HGCalCLUEAlgoGPUEM::populate(const ConstHGCRecHitSoA& hits,
   const dim3 gridSize( calculate_block_multiplicity(mNHits, blockSize.x), 1, 1 );
 
   kernel_fill_input_soa<<<gridSize,blockSize,0,stream>>>(hits, mDevPoints, conds, mEcut);
-
+  cudaCheck( cudaGetLastError() );
   cudaCheck( cudaStreamSynchronize(stream) );
 }
 
@@ -65,21 +65,29 @@ void HGCalCLUEAlgoGPUEM::make_clusters(const cudaStream_t &stream) {
   ////////////////////////////////////////////
   kernel_compute_histogram
     <<<gridSize,blockSize,0,stream>>>(mDevHist, mDevPoints, mNHits);
-
+  cudaCheck(cudaGetLastError());
+  cudaCheck( cudaStreamSynchronize(stream) );
+  
   kernel_calculate_density
     <<<gridSize,blockSize,0,stream>>>(mDevHist, mDevPoints, mCLUEHitsSoA,
 				      mDc, mNHits);
-
+  cudaCheck(cudaGetLastError());
+  cudaCheck( cudaStreamSynchronize(stream) );
+  
   kernel_calculate_distanceToHigher
     <<<gridSize,blockSize,0,stream>>>(mDevHist, mDevPoints, mCLUEHitsSoA,
 				      mOutlierDeltaFactor, mDc,
 				      mNHits);
-
+  cudaCheck(cudaGetLastError());
+  cudaCheck( cudaStreamSynchronize(stream) );
+  
   kernel_find_clusters
     <<<gridSize,blockSize,0,stream>>>(mDevSeeds, mDevFollowers,
 				      mDevPoints, mCLUEHitsSoA,
 				      mOutlierDeltaFactor, mDc, mKappa,
 				      mNHits);
+  cudaCheck(cudaGetLastError());
+  cudaCheck( cudaStreamSynchronize(stream) );
   
   ////////////////////////////////////////////
   // assign clusters
@@ -90,15 +98,17 @@ void HGCalCLUEAlgoGPUEM::make_clusters(const cudaStream_t &stream) {
     <<<gridSize_nseeds,blockSize,0,stream>>>(mDevSeeds,
 					     mDevFollowers,
 					     mCLUEHitsSoA);
+  cudaCheck(cudaGetLastError());
+  cudaCheck( cudaStreamSynchronize(stream) );
 }
 
 void HGCalCLUEAlgoGPUEM::get_clusters(const cudaStream_t &stream) {
-  //const dim3 blockSize(512,1,1);
-  const dim3 blockSize(1,1,1);
+  const dim3 blockSize(32,1,1);
+  //const dim3 blockSize(1,1,1);
   //the number of clusters is given by mDevSeeds.size(), but by using mCLUEClustersSoa.nclusters I make
   //sure there is enough room for all the clusters in each layer without actually counting them
-  //const dim3 gridSize( calculate_block_multiplicity(mCLUEClustersSoA.nclusters, blockSize.x), 1, 1 );
-  const dim3 gridSize( 1, 1, 1 );
+  const dim3 gridSize( calculate_block_multiplicity(mCLUEClustersSoA.nclusters, blockSize.x), 1, 1 );
+  //const dim3 gridSize( 1, 1, 1 );
     
   float dc2 = mDc * mDc;
   //mDevSeeds gives number of seeds, i.e., an upper estimate for the number of clusters
@@ -109,5 +119,6 @@ void HGCalCLUEAlgoGPUEM::get_clusters(const cudaStream_t &stream) {
 				      mDevPoints,
 				      mCLUEHitsSoA,
 				      mCLUEClustersSoA);
-
+  cudaCheck(cudaGetLastError());
+  //implicit stream syncrhonization by the EDProducer
 }

@@ -36,7 +36,7 @@ public:
   void get_clusters(const cudaStream_t&) override;
 
 private:
-  static constexpr unsigned mNThreadsEM = 1024;
+  static constexpr unsigned mNThreadsEM = 64;
   clue_gpu::HGCCLUEInputSoAEM mDevPoints;
 
   void set_input_SoA_layout(const cudaStream_t&);

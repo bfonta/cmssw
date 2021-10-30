@@ -22,17 +22,42 @@ HeterogeneousHGCalCLUEValidator::HeterogeneousHGCalCLUEValidator(const edm::Para
   }
 
   for(unsigned i = 0; i<nTechnologies; ++i) {
-    std::string s = std::to_string(nTechnologies);
-    histosEn[i] = fs->make<TH1F>(("Energy" + s).c_str(),    "En", 200,  0., 2. );
-    histosX[i]  = fs->make<TH1F>(("PositionX" + s).c_str(), "X", 500,  -160, 160 );
-    histosY[i]  = fs->make<TH1F>(("PositionY" + s).c_str(), "Y", 500,  -160, 160 );
-    histosZ[i]  = fs->make<TH1F>(("PositionY" + s).c_str(), "Y", 5000,  -400, 400 );
+    std::string s = (i==0) ? "_ClusterCPU" : "_ClusterGPU";
+    histosEn[i] = fs->make<TH1F>(("Energy" + s).c_str(),    "En", 80,  0., 1. );
+    histosX[i]  = fs->make<TH1F>(("PositionX" + s).c_str(), "X", 200,  -160, 160 );
+    histosY[i]  = fs->make<TH1F>(("PositionY" + s).c_str(), "Y", 200,  -160, 160 );
+    histosZ[i]  = fs->make<TH1F>(("PositionZ" + s).c_str(), "Z", 4000,  -400, 400 );
   }
+
+  fileCPU.open("ids_CPU.txt", std::ios_base::out);
+  fileGPU.open("ids_GPU.txt", std::ios_base::out);
 }
 
-HeterogeneousHGCalCLUEValidator::~HeterogeneousHGCalCLUEValidator() {}
+HeterogeneousHGCalCLUEValidator::~HeterogeneousHGCalCLUEValidator() {
+  fileCPU.close();
+  fileGPU.close();
+}
 
 void HeterogeneousHGCalCLUEValidator::endJob() {}
+
+const reco::BasicCluster HeterogeneousHGCalCLUEValidator::get_matched_cluster(
+				      unsigned nClustersGPU,
+				      uint32_t cpuSeedId,
+				      const std::vector<reco::BasicCluster>& gpuClusters) {
+  for (unsigned i(0); i<nClustersGPU; i++) {
+    const reco::BasicCluster &gpuCluster = gpuClusters[i];
+    if(cpuSeedId == gpuCluster.seed())
+      return gpuCluster;
+  }
+
+  //return dummy cluster if it did not find a match
+  std::vector<std::pair<DetId, float>> dummy;
+  return reco::BasicCluster(-1.,
+			    math::XYZPoint(0.f, 0.f, 0.f),
+			    reco::CaloID::DET_HGCAL_ENDCAP,
+			    dummy,
+			    reco::CaloCluster::undefined);
+}
 
 void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm::EventSetup &setup) {
   //future subdetector loop
@@ -46,14 +71,24 @@ void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm
 
     size_t nClustersCPU = cpuClusters.size();
     size_t nClustersGPU = gpuClusters.size();
-    std::cout << nClustersCPU << ", " << nClustersGPU << std::endl;
+    std::cout << "[CLUEValidator] #Clusters: CPU=" << nClustersCPU
+	      << ", GPU=" << nClustersGPU << std::endl;
 
-    //assers(nclusters == gpuClusters.size());
-    //float sum_cpu = 0.f, sum_gpu = 0.f, sum_son_cpu = 0.f, sum_son_gpu = 0.f;
-
-    //CPU clusters loop
+    ///////////////////////////////////////////////
+    //CPU clusters loop ///////////////////////////
+    ///////////////////////////////////////////////
     for (unsigned i(0); i < nClustersCPU; i++) {
       const reco::BasicCluster &cpuCluster = cpuClusters[i];
+
+      //print detids to files as an extra check
+      if(i==0) {
+	for (unsigned i(0); i < nClustersCPU; i++) {
+	  if (!fileCPU.is_open())
+	    std::cout << "failed to open CPU file" << std::endl;
+	  else
+	    fileCPU << i << ": " << cpuClusters[i].seed().rawId() << std::endl;
+	}
+      }
 
       if(cpuCluster.algo() == reco::CaloCluster::hgcal_em)
 	{  
@@ -66,8 +101,6 @@ void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm
 	  const float cpuZ = cpuCluster.z();
 	  histosZ[0]->Fill(cpuZ);
 
-	  ValidCLUECluster vCPU(cpuEn, cpuX, cpuY, cpuZ);
-
 	  cpuValidClusters[idet].emplace_back(cpuEn, cpuX, cpuY, cpuZ);
 	}
       else if(cpuCluster.algo() != reco::CaloCluster::hgcal_em)
@@ -77,6 +110,16 @@ void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm
     //GPU clusters loop
     for (unsigned i(0); i < nClustersGPU; i++) {
       const reco::BasicCluster &gpuCluster = gpuClusters[i];
+
+      //print detids to files as an extra check
+      if(i==0) {
+	for (unsigned i(0); i < nClustersGPU; i++) {
+	  if (!fileGPU.is_open())
+	    std::cout << "failed to open GPU file" << std::endl;
+	  else
+	    fileGPU << i << ": " << gpuClusters[i].seed().rawId() << std::endl;
+	}
+      }
 
       const float gpuEn = gpuCluster.energy();
       histosEn[1]->Fill(gpuEn);
@@ -91,9 +134,41 @@ void HeterogeneousHGCalCLUEValidator::analyze(const edm::Event &event, const edm
 
       gpuValidClusters[idet].emplace_back(gpuEn, gpuX, gpuY, gpuZ);
     }
-    treesC_[idet]->Fill();
 
-    //Hits loop
+    //search for a GPU cluster initiated by the same CPU seed
+    unsigned counter = 0;
+    for (unsigned i(0); i < nClustersCPU; i++) {
+      const reco::BasicCluster &cpuCluster = cpuClusters[i];
+      
+      if(cpuCluster.algo() == reco::CaloCluster::hgcal_em)
+	{  
+	  const float cpuEn = cpuCluster.energy();
+	  const float cpuX = cpuCluster.x();
+	  const float cpuY = cpuCluster.y();
+	  const float cpuZ = cpuCluster.z();
+	  const uint32_t cpuSeedId = cpuCluster.seed().rawId();
+
+	  const reco::BasicCluster &gpuCluster = get_matched_cluster(nClustersGPU,
+								     cpuSeedId,
+								     gpuClusters);
+
+	  if(gpuCluster.algo() == reco::CaloCluster::undefined)
+	    ++counter;
+
+	  diffsValidClusters[idet].emplace_back( gpuCluster.energy() - cpuEn,
+						 gpuCluster.x() - cpuX,
+						 gpuCluster.y() - cpuY,
+						 gpuCluster.z() - cpuZ );
+	  
+	  continue;
+	}
+    }
+    std::cout << "RATIO: "  << counter << ", " << nClustersCPU << ", " << static_cast<float>(counter)/nClustersCPU << std::endl;
+    treesC_[idet]->Fill();
+    
+    ///////////////////////////////////////////////
+    //Hits loop ///////////////////////////////////
+    ///////////////////////////////////////////////
     size_t nlayers = cpuHits.size();
     std::cout << "NLAYERS: " << nlayers << std::endl;
 

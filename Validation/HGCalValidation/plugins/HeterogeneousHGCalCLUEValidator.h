@@ -16,8 +16,6 @@
 #include "Validation/HGCalValidation/interface/ValidCLUEHit.h"
 #include "Validation/HGCalValidation/interface/ValidCLUECluster.h"
 
-#include "RecoLocalCalo/HGCalRecProducers/plugins/HGCalCLUEAlgo.h"
-
 #include "CUDADataFormats/HGCal/interface/HGCCLUECPUHitsProduct.h"
 
 #include "DataFormats/ForwardDetId/interface/HGCSiliconDetId.h"
@@ -27,6 +25,7 @@
 #include "TH1F.h"
 
 #include <iostream>
+#include <fstream>
 #include <string>
 
 class HeterogeneousHGCalCLUEValidator : public edm::one::EDAnalyzer<edm::one::SharedResources> {
@@ -43,6 +42,7 @@ class HeterogeneousHGCalCLUEValidator : public edm::one::EDAnalyzer<edm::one::Sh
 public:
   explicit HeterogeneousHGCalCLUEValidator(const edm::ParameterSet&);
   ~HeterogeneousHGCalCLUEValidator() override;
+  
   void analyze(const edm::Event&, const edm::EventSetup&) override;
   void endJob() override;
 
@@ -56,8 +56,11 @@ private:
   Arr<edm::EDGetTokenT<InClustersCPU>, nReg> tokClustersCPU_;
   Arr<edm::EDGetTokenT<InClustersGPU>, nReg> tokClustersGPU_;
 
+  const reco::BasicCluster get_matched_cluster(unsigned, uint32_t,
+					       const std::vector<reco::BasicCluster>&);
 
   TFile *outFile_;
+  std::ofstream fileCPU, fileGPU;
   Arr<TTree*, nReg> treesH_, treesC_;
   Arr<TH1F*, nTechnologies> histosEn, histosX, histosY, histosZ;
   Arr<std::string, nReg> treenamesH_, treenamesC_;
