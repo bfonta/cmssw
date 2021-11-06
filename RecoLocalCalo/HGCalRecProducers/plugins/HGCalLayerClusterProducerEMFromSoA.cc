@@ -73,12 +73,13 @@ void HGCalLayerClusterProducerEMFromSoA::beginRun(edm::Run const&, edm::EventSet
   rhtools_.setGeometry(geom);
 }
 
-void HGCalLayerClusterProducerEMFromSoA::produce(edm::Event& event, const edm::EventSetup& setup) { 
+void HGCalLayerClusterProducerEMFromSoA::produce(edm::Event& event, const edm::EventSetup& setup) {
+  std::cout << "PRODUCE FROM SOA" << std::endl;
   const HGCCLUECPUHitsProduct& clueHits = event.get(clueHitsSoAToken_);
   const HGCCLUECPUClustersProduct& clueClusters = event.get(clueClustersSoAToken_);
   ConstHGCCLUEHitsSoA clueHitsSoA = clueHits.get();
   ConstHGCCLUEClustersSoA clueClustersSoA = clueClusters.get();
-  
+
   out_ = std::make_unique<reco::BasicClusterCollection>();
 
   getClusters_(clueHits.nHits(), clueClusters.nClusters(),
@@ -92,6 +93,8 @@ void HGCalLayerClusterProducerEMFromSoA::getClusters_(uint32_t nhits, uint32_t n
                                                       ConstHGCCLUEClustersSoA* clusters,
 						      reco::BasicClusterCollection& coll) {
   coll.reserve(nclusters);
+  std::cout << nclusters << std::endl;
+
   for (unsigned i=0; i<nclusters; ++i) {
 
     if( clusters->energy[i] > 0.) { //get rid of excess empty GPU clusters
@@ -115,6 +118,7 @@ void HGCalLayerClusterProducerEMFromSoA::getClusters_(uint32_t nhits, uint32_t n
 				     thisCluster,
 				     reco::CaloCluster::hgcal_em //reco::CaloCluster::hgcal_had for HAD section
 				     );
+      
       tmpCluster.setSeed( clusters->seedId[i] );
       coll.emplace_back( tmpCluster );
     }

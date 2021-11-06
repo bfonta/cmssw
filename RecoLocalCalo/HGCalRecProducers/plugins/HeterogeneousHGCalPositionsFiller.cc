@@ -277,7 +277,7 @@ void HeterogeneousHGCalPositionsFiller::fill_conditions_scintillator_(const HGCa
 
 std::unique_ptr<HeterogeneousHGCalPositionsConditions> HeterogeneousHGCalPositionsFiller::produce(
     const HeterogeneousHGCalPositionsConditionsRecord& iRecord) {
-
+  std::cout << "PRODUCER POSITIONS" << std::endl;
   clear_conditions_();
   
   auto geomEE = iRecord.getTransientHandle(mGeomTokEE);
@@ -288,13 +288,14 @@ std::unique_ptr<HeterogeneousHGCalPositionsConditions> HeterogeneousHGCalPositio
 
   auto geomHEB = iRecord.getTransientHandle(mGeomTokHEB);
   mDDDHEB = &(geomHEB->topology().dddConstants());
-
+  std::cout << "PRODUCER POSITIONS 1" << std::endl;
   reserve_conditions_( mDDDEE,  mDDDEE->getParameter(),
 		       mDDDHEF, mDDDHEF->getParameter(),
 		       mDDDHEB, mDDDHEB->getParameter() );
-
+  std::cout << "PRODUCER POSITIONS 2" << std::endl;
   fill_conditions_silicon_( mDDDEE, mDDDEE->getParameter(),
 			    mDDDHEF, mDDDHEF->getParameter() );
+  std::cout << "PRODUCER POSITIONS 3" << std::endl;
   //fill_conditions_scintillator( mDDDHEB, mDDDHEB->getParameter() );
 
   std::unique_ptr<HeterogeneousHGCalPositionsConditions> up =

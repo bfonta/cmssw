@@ -55,7 +55,7 @@ process.TFileService = cms.Service("TFileService",
 
     
 process.source = getHeterogeneousRecHitsSource(F.PU)
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(20) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(3) )
 process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool( False )) #add option for edmStreams
 
@@ -87,7 +87,7 @@ process.recHits_task = cms.Task( process.ee_task, process.hef_task, process.heb_
 process.path = cms.Path( process.recHits_task )
 
 outkeeps = ['keep *_EERecHitFromSoAProd_*_*',
-            'keep *_HEFRecHitFromSoAProd_*_*',
+            'keep *_HEFRecHitFromSoAProd_*_*',                               
             'keep *_HEBRecHitFromSoAProd_*_*']
 
 process.out = cms.OutputModule( "PoolOutputModule", 

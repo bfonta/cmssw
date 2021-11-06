@@ -68,6 +68,8 @@ void HGCalLayerClusterProducerEMGPUtoSoA::acquire(edm::Event const& event,
   const auto& gpuCLUEClusters = ctx.get(event, clueGPUClustersToken_);
   const unsigned nhits(gpuCLUEHits.nHits());
   const unsigned nclusters(gpuCLUEClusters.nClusters());
+
+  std::cout << "ACQUIRE GPU TO SOA " << nhits << ", " << nclusters << std::endl;
   
   prodHitsPtr_ = std::make_unique<HGCCLUECPUHitsProduct>(nhits, ctx.stream());
   prodClustersPtr_ = std::make_unique<HGCCLUECPUClustersProduct>(nclusters, ctx.stream());
@@ -76,12 +78,14 @@ void HGCalLayerClusterProducerEMGPUtoSoA::acquire(edm::Event const& event,
   HGCCLUECPUClustersProduct& prodClusters_ = *prodClustersPtr_;
 
   mAlgo = std::make_unique<HGCalCLUEAlgoGPUEM>(nhits, nclusters,
-					       prodHits_.get(), gpuCLUEHits.get(),
-					       prodClusters_.get(), gpuCLUEClusters.get());
+						prodHits_.get(), gpuCLUEHits.get(),
+						prodClusters_.get(), gpuCLUEClusters.get());
   mAlgo->copy_tohost(ctx.stream());
 }
 
 void HGCalLayerClusterProducerEMGPUtoSoA::produce(edm::Event& event, const edm::EventSetup& setup) {
+  std::cout << "PRODUCE GPU TO SOA" << std::endl;
+  
   event.put(std::move(prodHitsPtr_), "Hits");
   event.put(std::move(prodClustersPtr_), "Clusters");
 }

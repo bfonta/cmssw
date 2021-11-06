@@ -4,7 +4,6 @@ from Configuration.ProcessModifiers.gpu_cff import gpu
 from RecoLocalCalo.HGCalRecProducers.HGCalRecHit_cfi import HGCalRecHit
 from SimCalorimetry.HGCalSimProducers.hgcalDigitizer_cfi import HGCAL_noise_fC, HGCAL_chargeCollectionEfficiencies
 
-
 def getHeterogeneousRecHitsSource(pu):
     indir = '/eos/user/b/bfontana/Samples/' #indir = '/home/bfontana/'
     filename_suff = 'step3_ttbar_PU' + str(pu) #filename_suff = 'hadd_out_PU' + str(pu)
@@ -75,6 +74,6 @@ process.global_task = cms.Task( process.HeterogeneousHGCalPositionsFiller,
 )
 process.path = cms.Path( process.global_task )
 
-process.consumer = cms.EDAnalyzer("GenericConsumer",                     
+process.consumer = cms.EDAnalyzer("GenericConsumer",
                                   eventProducts = cms.untracked.vstring('EMCLUEFromSoAProd',) )
 process.consume_step = cms.EndPath(process.consumer)

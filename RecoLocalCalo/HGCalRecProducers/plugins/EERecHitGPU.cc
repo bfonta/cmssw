@@ -109,6 +109,7 @@ void EERecHitGPU::assert_sizes_constants_(const HGCConstantVectorData &vd) {
 void EERecHitGPU::beginRun(edm::Run const &, edm::EventSetup const &setup) {}
 
 void EERecHitGPU::produce(edm::Event &event, const edm::EventSetup &setup) {
+  std::cout << "RECHIT PRODUCER" << std::endl;
   cms::cuda::ScopedContextProduce ctx{event.streamID()};
 
   const auto &hits = event.get(uncalibRecHitCPUToken_);

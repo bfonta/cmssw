@@ -103,12 +103,12 @@ void HGCalCLUEAlgoGPUEM::make_clusters(const cudaStream_t &stream) {
 }
 
 void HGCalCLUEAlgoGPUEM::get_clusters(const cudaStream_t &stream) {
-  const dim3 blockSize(32,1,1);
-  //const dim3 blockSize(1,1,1);
+  //const dim3 blockSize(32,1,1);
+  const dim3 blockSize(1,1,1);
   //the number of clusters is given by mDevSeeds.size(), but by using mCLUEClustersSoa.nclusters I make
   //sure there is enough room for all the clusters in each layer without actually counting them
-  const dim3 gridSize( calculate_block_multiplicity(mCLUEClustersSoA.nclusters, blockSize.x), 1, 1 );
-  //const dim3 gridSize( 1, 1, 1 );
+  //const dim3 gridSize( calculate_block_multiplicity(mCLUEClustersSoA.nclusters, blockSize.x), 1, 1 );
+  const dim3 gridSize( 1, 1, 1 );
     
   float dc2 = mDc * mDc;
   //mDevSeeds gives number of seeds, i.e., an upper estimate for the number of clusters

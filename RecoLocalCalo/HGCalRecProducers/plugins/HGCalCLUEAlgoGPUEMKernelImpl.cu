@@ -56,8 +56,6 @@ void kernel_compute_histogram( HeterogeneousHGCalLayerTiles *hist,
 
   for (int i = tid; i < numberOfPoints; i += blockDim.x * gridDim.x)
     {
-      if(i%10000==0)
-	printf("!!!!!!!!!!!!!!!!CHECK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
       if( is_energy_valid(in.energy[i]) )
 	// push index of points into tiles
 	hist[in.layer[i]].fill(in.x[i], in.y[i], i);
