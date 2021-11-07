@@ -74,7 +74,6 @@ void HGCalLayerClusterProducerEMFromSoA::beginRun(edm::Run const&, edm::EventSet
 }
 
 void HGCalLayerClusterProducerEMFromSoA::produce(edm::Event& event, const edm::EventSetup& setup) {
-  std::cout << "PRODUCE FROM SOA" << std::endl;
   const HGCCLUECPUHitsProduct& clueHits = event.get(clueHitsSoAToken_);
   const HGCCLUECPUClustersProduct& clueClusters = event.get(clueClustersSoAToken_);
   ConstHGCCLUEHitsSoA clueHitsSoA = clueHits.get();
@@ -93,7 +92,6 @@ void HGCalLayerClusterProducerEMFromSoA::getClusters_(uint32_t nhits, uint32_t n
                                                       ConstHGCCLUEClustersSoA* clusters,
 						      reco::BasicClusterCollection& coll) {
   coll.reserve(nclusters);
-  std::cout << nclusters << std::endl;
 
   for (unsigned i=0; i<nclusters; ++i) {
 
@@ -101,8 +99,9 @@ void HGCalLayerClusterProducerEMFromSoA::getClusters_(uint32_t nhits, uint32_t n
 
       math::XYZPoint position = math::XYZPoint(clusters->x[i],
 					       clusters->y[i],
-					       //rhtools_.getPosition( 2416969935 ).z() );
-					       rhtools_.getPosition( clusters->seedId[i] ).z() );
+					       rhtools_.getPosition( 2416969935 ).z() );
+					       //rhtools_.getPosition( clusters->seedId[i] ).z() );
+      //REMOVE RHTOOLS TO MEASURE THROUGHPUT CHAAAAAAAAAAAANGE!!!!!!!
 
       //This code block is needed to match expected input from reco::BasicCluster
       // 

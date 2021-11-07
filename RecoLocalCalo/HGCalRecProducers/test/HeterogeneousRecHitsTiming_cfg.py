@@ -68,7 +68,6 @@ process.ThroughputService = cms.Service( "ThroughputService",
 process.FastTimerService.enableDQM = False
 process.FastTimerService.writeJSONSummary = True
 process.FastTimerService.jsonFileName = 'resources.json'
-process.MessageLogger.categories.append('ThroughputService')
 
 if withGPU:
     process.ee_t = cms.Task( process.EERecHitGPUProd, process.EERecHitGPUtoSoAProd, process.EERecHitFromSoAProd )
