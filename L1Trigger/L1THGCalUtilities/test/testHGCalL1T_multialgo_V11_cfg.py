@@ -29,7 +29,7 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource",
-       fileNames = cms.untracked.vstring('/store/mc/Phase2HLTTDRWinter20DIGI/TT_TuneCP5_14TeV-powheg-pythia8/GEN-SIM-DIGI-RAW/PU200_110X_mcRun4_realistic_v3-v2/240000/2D0339A5-751F-3543-BA5B-456EA6E5E294.root'),
+       fileNames = cms.untracked.vstring('/store/mc/Phase2HLTTDRWinter20DIGI/SingleElectron_PT2to200/GEN-SIM-DIGI-RAW/PU200_110X_mcRun4_realistic_v3_ext2-v2/40000/00582F93-5A2A-5847-8162-D81EE503500F.root'),
        inputCommands=cms.untracked.vstring(
            'keep *',
            'drop l1tEMTFHit2016Extras_simEmtfDigis_CSC_HLT',
@@ -59,7 +59,7 @@ process.TFileService = cms.Service(
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic_T15', '')
 
 # load HGCAL TPG simulation
 process.load('L1Trigger.L1THGCal.hgcalTriggerPrimitives_cff')
@@ -77,23 +77,26 @@ import L1Trigger.L1THGCalUtilities.customNtuples as ntuple
 chains = HGCalTriggerChains()
 # Register algorithms
 ## VFE
-chains.register_vfe("Floatingpoint", vfe.create_vfe)
+chains.register_vfe("Floatingpoint", vfe.CreateVfe())
 ## ECON
-chains.register_concentrator("Supertriggercell", concentrator.create_supertriggercell)
-chains.register_concentrator("Threshold", concentrator.create_threshold)
-chains.register_concentrator("Bestchoice", concentrator.create_bestchoice)
+chains.register_concentrator("Supertriggercell", concentrator.CreateSuperTriggerCell())
+chains.register_concentrator("Threshold", concentrator.CreateThreshold())
+chains.register_concentrator("Bestchoice", concentrator.CreateBestChoice())
+chains.register_concentrator("AutoEncoder", concentrator.CreateAutoencoder())
 ## BE1
-chains.register_backend1("Dummy", clustering2d.create_dummy)
+chains.register_backend1("Dummy", clustering2d.CreateDummy())
 ## BE2
-chains.register_backend2("Histomax", clustering3d.create_histoMax)
+chains.register_backend2("Histomax", clustering3d.CreateHistoMax())
 # Register selector
-chains.register_selector("Genmatch", selectors.create_genmatch)
+chains.register_selector("Genmatch", selectors.CreateGenMatch())
+
+
 # Register ntuples
 ntuple_list = ['event', 'gen', 'multiclusters']
-chains.register_ntuple("Genclustersntuple", lambda p,i : ntuple.create_ntuple(p,i, ntuple_list))
+chains.register_ntuple("Genclustersntuple", ntuple.CreateNtuple(ntuple_list))
 
 # Register trigger chains
-concentrator_algos = ['Supertriggercell', 'Threshold', 'Bestchoice']
+concentrator_algos = ['Supertriggercell', 'Threshold', 'Bestchoice', 'AutoEncoder']
 backend_algos = ['Histomax']
 ## Make cross product fo ECON and BE algos
 import itertools

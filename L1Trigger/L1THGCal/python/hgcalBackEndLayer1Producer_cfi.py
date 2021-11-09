@@ -17,7 +17,7 @@ c2d_thresholds_pset = cms.PSet(seeding_threshold_silicon=cms.double(5.),
                                clustering_threshold_silicon=cms.double(2.),
                                clustering_threshold_scintillator=cms.double(2.))
 
-# V9 samples have a different definition of the dEdx calibrations. To account for it
+# >= V9 samples have a different definition of the dEdx calibrations. To account for it
 # we rescale the thresholds for the clustering
 # (see https://indico.cern.ch/event/806845/contributions/3359859/attachments/1815187/2966402/19-03-20_EGPerf_HGCBE.pdf
 # for more details)
@@ -28,7 +28,7 @@ phase2_hgcalV10.toModify(c2d_thresholds_pset,
                         clustering_threshold_scintillator=1.5,
                         )
 
-# we still don't have layer calibrations for V9 geometry. Switching this off we
+# we still don't have layer calibrations for >=V9 geometry. Switching this off we
 # use the dEdx calibrated energy of the TCs
 phase2_hgcalV10.toModify(c2d_calib_pset,
                         applyLayerCalibration=False
@@ -57,6 +57,33 @@ constrTopological_C2d_params = cms.PSet(c2d_calib_pset,
                                         dR_cluster=cms.double(6.),
                                         )
 
+ntcs_72links = [ 1,  4, 13, 13, 10, 10,  8,  8,  8,  7,  7,  6,  6,  6,  6,  6,  5,  5,  5,  5,  5,  5,  5,  4,  4,  4,  4,  4,  4,  4,  4,  4,  3,  2,  2,  2,  2,  2,  2,  2,  2,  1]
+ntcs_120links = [ 2,  7, 27, 24, 19, 17, 16, 15, 14, 14, 13, 13, 13, 12, 12, 12, 11, 11, 11, 10, 10, 10, 10, 10,  9,  9, 10,  9,  9,  9,  8,  8,  7,  5,  3,  3,  3,  3,  3,  3,  3,  3]
+
+phi_edges = [0.98901991,0.72722052,0.6981317,0.87266463,0.93084227,0.90175345,
+0.87266463,0.90175345,0.95993109,0.95993109,0.93084227,0.93084227,
+0.95993109,0.98901991,0.95993109,0.95993109,0.95993109,0.98901991,
+0.98901991,0.95993109,0.95993109,0.98901991,0.98901991,0.98901991,
+0.98901991,0.98901991,1.01810873,0.98901991,0.98901991,0.98901991,
+0.98901991,0.98901991,0.98901991,0.98901991,1.04719755,1.04719755,
+1.04719755,1.04719755,1.01810873,1.04719755,1.01810873,1.01810873]
+
+truncation_params = cms.PSet(rozMin=cms.double(0.07587128),
+        rozMax=cms.double(0.55508006),
+        rozBins=cms.uint32(42),
+        maxTcsPerBin=cms.vuint32(ntcs_72links),
+        phiSectorEdges=cms.vdouble(phi_edges),
+        doTruncation=cms.bool(True)
+        )
+
+
+layer1truncation_proc = cms.PSet(ProcessorName  = cms.string('HGCalBackendLayer1Processor'),
+                   C2d_parameters = dummy_C2d_params.clone(),
+                   truncation_parameters = truncation_params.clone()
+                   )
+stage1truncation_proc = cms.PSet(ProcessorName  = cms.string('HGCalBackendStage1Processor'),
+                   truncation_parameters = truncation_params.clone()
+                   )
 
 be_proc = cms.PSet(ProcessorName  = cms.string('HGCalBackendLayer1Processor2DClustering'),
                    C2d_parameters = dummy_C2d_params.clone()
@@ -66,6 +93,13 @@ hgcalBackEndLayer1Producer = cms.EDProducer(
     "HGCalBackendLayer1Producer",
     InputTriggerCells = cms.InputTag('hgcalConcentratorProducer:HGCalConcentratorProcessorSelection'),
     ProcessorParameters = be_proc.clone()
+    )
+
+hgcalBackEndStage1Producer = cms.EDProducer(
+    "HGCalBackendStage1Producer",
+    InputTriggerCells = cms.InputTag('hgcalConcentratorProducer:HGCalConcentratorProcessorSelection'),
+    C2d_parameters = dummy_C2d_params.clone(),
+    ProcessorParameters = stage1truncation_proc.clone()
     )
 
 hgcalBackEndLayer1ProducerHFNose = hgcalBackEndLayer1Producer.clone(
