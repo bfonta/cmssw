@@ -85,6 +85,6 @@ float HGCalCLUEAlgoGPUBase::calculate_block_multiplicity(unsigned nelements, uns
 }
 
 cms::cuda::device::unique_ptr<std::byte[]>
-HGCalCLUEAlgoGPUBase::allocate_soa_memory_block(uint32_t st, const cudaStream_t &stream) {
+HGCalCLUEAlgoGPUBase::allocate_soa_memory_block(unsigned st, const cudaStream_t &stream) {
   return cms::cuda::make_device_unique<std::byte[]>(mPadHits * st, stream);
 }

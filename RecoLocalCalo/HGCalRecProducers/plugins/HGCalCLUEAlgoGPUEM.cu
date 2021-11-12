@@ -21,12 +21,12 @@ void HGCalCLUEAlgoGPUEM::copy_tohost(const cudaStream_t& s) {
 }  
 
 void HGCalCLUEAlgoGPUEM::set_input_SoA_layout(const cudaStream_t &stream) {
-  const std::array<uint32_t, clue_gpu::ntypes_hgcclue_inemsoa> sizes_ = {
-									 {clue_gpu::float_hgcclue_inemsoa * sizeof(float),
-									  clue_gpu::int32_hgcclue_inemsoa * sizeof(int32_t),
-									  clue_gpu::int32_hgcclue_inemsoa * sizeof(uint32_t)}
+  const std::array<unsigned, clue_gpu::ntypes_hgcclue_inemsoa> sizes_ = {
+    {clue_gpu::float_hgcclue_inemsoa * sizeof(float),
+     clue_gpu::int32_hgcclue_inemsoa * sizeof(int32_t),
+     clue_gpu::uint32_hgcclue_inemsoa * sizeof(uint32_t)}
   };
-  const uint32_t size_tot = std::accumulate(sizes_.begin(), sizes_.end(), 0);
+  const unsigned size_tot = std::accumulate(sizes_.begin(), sizes_.end(), 0);
   mMem = allocate_soa_memory_block(size_tot, stream);
   
   //set input SoA memory view
@@ -38,6 +38,13 @@ void HGCalCLUEAlgoGPUEM::set_input_SoA_layout(const cudaStream_t &stream) {
   mDevPoints.id         = reinterpret_cast<uint32_t *>(mDevPoints.layer + mPadHits);
 
   mDevPoints.pad = mPadHits;
+
+  cudaMemset(mDevPoints.x,          0x00, sizeof(float)*mPadHits);
+  cudaMemset(mDevPoints.y,          0x00, sizeof(float)*mPadHits);
+  cudaMemset(mDevPoints.energy,     0x00, sizeof(float)*mPadHits);
+  cudaMemset(mDevPoints.sigmaNoise, 0x00, sizeof(float)*mPadHits);
+  cudaMemset(mDevPoints.layer,      0x00, sizeof(int32_t)*mPadHits);
+  cudaMemset(mDevPoints.id,         0x00, sizeof(uint32_t)*mPadHits);
 }
 				  
 void HGCalCLUEAlgoGPUEM::populate(const ConstHGCRecHitSoA& hits,
@@ -56,6 +63,7 @@ void HGCalCLUEAlgoGPUEM::populate(const ConstHGCRecHitSoA& hits,
 
 void HGCalCLUEAlgoGPUEM::make_clusters(const cudaStream_t &stream) {
   const dim3 blockSize(mNThreadsEM,1,1);
+  //const dim3 blockSize(1,1,1);
   const dim3 gridSize( calculate_block_multiplicity(mNHits, blockSize.x), 1, 1 );
   //const dim3 gridSize( 1, 1, 1 );
 
@@ -103,12 +111,12 @@ void HGCalCLUEAlgoGPUEM::make_clusters(const cudaStream_t &stream) {
 }
 
 void HGCalCLUEAlgoGPUEM::get_clusters(const cudaStream_t &stream) {
-  //const dim3 blockSize(32,1,1);
-  const dim3 blockSize(1,1,1);
+  const dim3 blockSize(mNThreadsEM,1,1);
+  //const dim3 blockSize(1,1,1);
   //the number of clusters is given by mDevSeeds.size(), but by using mCLUEClustersSoa.nclusters I make
   //sure there is enough room for all the clusters in each layer without actually counting them
-  //const dim3 gridSize( calculate_block_multiplicity(mCLUEClustersSoA.nclusters, blockSize.x), 1, 1 );
-  const dim3 gridSize( 1, 1, 1 );
+  const dim3 gridSize( calculate_block_multiplicity(mCLUEClustersSoA.nclusters, blockSize.x), 1, 1 );
+  //const dim3 gridSize( 1, 1, 1 );
     
   float dc2 = mDc * mDc;
   //mDevSeeds gives number of seeds, i.e., an upper estimate for the number of clusters

@@ -14,9 +14,9 @@
 #include "CUDADataFormats/HGCal/interface/HGCConditions.h"
 
 namespace clue_gpu {
-  static const int maxNSeeds = 100000; 
-  static const int maxNFollowers = 2000; 
-  static const int localStackSizePerSeed = 2000;
+  static const int maxNSeeds = 1000000; 
+  static const int maxNFollowers = 500;
+  static const int localStackSizePerSeed = 500;
 
   //number of float pointers in the CLUE EM SoA
   constexpr unsigned float_hgcclue_inemsoa = 4;

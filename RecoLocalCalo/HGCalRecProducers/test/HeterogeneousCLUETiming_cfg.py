@@ -68,8 +68,8 @@ process.HeterogeneousHGCalPositionsFiller = cms.ESProducer("HeterogeneousHGCalPo
 process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEERecHitGPU_cfi')
 #process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousHEFRecHitGPU_cfi')
 process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEGPU_cfi')
-process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEGPUtoSoA_cfi')
-process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEFromSoA_cfi')
+#process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEGPUtoSoA_cfi')
+#process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEFromSoA_cfi')
 
 process.load( "HLTrigger.Timer.FastTimerService_cfi" )
 process.ThroughputService = cms.Service( "ThroughputService",
@@ -89,7 +89,8 @@ process.FastTimerService.writeJSONSummary = True
 process.FastTimerService.jsonFileName = 'resources.json'
 
 process.ee_task = cms.Task( process.EERecHitGPUProd, #process.HEFRecHitGPUProd,
-                            process.EMCLUEGPUProd, process.EMCLUEGPUtoSoAProd, process.EMCLUEFromSoAProd,
+                            #process.EMCLUEGPUProd, process.EMCLUEGPUtoSoAProd, process.EMCLUEFromSoAProd,
+                            process.EMCLUEGPUProd,
 )
 
 process.global_task = cms.Task( process.HeterogeneousHGCalPositionsFiller,
@@ -98,5 +99,5 @@ process.global_task = cms.Task( process.HeterogeneousHGCalPositionsFiller,
 process.path = cms.Path( process.global_task )
 
 process.consumer = cms.EDAnalyzer("GenericConsumer",
-                                  eventProducts = cms.untracked.vstring('EMCLUEFromSoAProd',) )
+                                  eventProducts = cms.untracked.vstring('EMCLUEGPUProd',) )
 process.consume_step = cms.EndPath(process.consumer)

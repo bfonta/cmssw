@@ -99,7 +99,7 @@ void HGCalLayerClusterProducerEMGPU::acquire(edm::Event const& event,
   mAlgo->make_clusters(ctx.stream());
 
   //Clusters
-  mAlgo->get_clusters(ctx.stream());
+  //mAlgo->get_clusters(ctx.stream());
 }
 
 void HGCalLayerClusterProducerEMGPU::produce(edm::Event& event,

@@ -208,7 +208,6 @@ void kernel_find_clusters( cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* dSeeds,
 {
   int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
-
   for (int i = tid; i < numberOfPoints; i += blockDim.x * gridDim.x)
     {
       // initialize clusterIndex
@@ -232,9 +231,10 @@ void kernel_find_clusters( cms::cuda::VecArray<int,clue_gpu::maxNSeeds>* dSeeds,
 	  if (!isOutlier) {
 	    assert(out.nearestHigher[i] < numberOfPoints);
 	    // register as follower of its nearest higher
-	    dFollowers[out.nearestHigher[i]].push_back(i);  
+	    dFollowers[out.nearestHigher[i]].push_back(i);
 	  }
 	}
+
       }
     } // for
   
@@ -269,10 +269,10 @@ void kernel_assign_clusters( const cms::cuda::VecArray<int,clue_gpu::maxNSeeds>*
       	int idxEndOflocalStack = localStack[localStackSize-1];
       	int temp_clusterIndex = out.clusterIndex[idxEndOflocalStack];
       	// pop_back last element of localStack
-  	localStack[localStackSize-1] = -1;
+	localStack[localStackSize-1] = -1;
       	localStackSize--;
 	
-	// loop over followers of last element of localStack
+	//loop over followers of last element of localStack
       	for( int j : dFollowers[idxEndOflocalStack]){
       	  // pass id to follower
       	  out.clusterIndex[j] = temp_clusterIndex;
