@@ -68,6 +68,7 @@ HGCalLayerClusterProducer::HGCalLayerClusterProducer(const edm::ParameterSet& ps
       timeClname(ps.getParameter<std::string>("timeClname")),
       timeOffset(ps.getParameter<double>("timeOffset")),
       nHitsTime(ps.getParameter<unsigned int>("nHitsTime")) {
+
   if (detector == "HFNose") {
     hits_hfnose_token = consumes<HGCRecHitCollection>(ps.getParameter<edm::InputTag>("HFNoseInput"));
     algoId = reco::CaloCluster::hfnose;

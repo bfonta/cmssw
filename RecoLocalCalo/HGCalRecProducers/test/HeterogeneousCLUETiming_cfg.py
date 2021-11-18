@@ -2,6 +2,7 @@ import FWCore.ParameterSet.Config as cms
 import os, glob
 from Configuration.ProcessModifiers.gpu_cff import gpu
 from RecoLocalCalo.HGCalRecProducers.HGCalRecHit_cfi import HGCalRecHit
+from RecoLocalCalo.HGCalRecProducers.hgcalLayerClusters_cff import hgcalLayerClusters
 from SimCalorimetry.HGCalSimProducers.hgcalDigitizer_cfi import HGCAL_noise_fC, HGCAL_chargeCollectionEfficiencies
 
 def getHeterogeneousRecHitsSource(pu):
@@ -33,7 +34,13 @@ def getHeterogeneousRecHitsSource(pu):
                       inputCommands = cms.untracked.vstring(keep, drop1, drop2),
                       duplicateCheckMode = cms.untracked.string("noDuplicateCheck"))
 
-PU=0
+PU=os.environ.get('PU');
+withGPU=os.environ.get('withGPU');
+if not PU:
+    PU=0
+if not withGPU:
+    withGPU=0
+print('PU={} and withGPU={}'.format(PU, withGPU))
 enableGPU = True
 
 process = cms.Process("gpuTiming", gpu) if enableGPU else cms.Process("cpuTiming")
@@ -57,7 +64,7 @@ process.TFileService = cms.Service("TFileService",
                                )
 
 process.source = getHeterogeneousRecHitsSource(PU)
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(400) )
 wantSummaryFlag = True
 process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool( wantSummaryFlag )) #add option for edmStreams
@@ -68,8 +75,8 @@ process.HeterogeneousHGCalPositionsFiller = cms.ESProducer("HeterogeneousHGCalPo
 process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEERecHitGPU_cfi')
 #process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousHEFRecHitGPU_cfi')
 process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEGPU_cfi')
-#process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEGPUtoSoA_cfi')
-#process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEFromSoA_cfi')
+process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEGPUtoSoA_cfi')
+process.load('RecoLocalCalo.HGCalRecProducers.HeterogeneousEMCLUEFromSoA_cfi')
 
 process.load( "HLTrigger.Timer.FastTimerService_cfi" )
 process.ThroughputService = cms.Service( "ThroughputService",
@@ -88,16 +95,30 @@ process.FastTimerService.enableDQM = False
 process.FastTimerService.writeJSONSummary = True
 process.FastTimerService.jsonFileName = 'resources.json'
 
-process.ee_task = cms.Task( process.EERecHitGPUProd, #process.HEFRecHitGPUProd,
-                            #process.EMCLUEGPUProd, process.EMCLUEGPUtoSoAProd, process.EMCLUEFromSoAProd,
-                            process.EMCLUEGPUProd,
-)
+if withGPU:
+    process.ee_task = cms.Task( process.EERecHitGPUProd, #process.HEFRecHitGPUProd,
+                                process.EMCLUEGPUProd, process.EMCLUEGPUtoSoAProd, process.EMCLUEFromSoAProd,
+                               )
+    process.global_task = cms.Task( process.HeterogeneousHGCalPositionsFiller,
+                                    process.ee_task )
+else:
+    process.HGCalRecHit = HGCalRecHit.clone()
+    process.CLUEClone = hgcalLayerClusters.clone()
+    process.global_task = cms.Task(process.HGCalRecHit, process.CLUEClone ) #CPU version
+    outkeeps = [f #'keep *_*_' + f + '*_*'
+                for f in [ 'keep *_*_HGCEERecHits*_*', 'keep *_*_HGCHEFRecHits*_*', 'keep *_*_HGCHEBRecHits*_*',
+                           'keep *_CLUEClone_*_*'] ]
 
-process.global_task = cms.Task( process.HeterogeneousHGCalPositionsFiller,
-                                process.ee_task
-)
 process.path = cms.Path( process.global_task )
 
-process.consumer = cms.EDAnalyzer("GenericConsumer",
-                                  eventProducts = cms.untracked.vstring('EMCLUEGPUProd',) )
-process.consume_step = cms.EndPath(process.consumer)
+if withGPU:
+    process.consumer = cms.EDAnalyzer("GenericConsumer",
+                                      eventProducts = cms.untracked.vstring('EMCLUEFromSoAProd',) )
+    process.consume_step = cms.EndPath(process.consumer)
+else:
+    outName = '/home/bfontana/out_CLUETiming_PU' + str(PU) + '_withGPU' +str(withGPU) + '.root'
+    process.out = cms.OutputModule( "PoolOutputModule", 
+                                    fileName = cms.untracked.string( outName ),
+                                    outputCommands = cms.untracked.vstring(outkeeps[0], outkeeps[1], outkeeps[2], outkeeps[3])
+                                   )
+    process.outpath = cms.EndPath(process.out)

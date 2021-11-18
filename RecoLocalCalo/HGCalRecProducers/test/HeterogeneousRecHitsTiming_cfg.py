@@ -4,8 +4,13 @@ from Configuration.StandardSequences.Eras import eras
 from Configuration.ProcessModifiers.gpu_cff import gpu
 from RecoLocalCalo.HGCalRecProducers.HGCalRecHit_cfi import HGCalRecHit
 
-PU=0
-withGPU=0
+PU=os.environ.get('PU');
+withGPU=os.environ.get('withGPU');
+if not PU:
+    PU=0
+if not withGPU:
+    withGPU=0
+enableGPU = True
 
 #package loading
 process = cms.Process("gpuTiming", gpu) if withGPU else cms.Process("cpuTiming")
@@ -19,6 +24,7 @@ process.load('HeterogeneousCore.CUDAServices.CUDAService_cfi')
 process.load('RecoLocalCalo.HGCalRecProducers.HGCalRecHit_cfi')
 process.load('SimCalorimetry.HGCalSimProducers.hgcalDigitizer_cfi')
 process.load( "HLTrigger.Timer.FastTimerService_cfi" )
+
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic', '')
