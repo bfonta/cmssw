@@ -171,9 +171,13 @@ HGCalHistoSeedingImpl::Histogram HGCalHistoSeedingImpl::fillSmoothPhiHistoCluste
                                                                                    const vector<unsigned>& binSums) {
   Histogram histoSumPhiClusters(nBins1_, nBins2_);
 
+  std::cout << nBins1_ << ", " << nBins2_ << "\n";
+
   for (int z_side : {-1, 1}) {
     for (unsigned bin1 = 0; bin1 < nBins1_; bin1++) {
       int nBinsSide = (binSums[bin1] - 1) / 2;
+      std::cout << nBinsSide << "; " << bin1 << " " << binSums[bin1] << "\n";
+
       double area =
           (1 +
            2.0 *
@@ -532,6 +536,8 @@ void HGCalHistoSeedingImpl::findHistoSeeds(const std::vector<edm::Ptr<l1t::HGCal
                                            std::vector<std::pair<GlobalPoint, double>>& seedPositionsEnergy) {
   /* put clusters into an r/z x phi histogram */
   Histogram histoCluster = fillHistoClusters(clustersPtrs);
+
+  std::cout << "CHECK       " << seedingAlgoType_ << "\n";
 
   Histogram smoothHistoCluster;
   if (seedingSpace_ == RPhi) {
