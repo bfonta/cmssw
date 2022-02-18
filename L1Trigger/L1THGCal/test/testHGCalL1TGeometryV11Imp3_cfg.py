@@ -101,6 +101,7 @@ process.FEVTDEBUGoutput_step = cms.EndPath(process.FEVTDEBUGoutput)
 
 process.load('L1Trigger.L1THGCal.hgcalTriggerPrimitives_cff')
 # Eventually modify default geometry parameters
+
 from L1Trigger.L1THGCal.customTriggerGeometry import custom_geometry_V11_Imp3
 process = custom_geometry_V11_Imp3(process)
 
@@ -113,10 +114,4 @@ process.test_step = cms.Path(process.hgcaltriggergeomtester)
 process.schedule = cms.Schedule(process.test_step,process.endjob_step)
 #  process.schedule = cms.Schedule(process.generation_step,process.genfiltersummary_step,process.simulation_step,process.digitisation_step,process.L1simulation_step,process.digi2raw_step,process.test_step,process.endjob_step,process.FEVTDEBUGoutput_step)
 #process.schedule = cms.Schedule(process.generation_step,process.genfiltersummary_step,process.simulation_step,process.digitisation_step,process.L1simulation_step,process.digi2raw_step,process.endjob_step,process.FEVTDEBUGoutput_step)
-# filter all path with the production filter sequence
-for path in process.paths:
-    getattr(process,path)._seq = process.generator * getattr(process,path)._seq
-
-# Add early deletion of temporary data products to reduce peak memory need
-from Configuration.StandardSequences.earlyDeleteSettings_cff import customiseEarlyDelete
-process = customiseEarlyDelete(process)
+# filter a
