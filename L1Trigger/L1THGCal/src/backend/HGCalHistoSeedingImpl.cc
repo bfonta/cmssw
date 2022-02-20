@@ -72,6 +72,15 @@ HGCalHistoSeedingImpl::HGCalHistoSeedingImpl(const edm::ParameterSet& conf)
   float R1_10pct = kROverZMin_ + bin1_10pct * (kROverZMax_ - kROverZMin_) / nBins1_;
   float R2_10pct = R1_10pct + ((kROverZMax_ - kROverZMin_) / nBins1_);
   area_10pct_ = ((M_PI * (pow(R2_10pct, 2) - pow(R1_10pct, 2))) / nBins2_);
+  std::cout << "nBins1=" << nBins1_ << "; "
+	    << "nBins2=" << nBins2_ << "; "
+    	    << "kROverZMin=" << kROverZMin_ << "; "
+	    << "kROverZMax=" << kROverZMax_ << "; "
+	    << "bin1_10pct=" << bin1_10pct << "; "
+	    << "R1_10pct=" << R1_10pct << "; "
+	    << "R2_10pct=" << R2_10pct << "; "
+	    << "area_10pct_=" << area_10pct_ << "; ";
+  std::cout << std::endl;
 }
 
 HGCalHistoSeedingImpl::Histogram HGCalHistoSeedingImpl::fillHistoClusters(
@@ -171,12 +180,9 @@ HGCalHistoSeedingImpl::Histogram HGCalHistoSeedingImpl::fillSmoothPhiHistoCluste
                                                                                    const vector<unsigned>& binSums) {
   Histogram histoSumPhiClusters(nBins1_, nBins2_);
 
-  std::cout << nBins1_ << ", " << nBins2_ << "\n";
-
   for (int z_side : {-1, 1}) {
     for (unsigned bin1 = 0; bin1 < nBins1_; bin1++) {
       int nBinsSide = (binSums[bin1] - 1) / 2;
-      std::cout << nBinsSide << "; " << bin1 << " " << binSums[bin1] << "\n";
 
       double area =
           (1 +
@@ -193,6 +199,14 @@ HGCalHistoSeedingImpl::Histogram HGCalHistoSeedingImpl::fillSmoothPhiHistoCluste
         area = area * area_10pct_;
       }
 
+      std::cout << nBins1_ << ", " << nBins2_ << "\n";
+      std::cout << "nBinsSide=" << nBinsSide << "; "
+		<< "bin1=" << bin1 << "; "
+		<< "binSums[b1]=" << binSums[bin1] << "; "
+		<< "area=" << area << "; "
+		<< "seeds_norm_by_area=" << seeds_norm_by_area_ << "; "
+		<< "\n";
+      
       for (unsigned bin2 = 0; bin2 < nBins2_; bin2++) {
         const auto& bin_orig = histoClusters.at(z_side, bin1, bin2);
         float content = bin_orig.values[Bin::Content::Sum];
