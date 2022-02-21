@@ -115,7 +115,7 @@ ntcs_120links_flat =  [ 10,  10,  10,  10,  10,  10,  10,  10,  10,  10,  10,  1
 
 chains.register_backend1( "Truncation120default",  clustering2d.RozBinTruncation( maxTcsPerBin=ntcs_120links_default ))
 chains.register_backend1( "Truncation120flat",     clustering2d.RozBinTruncation( maxTcsPerBin=ntcs_120links_flat    ))
-
+ 
 ## BE2
 from L1Trigger.L1THGCal.hgcalBackEndLayer2Producer_cfi import MAX_LAYERS
 dr015 = [0.015]*(MAX_LAYERS+1)

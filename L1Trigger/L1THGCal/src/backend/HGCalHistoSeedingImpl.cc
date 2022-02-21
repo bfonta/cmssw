@@ -4,6 +4,9 @@
 #include "DataFormats/Math/interface/deltaPhi.h"
 #include <numeric>
 
+#include <iostream> //include the header files like input-output streams
+#include <fstream> //include the filestreamobject as the header files
+
 HGCalHistoSeedingImpl::HGCalHistoSeedingImpl(const edm::ParameterSet& conf)
     : seedingAlgoType_(conf.getParameter<std::string>("type_histoalgo")),
       nBins1_(conf.getParameter<unsigned>("nBins_X1_histo_multicluster")),
@@ -72,26 +75,32 @@ HGCalHistoSeedingImpl::HGCalHistoSeedingImpl(const edm::ParameterSet& conf)
   float R1_10pct = kROverZMin_ + bin1_10pct * (kROverZMax_ - kROverZMin_) / nBins1_;
   float R2_10pct = R1_10pct + ((kROverZMax_ - kROverZMin_) / nBins1_);
   area_10pct_ = ((M_PI * (pow(R2_10pct, 2) - pow(R1_10pct, 2))) / nBins2_);
-  std::cout << "nBins1=" << nBins1_ << "; "
-	    << "nBins2=" << nBins2_ << "; "
-    	    << "kROverZMin=" << kROverZMin_ << "; "
-	    << "kROverZMax=" << kROverZMax_ << "; "
-	    << "bin1_10pct=" << bin1_10pct << "; "
-	    << "R1_10pct=" << R1_10pct << "; "
-	    << "R2_10pct=" << R2_10pct << "; "
-	    << "area_10pct_=" << area_10pct_ << "; ";
-  std::cout << std::endl;
+  // std::cout << "AlgoType: " << seedingAlgoType_ << "; "
+  // 	    << "SeedingSpace: " << conf.getParameter<std::string>("seeding_space") << "; "
+  // 	    << "nBins1=" << nBins1_ << "; "
+  // 	    << "nBins2=" << nBins2_ << "; "
+  //   	    << "kROverZMin=" << kROverZMin_ << "; "
+  // 	    << "kROverZMax=" << kROverZMax_ << "; "
+  // 	    << "bin1_10pct=" << bin1_10pct << "; "
+  // 	    << "R1_10pct=" << R1_10pct << "; "
+  // 	    << "R2_10pct=" << R2_10pct << "; "
+  // 	    << "area_10pct_=" << area_10pct_ << "; ";
+  // std::cout << std::endl;
+
+  system("rm -f -- outCMSSWZero.txt");
+  system("rm -f -- outCMSSWOne.txt");
 }
 
 HGCalHistoSeedingImpl::Histogram HGCalHistoSeedingImpl::fillHistoClusters(
     const std::vector<edm::Ptr<l1t::HGCalCluster>>& clustersPtrs) {
+   
   Histogram histoClusters(nBins1_, nBins2_);
   std::array<double, 4> bounds = boundaries();
   double minx1 = std::get<0>(bounds);
   double maxx1 = std::get<1>(bounds);
   double minx2 = std::get<2>(bounds);
   double maxx2 = std::get<3>(bounds);
-
+  
   for (auto& clu : clustersPtrs) {
     float x1 = 0., x2 = 0;
     switch (seedingSpace_) {
@@ -199,13 +208,13 @@ HGCalHistoSeedingImpl::Histogram HGCalHistoSeedingImpl::fillSmoothPhiHistoCluste
         area = area * area_10pct_;
       }
 
-      std::cout << nBins1_ << ", " << nBins2_ << "\n";
-      std::cout << "nBinsSide=" << nBinsSide << "; "
-		<< "bin1=" << bin1 << "; "
-		<< "binSums[b1]=" << binSums[bin1] << "; "
-		<< "area=" << area << "; "
-		<< "seeds_norm_by_area=" << seeds_norm_by_area_ << "; "
-		<< "\n";
+      // std::cout << nBins1_ << ", " << nBins2_ << "\n";
+      // std::cout << "nBinsSide=" << nBinsSide << "; "
+      // 		<< "bin1=" << bin1 << "; "
+      // 		<< "binSums[b1]=" << binSums[bin1] << "; "
+      // 		<< "area=" << area << "; "
+      // 		<< "seeds_norm_by_area=" << seeds_norm_by_area_ << "; "
+      // 		<< "\n";
       
       for (unsigned bin2 = 0; bin2 < nBins2_; bin2++) {
         const auto& bin_orig = histoClusters.at(z_side, bin1, bin2);
@@ -297,6 +306,9 @@ void HGCalHistoSeedingImpl::setSeedEnergyAndPosition(std::vector<std::pair<Globa
 
 std::vector<std::pair<GlobalPoint, double>> HGCalHistoSeedingImpl::computeMaxSeeds(const Histogram& histoClusters) {
   std::vector<std::pair<GlobalPoint, double>> seedPositionsEnergy;
+
+  // std::cout << "histoThreshold=" << histoThreshold_ << "; "
+  // 	    << "\n";
 
   for (int z_side : {-1, 1}) {
     for (unsigned bin1 = 0; bin1 < nBins1_; bin1++) {
@@ -546,18 +558,86 @@ std::vector<std::pair<GlobalPoint, double>> HGCalHistoSeedingImpl::computeSecond
   return seedPositionsEnergy;
 }
 
+void HGCalHistoSeedingImpl::validationZero( const std::vector<edm::Ptr<l1t::HGCalCluster>>& clustersPtrs ) {
+  std::unordered_map<unsigned,float> testMap;
+  std::vector<float> test;
+  unsigned _count = 0;
+  for (auto& clu : clustersPtrs) {
+    testMap[_count] = clu->mipPt();
+    test.push_back(clu->mipPt());
+    ++_count;
+  }
+  std::sort(test.begin(), test.end());
+  std::ofstream o; //ofstream is the class for fstream package
+  o.open("outCMSSWZero.txt", ios::app); //open is the method of ofstream
+  o << nBins1_ << " "
+    << nBins2_ << " "
+    << kROverZMin_ << " "
+    << kROverZMax_ << " "
+    << -M_PI << " "
+    << M_PI  << "\n";
+  for (auto& t : test) {
+
+    int _idx = -1;
+    for (auto it = testMap.begin(); it != testMap.end(); ++it)
+      if (it->second == t)
+        _idx = it->first;
+
+    if ( triggerTools_.zside(clustersPtrs[_idx]->detId()) == 1 ) {
+      float x1 = sqrt(pow(clustersPtrs[_idx]->centreProj().x(), 2) + pow(clustersPtrs[_idx]->centreProj().y(), 2));
+      unsigned bin1 = unsigned((x1 - kROverZMin_) * nBins1_ / (kROverZMax_ - kROverZMin_));
+      
+      float x2 = reco::reduceRange(clustersPtrs[_idx]->phi());
+      unsigned bin2 = unsigned((x2 - (-M_PI)) * nBins2_ / ((M_PI) - (-M_PI)));
+
+      o << t << " " << triggerTools_.isEm(clustersPtrs[_idx]->detId())
+	<< " " << x1
+        << " " << x2
+	<< " " << bin1
+	<< " " << bin2
+	<< std::endl;
+    }
+  }
+  o << std::endl;
+  o.close();
+}
+
+void HGCalHistoSeedingImpl::validationOne( const Histogram& histoCluster ) {
+  if(nBins1_ == 42 and nBins2_ == 216)
+    {
+      std::ofstream o; //ofstream is the class for fstream package
+      o.open("outCMSSWFirst.txt", ios::app); //open is the method of ofstream
+      o << nBins1_ << " "
+	<< nBins2_ << "\n";
+
+      for (unsigned bin1 = 0; bin1 < nBins1_; bin1++) {
+	o << std::endl;
+	for (unsigned bin2 = 0; bin2 < nBins2_; bin2++) {
+	  auto& bin = histoCluster.at(1, bin1, bin2);
+	  o << bin1 << "\t" << bin2 << "\t" << bin.values[Bin::Content::Sum] << "\n";
+	}
+      }
+      o << std::endl;
+      o.close();
+    }
+}
+
 void HGCalHistoSeedingImpl::findHistoSeeds(const std::vector<edm::Ptr<l1t::HGCalCluster>>& clustersPtrs,
-                                           std::vector<std::pair<GlobalPoint, double>>& seedPositionsEnergy) {
+                                           std::vector<std::pair<GlobalPoint, double>>& seedPositionsEnergy) {  
+  //validationZero( clustersPtrs );
+
   /* put clusters into an r/z x phi histogram */
   Histogram histoCluster = fillHistoClusters(clustersPtrs);
 
-  std::cout << "CHECK       " << seedingAlgoType_ << "\n";
-
+  //validationOne( histoCluster );
+  
   Histogram smoothHistoCluster;
-  if (seedingSpace_ == RPhi) {
+  if (seedingSpace_ == RPhi) {	
     /* smoothen along the phi direction + normalize each bin to same area */
-    Histogram smoothPhiHistoCluster = fillSmoothPhiHistoClusters(histoCluster, binsSumsHisto_);
+    Histogram smoothPhiHistoCluster = fillSmoothPhiHistoClusters(histoCluster, binsSumsHisto_);    
 
+    validationOne( smoothPhiHistoCluster );
+    
     /* smoothen along the r/z direction */
     smoothHistoCluster = fillSmoothRPhiHistoClusters(smoothPhiHistoCluster);
   } else if (seedingSpace_ == XY) {
