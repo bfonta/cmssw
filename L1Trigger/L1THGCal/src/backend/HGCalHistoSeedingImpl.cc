@@ -305,6 +305,8 @@ void HGCalHistoSeedingImpl::setSeedEnergyAndPosition(std::vector<std::pair<Globa
 }
 
 std::vector<std::pair<GlobalPoint, double>> HGCalHistoSeedingImpl::computeMaxSeeds(const Histogram& histoClusters) {
+  validationSmoothing2( "outCMSSWSmooth2.txt", histoClusters );
+  
   std::vector<std::pair<GlobalPoint, double>> seedPositionsEnergy;
 
   // std::cout << "histoThreshold=" << histoThreshold_ << "; "
@@ -362,7 +364,7 @@ std::vector<std::pair<GlobalPoint, double>> HGCalHistoSeedingImpl::computeMaxSee
       }
     }
   }
-
+  validationSeeding( "outCMSSWSeeding.txt", seedPositionsEnergy );
   return seedPositionsEnergy;
 }
 
@@ -558,7 +560,7 @@ std::vector<std::pair<GlobalPoint, double>> HGCalHistoSeedingImpl::computeSecond
   return seedPositionsEnergy;
 }
 
-void HGCalHistoSeedingImpl::validationZero( const std::vector<edm::Ptr<l1t::HGCalCluster>>& clustersPtrs ) {
+void HGCalHistoSeedingImpl::validationSmoothing1( std::string outName, const std::vector<edm::Ptr<l1t::HGCalCluster>>& clustersPtrs ) {
   std::unordered_map<unsigned,float> testMap;
   std::vector<float> test;
   unsigned _count = 0;
@@ -569,7 +571,7 @@ void HGCalHistoSeedingImpl::validationZero( const std::vector<edm::Ptr<l1t::HGCa
   }
   std::sort(test.begin(), test.end());
   std::ofstream o; //ofstream is the class for fstream package
-  o.open("outCMSSWZero.txt", ios::app); //open is the method of ofstream
+  o.open(outName, ios::app); //open is the method of ofstream
   o << nBins1_ << " "
     << nBins2_ << " "
     << kROverZMin_ << " "
@@ -591,23 +593,23 @@ void HGCalHistoSeedingImpl::validationZero( const std::vector<edm::Ptr<l1t::HGCa
       unsigned bin2 = unsigned((x2 - (-M_PI)) * nBins2_ / ((M_PI) - (-M_PI)));
 
       o << t << " " << triggerTools_.isEm(clustersPtrs[_idx]->detId())
-	<< " " << x1
+		<< " " << x1
         << " " << x2
-	<< " " << bin1
-	<< " " << bin2
-	<< std::endl;
+		<< " " << bin1
+		<< " " << bin2
+		<< std::endl;
     }
   }
   o << std::endl;
   o.close();
 }
 
-void HGCalHistoSeedingImpl::validationOne( const Histogram& histoCluster ) {
+void HGCalHistoSeedingImpl::validationSmoothing2( std::string outName, const Histogram& histoCluster ) {
   if(nBins1_ == 42 and nBins2_ == 216)
     {
       std::ofstream o; //ofstream is the class for fstream package
-      o.open("outCMSSWFirst.txt", ios::app); //open is the method of ofstream
-      o << nBins1_ << " "
+      o.open(outName, ios::app); //open is the method of ofstream
+      o << "# " << nBins1_ << " "
 	<< nBins2_ << "\n";
 
       for (unsigned bin1 = 0; bin1 < nBins1_; bin1++) {
@@ -622,22 +624,44 @@ void HGCalHistoSeedingImpl::validationOne( const Histogram& histoCluster ) {
     }
 }
 
+void HGCalHistoSeedingImpl::validationSeeding( std::string outName,
+											   std::vector<std::pair<GlobalPoint, double>>& results) {
+  if(nBins1_ == 42 and nBins2_ == 216)
+    {
+      std::ofstream o; //ofstream is the class for fstream package
+      o.open(outName, ios::app); //open is the method of ofstream
+      o << "# " << nBins1_ << " "
+	<< nBins2_ << "\n\n";
+
+	  for(const std::pair<GlobalPoint, double> &res : results) {
+		if(res.first.z() > 0) {
+		  o << "E="  << res.second
+			<< " X=" << res.first.x()
+			<< " Y=" << res.first.y()
+			<< " Z=" << res.first.z()
+
+			<< std::endl;
+		}
+	  }
+      o << std::endl;
+      o.close();
+    }
+}
+
 void HGCalHistoSeedingImpl::findHistoSeeds(const std::vector<edm::Ptr<l1t::HGCalCluster>>& clustersPtrs,
                                            std::vector<std::pair<GlobalPoint, double>>& seedPositionsEnergy) {  
-  //validationZero( clustersPtrs );
+  //validationSmoothing1( clustersPtrs );
 
   /* put clusters into an r/z x phi histogram */
   Histogram histoCluster = fillHistoClusters(clustersPtrs);
 
-  //validationOne( histoCluster );
+  //validationSmoothing2( histoCluster );
   
   Histogram smoothHistoCluster;
   if (seedingSpace_ == RPhi) {	
     /* smoothen along the phi direction + normalize each bin to same area */
     Histogram smoothPhiHistoCluster = fillSmoothPhiHistoClusters(histoCluster, binsSumsHisto_);    
-
-    validationOne( smoothPhiHistoCluster );
-    
+    //validationSmoothing2( "outCMSSWSmooth1.txt", smoothPhiHistoCluster );
     /* smoothen along the r/z direction */
     smoothHistoCluster = fillSmoothRPhiHistoClusters(smoothPhiHistoCluster);
   } else if (seedingSpace_ == XY) {
@@ -653,7 +677,7 @@ void HGCalHistoSeedingImpl::findHistoSeeds(const std::vector<edm::Ptr<l1t::HGCal
       }
     }
   }
-
+  
   /* seeds determined with local maximum criteria */
   if (seedingType_ == HistoMaxC3d)
     seedPositionsEnergy = computeMaxSeeds(smoothHistoCluster);

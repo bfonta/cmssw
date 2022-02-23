@@ -120,8 +120,10 @@ private:
   enum SeedingSpace { RPhi, XY };
   enum SeedingPosition { BinCentre, TCWeighted };
 
-  void validationZero( const std::vector<edm::Ptr<l1t::HGCalCluster>>& clustersPtrs );
-  void validationOne( const Histogram& histoCluster );
+  void validationSmoothing1( std::string, const std::vector<edm::Ptr<l1t::HGCalCluster>>& );
+  void validationSmoothing2( std::string, const Histogram& );
+  void validationSeeding( std::string, std::vector<std::pair<GlobalPoint, double>>& ) ;
+
   
   Histogram fillHistoClusters(const std::vector<edm::Ptr<l1t::HGCalCluster>>& clustersPtrs);
 
