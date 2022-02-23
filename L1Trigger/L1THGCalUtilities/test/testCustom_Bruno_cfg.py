@@ -24,24 +24,21 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(1)
+    input = cms.untracked.int32(-1)
 )
 
 # Input source
 process.source = cms.Source("PoolSource",
-       #  fileNames = cms.untracked.vstring(''),
-       #  fileNames = cms.untracked.vstring('/store/mc/Phase2HLTTDRSummer20ReRECOMiniAOD/DoubleElectron_FlatPt-1To100/GEN-SIM-DIGI-RAW-MINIAOD/PU200_111X_mcRun4_realistic_T15_v1-v2/280000/003B8BCB-93B0-4040-854A-04C77E4BD066.root'),
-                            #  fileNames = cms.untracked.vstring('/store/mc/Phase2HLTTDRSummer20ReRECOMiniAOD/JPsiToMuMu_Pt0to100-pythia8_TuneCP5-gun/GEN-SIM-DIGI-RAW-MINIAOD/PU200_111X_mcRun4_realistic_T15_v1_ext1-v3/270000/01A1498B-3929-A04C-B651-8D418C11FABD.root'),
-          fileNames = cms.untracked.vstring('/store/mc/Phase2HLTTDRSummer20ReRECOMiniAOD/DoublePhoton_FlatPt-1To100/FEVT/NoPU_111X_mcRun4_realistic_T15_v1-v1/110000/001C5D05-8192-054B-827B-F1D34DFDDB96.root'),
-       inputCommands=cms.untracked.vstring(
-           'keep *',
-           'drop l1tEMTFHit2016Extras_simEmtfDigis_CSC_HLT',
-           'drop l1tEMTFHit2016Extras_simEmtfDigis_RPC_HLT',
-           'drop l1tEMTFHit2016s_simEmtfDigis__HLT',
-           'drop l1tEMTFTrack2016Extras_simEmtfDigis__HLT',
-           'drop l1tEMTFTrack2016s_simEmtfDigis__HLT',
-           )
-       )
+                            fileNames = cms.untracked.vstring('/store/mc/Phase2HLTTDRSummer20ReRECOMiniAOD/DoublePhoton_FlatPt-1To100/FEVT/NoPU_111X_mcRun4_realistic_T15_v1-v1/110000/6863DBBE-61BF-7B4E-AD3E-367DDE81E8B8.root'),
+                            inputCommands=cms.untracked.vstring(
+                                'keep *',
+                                'drop l1tEMTFHit2016Extras_simEmtfDigis_CSC_HLT',
+                                'drop l1tEMTFHit2016Extras_simEmtfDigis_RPC_HLT',
+                                'drop l1tEMTFHit2016s_simEmtfDigis__HLT',
+                                'drop l1tEMTFTrack2016Extras_simEmtfDigis__HLT',
+                                'drop l1tEMTFTrack2016s_simEmtfDigis__HLT',),
+                            firstEvent = cms.untracked.uint32(187544)
+                            )
 
 process.options = cms.untracked.PSet(
 

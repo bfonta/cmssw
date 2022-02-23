@@ -56,16 +56,39 @@ void HGCalBackendLayer2Producer::beginRun(const edm::Run& /*run*/, const edm::Ev
 }
 
 void HGCalBackendLayer2Producer::produce(edm::Event& e, const edm::EventSetup& es) {
-  // Output collections
-  std::pair<l1t::HGCalMulticlusterBxCollection, l1t::HGCalClusterBxCollection> be_output;
+  // if( e.id().event() == 115441 or
+  // 	  e.id().event() == 130968 or
+  // 	  e.id().event() == 139941 or
+  // 	  e.id().event() == 157002 or
+  // 	  e.id().event() == 187544 or
+  // 	  e.id().event() == 187603 or
+  // 	  e.id().event() == 192041 or
+  // 	  e.id().event() == 28274  or
+  // 	  e.id().event() == 35224  or
+  // 	  e.id().event() == 62740  or
+  // 	  e.id().event() == 77678  or
+  // 	  e.id().event() == 8580   or
+  // 	  e.id().event() == 88782 ) {
+  if( e.id().event() == 187544 ) { //187603
+  
+	// Output collections
+	std::pair<l1t::HGCalMulticlusterBxCollection, l1t::HGCalClusterBxCollection> be_output;
 
-  // Input collections
-  edm::Handle<l1t::HGCalClusterBxCollection> trigCluster2DBxColl;
+	// Input collections
+	edm::Handle<l1t::HGCalClusterBxCollection> trigCluster2DBxColl;
 
-  e.getByToken(input_clusters_, trigCluster2DBxColl);
-  backendProcess_->run(trigCluster2DBxColl, be_output, es);
+	e.getByToken(input_clusters_, trigCluster2DBxColl);
+	backendProcess_->run(trigCluster2DBxColl, be_output, es);
 
-  e.put(std::make_unique<l1t::HGCalMulticlusterBxCollection>(std::move(be_output.first)), backendProcess_->name());
-  e.put(std::make_unique<l1t::HGCalClusterBxCollection>(std::move(be_output.second)),
-        backendProcess_->name() + "Unclustered");
+	e.put(std::make_unique<l1t::HGCalMulticlusterBxCollection>(std::move(be_output.first)), backendProcess_->name());
+	e.put(std::make_unique<l1t::HGCalClusterBxCollection>(std::move(be_output.second)),
+		  backendProcess_->name() + "Unclustered");
+  }
+  else {
+	e.put(std::make_unique<l1t::HGCalMulticlusterBxCollection>(), backendProcess_->name());
+	e.put(std::make_unique<l1t::HGCalClusterBxCollection>(),
+		  backendProcess_->name() + "Unclustered");
+
+  }
+  
 }

@@ -40,15 +40,15 @@ std::vector<l1t::HGCalMulticluster> HGCalHistoClusteringImpl::clusterSeedMulticl
     const std::vector<std::pair<GlobalPoint, double>>& seeds,
     std::vector<l1t::HGCalCluster>& rejected_clusters) const {
 
-  std::cout << "CoefA: " << std::endl;
-  for (const auto& ca : dr_byLayer_coefficientA_) {
-	std::cout << ca << " ";
-  }
-  std::cout << "CoefB: " << std::endl;
-  for (const auto& cb : dr_byLayer_coefficientB_) {
-	std::cout << cb << " ";
-  }
-  std::cout << "kMidRadius: " << kMidRadius_ << std::endl;
+  // std::cout << "CoefA: " << std::endl;
+  // for (const auto& ca : dr_byLayer_coefficientA_) {
+  // 	std::cout << ca << " ";
+  // }
+  // std::cout << "CoefB: " << std::endl;
+  // for (const auto& cb : dr_byLayer_coefficientB_) {
+  // 	std::cout << cb << " ";
+  // }
+  // std::cout << "kMidRadius: " << kMidRadius_ << std::endl;
 
   std::map<int, l1t::HGCalMulticluster> mapSeedMulticluster;
   std::vector<l1t::HGCalMulticluster> multiclustersOut;
@@ -62,7 +62,7 @@ std::vector<l1t::HGCalMulticluster> HGCalHistoClusteringImpl::clusterSeedMulticl
         dr_byLayer_coefficientB_.empty() ? 0 : dr_byLayer_coefficientB_[triggerTools_.layerWithOffset(clu->detId())];
 
     double minDist = radiusCoefficientA + radiusCoefficientB * (kMidRadius_ - std::abs(clu->eta()));
-	std::cout << "minDist= " << minDist << std::endl;
+	// std::cout << "minDist= " << minDist << std::endl;
     std::vector<pair<int, double>> targetSeedsEnergy;
 
     for (unsigned int iseed = 0; iseed < seeds.size(); iseed++) {
@@ -78,7 +78,7 @@ std::vector<l1t::HGCalMulticluster> HGCalHistoClusteringImpl::clusterSeedMulticl
           targetSeedsEnergy.emplace_back(iseed, seedEnergy);
         } else if (cluster_association_strategy_ == NearestNeighbour) {
           minDist = d;
-		  std::cout << "d= " << d << std::endl;
+		  // std::cout << "d= " << d << std::endl;
           if (targetSeedsEnergy.empty()) {
             targetSeedsEnergy.emplace_back(iseed, seedEnergy);
           } else {
@@ -136,7 +136,7 @@ void HGCalHistoClusteringImpl::finalizeClusters(std::vector<l1t::HGCalMulticlust
                                                 l1t::HGCalMulticlusterBxCollection& multiclusters_out,
                                                 l1t::HGCalClusterBxCollection& rejected_clusters_out,
                                                 const HGCalTriggerGeometryBase& triggerGeometry) const {
-  std::cout << "finalizeClusters" << std::endl;
+  //std::cout << "finalizeClusters" << std::endl;
   for (const auto& tc : rejected_clusters_in) {
     rejected_clusters_out.push_back(0, tc);
   }
@@ -148,9 +148,9 @@ void HGCalHistoClusteringImpl::finalizeClusters(std::vector<l1t::HGCalMulticlust
 
     math::PtEtaPhiMLorentzVector multiclusterP4(sumPt, multicluster.centre().eta(), multicluster.centre().phi(), 0.);
     multicluster.setP4(multiclusterP4);
-    std::cout << "CL3d Energy=" << multicluster.energy()
-	      << " Z=" << multicluster.centre().eta()
-	      << std::endl;
+    // std::cout << "CL3d Energy=" << multicluster.energy()
+	//       << " Z=" << multicluster.centre().eta()
+	//       << std::endl;
 	
     if (multicluster.pt() > ptC3dThreshold_) {
       //compute shower shapes

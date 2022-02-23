@@ -305,7 +305,7 @@ void HGCalHistoSeedingImpl::setSeedEnergyAndPosition(std::vector<std::pair<Globa
 }
 
 std::vector<std::pair<GlobalPoint, double>> HGCalHistoSeedingImpl::computeMaxSeeds(const Histogram& histoClusters) {
-  validationSmoothing2( "outCMSSWSmooth2.txt", histoClusters );
+  validationSmoothing2( "outCMSSWSmoothBeforeSeeding.txt", histoClusters );
   
   std::vector<std::pair<GlobalPoint, double>> seedPositionsEnergy;
 
@@ -364,7 +364,7 @@ std::vector<std::pair<GlobalPoint, double>> HGCalHistoSeedingImpl::computeMaxSee
       }
     }
   }
-  validationSeeding( "outCMSSWSeeding.txt", seedPositionsEnergy );
+  validationSeeding( "outCMSSWAfterSeeding.txt", seedPositionsEnergy );
   return seedPositionsEnergy;
 }
 
@@ -655,13 +655,13 @@ void HGCalHistoSeedingImpl::findHistoSeeds(const std::vector<edm::Ptr<l1t::HGCal
   /* put clusters into an r/z x phi histogram */
   Histogram histoCluster = fillHistoClusters(clustersPtrs);
 
-  //validationSmoothing2( histoCluster );
+  validationSmoothing2( "outCMSSWBeforeSmoothing.txt", histoCluster );
   
   Histogram smoothHistoCluster;
   if (seedingSpace_ == RPhi) {	
     /* smoothen along the phi direction + normalize each bin to same area */
     Histogram smoothPhiHistoCluster = fillSmoothPhiHistoClusters(histoCluster, binsSumsHisto_);    
-    //validationSmoothing2( "outCMSSWSmooth1.txt", smoothPhiHistoCluster );
+    validationSmoothing2( "outCMSSWHalfSmoothing.txt", smoothPhiHistoCluster );
     /* smoothen along the r/z direction */
     smoothHistoCluster = fillSmoothRPhiHistoClusters(smoothPhiHistoCluster);
   } else if (seedingSpace_ == XY) {
