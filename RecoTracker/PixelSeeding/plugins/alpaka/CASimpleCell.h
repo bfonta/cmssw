@@ -2,8 +2,8 @@
 #define RecoTracker_PixelSeeding_plugins_alpaka_CASimpleCell_h
 
 // #define GPU_DEBUG
-// #define CA_DEBUG
-// #define CA_WARNINGS
+// MRMR #define CA_DEBUG   // MRMR 
+#define CA_WARNINGS
 #include <cmath>
 #include <limits>
 
@@ -156,6 +156,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       CircleEq<float> eq(x1, y1, x2, y2, x3, y3);
 
+// MRMR      printf("Computed curvature: %f, vs parameter: %f\n", eq.curvature(), maxCurv);
       if (eq.curvature() > maxCurv)
         return false;
 
@@ -201,7 +202,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           if (cells[otherCell].isKilled())
             continue;
 #ifdef CA_DEBUG
-          printf("Doublet no. %d %d doubletId: %ld -> %d (isKilled %d) (%d,%d) -> (%d,%d) %d %d\n",
+          printf("Doublet no. %d | Idx: %d | DoubletID: %ld | OtherCell: %d | isKilled: %d | "
+                 "This(i,o): (%d,%d) -> Other(i,o): (%d,%d) | Idx: %d | BinN: %d\n",
                  tmpNtuplet.size(),
                  idx,
                  doubletId,
@@ -247,7 +249,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
               hits[nh] = theOuterHitId;
               auto it = foundNtuplets.bulkFill(acc, apc, hits, nh + 1);
 #ifdef CA_DEBUG
-              printf("track n. %d nhits %d with cells: ", it, nh + 1);
+              printf("track n. %d nhits %d with cells: \n", it, nh + 1);
 #endif
               if (it >= 0) {  // if negative is overflow....
                 for (auto c : tmpNtuplet) {
@@ -259,6 +261,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                   if (t_ind >= uint32_t(ct.metadata().size())) {
 #ifdef CA_WARNINGS
                     printf("Warning!!!! Too many cell->tracks associations (limit = %d)!\n", ct.metadata().size());
+                    assert(0);
 #endif
                     alpaka::atomicSub(acc, nCellTracks, (uint32_t)1, alpaka::hierarchy::Blocks{});
                     break;

@@ -1,10 +1,10 @@
 #ifndef RecoTracker_PixelSeeding_plugins_alpaka_CAHitNtupletGeneratorKernelsImpl_h
 #define RecoTracker_PixelSeeding_plugins_alpaka_CAHitNtupletGeneratorKernelsImpl_h
 
-#define GPU_DEBUG
-// #define NTUPLE_DEBUG
-// #define CA_DEBUG
-// #define CA_WARNINGS
+// MRMR #define GPU_DEBUG     // MRMR  
+// MRMR #define NTUPLE_DEBUG  // MRMR 
+// MRMR #define CA_DEBUG      // MRMR 
+#define CA_WARNINGS   // MRMR 
 // C++ includes
 #include <cmath>
 #include <cstdint>
@@ -407,18 +407,20 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caHitNtupletGeneratorKernels {
           if (aligned && thisCell.dcaCut(hh, oc, dcaCut, params.hardCurvCut_)) {
             auto t_ind = alpaka::atomicAdd(acc, nTrips, (uint32_t)1, alpaka::hierarchy::Blocks{});
 #ifdef CA_DEBUG
-            printf("Triplet no. %d %.5f %.5f (%d %d) - %d %d -> (%d, %d, %d, %d) \n",
-                   t_ind,
-                   thetaCut,
-                   dcaCut,
-                   thisCell.layerPairId(),
-                   oc.layerPairId(),
-                   otherCell,
-                   cellIndex,
-                   thisCell.inner_hit_id(),
-                   thisCell.outer_hit_id(),
-                   oc.inner_hit_id(),
-                   oc.outer_hit_id());
+          if (cms::alpakatools::once_per_grid(acc))
+            printf("%-10s %-7s %-7s %-3s %-3s %-3s %-3s %-4s %-4s %-4s %-4s\n", "Triplet#", "Theta", "DCA", "LI", "LO", "OC", "CI", "i1", "o1", "i2", "o2");
+          printf("%-10d %-7.5f %-7.5f %-3d %-3d %-3d %-3d %-4d %-4d %-4d %-4d\n",
+                 t_ind,
+                 thetaCut,
+                 dcaCut,
+                 thisCell.layerPairId(),
+                 oc.layerPairId(),
+                 otherCell,
+                 cellIndex,
+                 thisCell.inner_hit_id(),
+                 thisCell.outer_hit_id(),
+                 oc.inner_hit_id(),
+                 oc.outer_hit_id());
 #endif
 
 #ifdef CA_DEBUG
@@ -428,6 +430,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caHitNtupletGeneratorKernels {
             if (t_ind >= maxTriplets) {
 #ifdef CA_WARNINGS
               printf("Warning!!!! Too many cell->cell (triplets) associations (limit = %d)!\n", cn.metadata().size());
+              assert(0);
 #endif
               alpaka::atomicSub(acc, nTrips, (uint32_t)1, alpaka::hierarchy::Blocks{});
               break;
@@ -1088,8 +1091,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caHitNtupletGeneratorKernels {
         auto nh = foundNtuplets->size(i);
         if (nh < 3)
           continue;
-        if (tracks_view[i].quality() < loose)
-          continue;
+//        if (tracks_view[i].quality() < loose)
+//          continue;
 
         printf("TK: %10d %3d %3d %3d %6.1f %9.3f %8.3f %8.3f %9.3f %9.3f %9.3f %9.3f %9.3f\n",
                10000 * iev + i,                              // ID
