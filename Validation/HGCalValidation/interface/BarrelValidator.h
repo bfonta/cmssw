@@ -68,6 +68,7 @@ public:
 protected:
   edm::ESGetToken<CaloGeometry, CaloGeometryRecord> caloGeomToken_;
   edm::InputTag label_lcl;
+  edm::InputTag label_rechitmap;
   std::vector<edm::InputTag> associator_;
   std::vector<edm::InputTag> associatorSim_;
   const bool SaveGeneralInfo_;

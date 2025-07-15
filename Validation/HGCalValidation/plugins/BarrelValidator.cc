@@ -65,6 +65,7 @@ bool assignTracksterMaps(const edm::Handle<std::vector<ticl::Trackster>>& tracks
 BarrelValidator::BarrelValidator(const edm::ParameterSet& pset)
     : caloGeomToken_(esConsumes<CaloGeometry, CaloGeometryRecord>()),
       label_lcl(pset.getParameter<edm::InputTag>("label_lcl")),
+      label_rechitmap(pset.getParameter<edm::InputTag>("label_rechitmap")),
       associator_(pset.getUntrackedParameter<std::vector<edm::InputTag>>("associator")),
       associatorSim_(pset.getUntrackedParameter<std::vector<edm::InputTag>>("associatorSim")),
       SaveGeneralInfo_(pset.getUntrackedParameter<bool>("SaveGeneralInfo")),
@@ -106,7 +107,7 @@ BarrelValidator::BarrelValidator(const edm::ParameterSet& pset)
   }
 
   barrelHitMap_ =
-      consumes<std::unordered_map<DetId, const unsigned int>>(edm::InputTag("recHitMapProducer", "barrelRecHitMap"));
+      consumes<std::unordered_map<DetId, const unsigned int>>(pset.getParameter<edm::InputTag>("label_rechitmap"));
 
   simClusters_ = consumes<std::vector<SimCluster>>(pset.getParameter<edm::InputTag>("label_scl"));
 
@@ -526,6 +527,7 @@ void BarrelValidator::fillDescriptions(edm::ConfigurationDescriptions& descripti
                                        });
 
   desc.add<edm::InputTag>("label_lcl", edm::InputTag("hgcalMergeLayerClusters"));
+  desc.add<edm::InputTag>("label_rechitmap", edm::InputTag("recHitMapProducer", "barrelRecHitMap"));
   desc.add<std::vector<edm::InputTag>>("label_tst",
                                        {
                                            edm::InputTag("ticlTrackstersCLUE3DHigh"),
