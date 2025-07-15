@@ -1981,6 +1981,7 @@ class ConfigBuilder(object):
         _,sequence,_ = self.loadDefaultOrSpecifiedCFF(stepSpec,self.VALIDATIONDefaultCFF)
         from Validation.Configuration.autoValidation import autoValidation
         #in case VALIDATION:something:somethingelse -> something,somethingelse
+        # breakpoint()
         if sequence.find(',')!=-1:
             prevalSeqName=sequence.split(',')[0].split('+')
             valSeqName=sequence.split(',')[1].split('+')
@@ -2009,7 +2010,7 @@ class ConfigBuilder(object):
             else:
                 return '%s'%index
 
-
+        # breakpoint()
         #rename the HLT process in validation steps
         if ('HLT' in self.stepMap and not self._options.fast) or self._options.hltProcess:
             for s in valSeqName+prevalSeqName:
@@ -2042,7 +2043,7 @@ class ConfigBuilder(object):
             #will get in the schedule, smoothly
             for (i,s) in enumerate(valSeqName):
                 getattr(self.process,'validation_step%s'%NFI(i)).insert(0, self.process.genstepfilter)
-
+        # breakpoint()
         return
 
 

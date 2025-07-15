@@ -57,6 +57,12 @@ _phase2_hltpostvalidation =  hltpostvalidation.copyAndExclude([HLTTauPostVal,
 # Add HGCal validation
 _phase2_hltpostvalidation += hltHcalValidatorPostProcessor
 
+# Add barrel validation
+_phase2_hltpostvalidation += barrelValidatorPostProcessor
+
+# Add jet validation
+_phase2_hltpostvalidation += DQMHarvestHLTPF
+
 # Add HLT gen validation
 _phase2_hltpostvalidation += hltGenValidationClient
 

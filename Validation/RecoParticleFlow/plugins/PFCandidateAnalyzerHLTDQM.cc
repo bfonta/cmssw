@@ -44,7 +44,6 @@ protected:
 
 private:
   //from config file
-  edm::InputTag PFCandTag;
   edm::EDGetTokenT<reco::PFCandidateCollection> PFCandToken;
   std::vector<double> etabins;
   std::map<std::string, MonitorElement*> me;
@@ -54,8 +53,7 @@ private:
 
 // constructor
 PFCandidateAnalyzerHLTDQM::PFCandidateAnalyzerHLTDQM(const edm::ParameterSet& iConfig) {
-  PFCandTag = iConfig.getParameter<edm::InputTag>("PFCandType");
-  PFCandToken = consumes<reco::PFCandidateCollection>(PFCandTag);
+  PFCandToken = consumes<reco::PFCandidateCollection>(iConfig.getParameter<edm::InputTag>("PFCandType"));
   etabins = iConfig.getParameter<std::vector<double>>("etabins");
 
   //create map of pdgId
@@ -264,11 +262,12 @@ void PFCandidateAnalyzerHLTDQM::analyze(const edm::Event& iEvent, const edm::Eve
   iEvent.getByToken(PFCandToken, pfHandle);
 
   if (!pfHandle.isValid()) {
-    edm::LogInfo("OutputInfo") << " failed to retrieve data required by ParticleFlow Task";
-    edm::LogInfo("OutputInfo") << " ParticleFlow Task cannot continue...!";
+	std::cout << "INVALID" << std::endl;
+    edm::LogPrint("OutputInfo") << " failed to retrieve data required by ParticleFlow Task";
+    edm::LogPrint("OutputInfo") << " ParticleFlow Task cannot continue...!";
     return;
   } else {
-    //Analyze
+	  std::cout << "SIZE ELENA: " << pfHandle->size() << " " << std::endl;
     // Loop Over Particle Flow Candidates
 
     for (unsigned int i = 0; i < pfHandle->size(); i++) {
@@ -428,6 +427,6 @@ void PFCandidateAnalyzerHLTDQM::analyze(const edm::Event& iEvent, const edm::Eve
     }
   }
 }
-#
+
 #include "FWCore/Framework/interface/MakerMacros.h"
 DEFINE_FWK_MODULE(PFCandidateAnalyzerHLTDQM);

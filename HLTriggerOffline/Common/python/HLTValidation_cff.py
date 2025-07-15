@@ -20,6 +20,7 @@ from Validation.HcalRecHits.HLTHcalRecHitParam_cfi import *
 from Validation.SiTrackerPhase2V.HLTPhase2TrackerValidationFirstStep_cff import *
 # Gen-level Validation
 from Validation.HLTrigger.HLTGenValidation_cff import *
+from Validation.RecoParticleFlow.DQMForPF_MiniAOD_cff import *
 
 # HGCAL Rechit Calibration
 from Validation.HGCalValidation.hgcalHitCalibrationDefault_cfi import hgcalHitCalibrationDefault as _hgcalHitCalibrationDefault
@@ -36,6 +37,9 @@ hgcalHitCalibrationHLT = _hgcalHitCalibrationDefault.clone(
 # HGCAL validation
 from Validation.HGCalValidation.HLTHGCalValidator_cff import *
 from RecoHGCal.TICL.HLTSimTracksters_cff import *
+
+# Barrel validation
+from Validation.HGCalValidation.BarrelValidator_cff import barrelValidator
 
 # offline dqm:
 # from DQMOffline.Trigger.DQMOffline_Trigger_cff.py import *
@@ -116,6 +120,7 @@ _hltvalidationWithMC_Phase2 = hltvalidationWithMC.copyAndExclude([#HLTMuonVal,
   hltHCALNoiseRates])
 _hltvalidationWithMC_Phase2.insert(-1, hgcalHitCalibrationHLT)
 _hltvalidationWithMC_Phase2.insert(-1, hltHgcalValidator)
+_hltvalidationWithMC_Phase2.insert(-1, barrelValidator)
 _hltvalidationWithMC_Phase2.insert(-1, hltGENValidation)
 phase2_common.toReplaceWith(hltvalidationWithMC, _hltvalidationWithMC_Phase2)
 
@@ -126,6 +131,12 @@ hltvalidation = cms.Sequence(
     hltvalidationCommon *
     hltvalidationWithMC *
     hltvalidationWithData
+)
+
+pfvalidation = cms.Sequence(
+    hltvalidationWithMC *
+    hltvalidationWithData *
+    DQMHLTPF
 )
 
 # some hlt collections have no direct fastsim equivalent
