@@ -2,13 +2,23 @@ import os
 import subprocess
 
 class Matrix(dict):
+    def __init__(self, adict=None):
+        super().__init__()
+
+        if adict is not None:
+            if not isinstance(adict, dict):
+                raise TypeError("Matrix requires a dictionary.")
+            
+            for key, value in adict.items():
+                self[key] = value  # triggers __setitem__
+            
     def __setitem__(self,key,value):
         key = float(key)
         if key in self:
             print("ERROR in Matrix")
             print("overwriting",key,"not allowed")
         else:
-            self.update({key:WF(key,value)})
+            dict.__setitem__(self, key, WF(key,value))
 
     def addOverride(self,key,override):
         self[key].addOverride(override)

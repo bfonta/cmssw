@@ -2,9 +2,6 @@
 # import the definition of the steps and input files:
 from  Configuration.PyReleaseValidation.relval_steps import *
 
-# here only define the workflows as a combination of the steps defined above:
-workflows = Matrix()
-
 # each workflow defines a name and a list of steps to be done.
 # if no explicit name/label given for the workflow (first arg),
 # the name of step1 will be used
@@ -85,11 +82,11 @@ numWFIB = [
            29834.751,
         ]
 
-for numWF in numWFIB:
-    if not numWF in _upgrade_workflows:
-        continue
-    workflows[numWF] = _upgrade_workflows[numWF]
+workflows = Matrix(
+    {k:v for k,v in _upgrade_workflows.items() if k in numWFIB}
+)
 
+    
 # data WFs to run in IB:
 
 # data 2023 Alpaka pixel-only triplets:   RunJetMET2023D on GPU (optional), RunJetMET2023D GPU-vs-CPU validation, RunJetMET2023D profiling
