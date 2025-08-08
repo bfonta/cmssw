@@ -3,11 +3,12 @@ import subprocess
 
 class Matrix(dict):
     def __setitem__(self,key,value):
+        key = float(key)
         if key in self:
             print("ERROR in Matrix")
             print("overwriting",key,"not allowed")
         else:
-            self.update({float(key):WF(float(key),value)})
+            self.update({key:WF(key,value)})
 
     def addOverride(self,key,override):
         self[key].addOverride(override)
