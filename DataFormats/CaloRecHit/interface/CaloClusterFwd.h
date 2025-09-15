@@ -14,7 +14,7 @@ namespace edm {
 
 namespace reco {
   class CaloCluster;
-  
+
   /// collection of CaloCluster objects
   typedef std::vector<CaloCluster> CaloClusterCollection;
 

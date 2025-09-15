@@ -5,7 +5,6 @@
 #include "SimDataFormats/CaloAnalysis/interface/CaloParticle.h"
 #include "SimDataFormats/CaloAnalysis/interface/SimCluster.h"
 
-
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
 LCToSimTSAssociatorByEnergyScoreImpl::LCToSimTSAssociatorByEnergyScoreImpl(edm::EDProductGetter const& productGetter)
