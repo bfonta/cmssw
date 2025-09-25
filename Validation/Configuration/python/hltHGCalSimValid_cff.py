@@ -22,6 +22,7 @@ hltHGCalRecHitMapProducer = _hltBarrelRecHitMapProducer.clone(
     hits = hgcal_hits,
     hgcalOnly = True,
 )
+
 from Configuration.Eras.Modifier_phase2_common_cff import phase2_common
 from Configuration.ProcessModifiers.ticl_barrel_cff import ticl_barrel
 (phase2_common & ~ticl_barrel).toReplaceWith(hltRecHitMapProducer, hltHGCalRecHitMapProducer)
