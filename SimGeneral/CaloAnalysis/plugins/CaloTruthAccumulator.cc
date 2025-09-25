@@ -15,6 +15,7 @@
 #include <unordered_map>
 #include <string>
 #include <tuple>
+#include <ranges>
 
 #include "FWCore/Framework/interface/ConsumesCollector.h"
 #include "FWCore/Framework/interface/ESWatcher.h"
@@ -142,10 +143,11 @@ namespace {
           mapToSub[pseudoJet.user_index()] = clusters_.size();
         }
 
-        clusters_.emplace_back(SimCluster::mergeHitsFromCollection(
-            constituents | std::views::transform([&](fastjet::PseudoJet const &pseudoJet) {
-              return subClustersBuilt[static_cast<std::size_t>(pseudoJet.user_index())];
-            })));
+        std::vector<SimCluster> tmpSimClusters;
+        tmpSimClusters.reserve(constituents.size());
+        for (auto const &pj : constituents)
+          tmpSimClusters.push_back(subClustersBuilt[static_cast<std::size_t>(pj.user_index())]);
+        clusters_.emplace_back(SimCluster::mergeHitsFromCollection(tmpSimClusters));
 
         // Record CaloParticle index for the merged SimCluster
         caloParticleParentIndexRecorder_.recordParentClusterIndex(currentCaloParticleIndex);
@@ -314,7 +316,7 @@ namespace {
     // to check if SimTrack has simHits : use DecayGraph EdgeProperty
 
     /** Given a track G4 ID, give map DetId->accumulated SimHit energy  */
-    std::map<int, float> const &hits_and_energies(unsigned int trackIdx) const {
+    std::map<int, float> const &hits_and_energies_map(unsigned int trackIdx) const {
       return simTrackDetIdEnergyMap_.at(trackIdx);
     }
 
@@ -344,15 +346,15 @@ namespace {
         return;  // Should not happen
       auto trackIdx = edge_simTrack->trackId();
       if (edge_property.simHits != 0) {
-        for (auto const &hit_and_energy : helper_.hits_and_energies(trackIdx)) {
-          acc_energy[hit_and_energy.first] += hit_and_energy.second;
+        for (auto const &[detId, energy] : helper_.hits_and_energies_map(trackIdx)) {
+          acc_energy[detId] += energy;
         }
       }
     }
 
     void doEndCluster(SimClassNameT &cluster) {
-      for (auto const &hit_and_energy : acc_energy) {
-        cluster.addRecHitAndFraction(hit_and_energy.first, hit_and_energy.second);
+      for (auto const &[detId, energy] : acc_energy) {
+        cluster.addRecHitAndEnergy(detId, energy);
       }
       acc_energy.clear();
     }
@@ -671,7 +673,6 @@ void CaloTruthAccumulator::initializeEvent(edm::Event const &event, edm::EventSe
 void CaloTruthAccumulator::accumulate(edm::Event const &event, edm::EventSetup const &setup) {
   edm::Handle<edm::HepMCProduct> hepmc;
   event.getByLabel(hepMCproductLabel_, hepmc);
-
   edm::LogInfo(messageCategory_) << " CaloTruthAccumulator::accumulate (signal)";
   accumulateEvent(event, setup, hepmc);
 }
@@ -697,10 +698,9 @@ namespace {
   void normalizeCollection(SimCaloCollection &simClusters,
                            std::unordered_map<Index_t, float> const &detIdToTotalSimEnergy) {
     for (auto &sc : simClusters) {
-      auto hitsAndEnergies = sc.hits_and_fractions();
-      sc.clearHitsAndFractions();
-      // Note : addHitEnergy is actually never used, so we do not clear and refill for it
-      for (auto &hAndE : hitsAndEnergies) {
+      auto hitsAndEnergies = sc.hits_and_energies_view();
+      sc.clearFractions();
+      for (auto hAndE : hitsAndEnergies) {
         const float totalenergy = detIdToTotalSimEnergy.at(hAndE.first);
         float fraction = 0.;
         if (totalenergy > 0)
@@ -708,8 +708,16 @@ namespace {
         else
           edm::LogWarning("CaloTruthAccumulator")
               << "TotalSimEnergy for hit " << hAndE.first << " is 0! The fraction for this hit cannot be computed.";
-        sc.addRecHitAndFraction(hAndE.first, fraction);
+        sc.addHitFraction(fraction);
       }
+    }
+  }
+
+  /** "Finalize" the collection production; to be called before putting it in the event */
+  template <typename SimCaloCollection>
+  void finalizeCollection(SimCaloCollection &simClusters) {
+    for (auto &sc : simClusters) {
+      sc.finalizeHits();
     }
   }
 };  // namespace
@@ -723,16 +731,21 @@ void CaloTruthAccumulator::finalizeEvent(edm::Event &event, edm::EventSetup cons
   // we have looped over all pileup events)
   // For premixing stage1 we keep the energies, they will be normalized to
   // fractions in stage2 (in PreMixingCaloParticleWorker.cc)
-
   if (premixStage1_) {
     auto totalEnergies = std::make_unique<std::vector<std::pair<unsigned int, float>>>();
     totalEnergies->reserve(m_detIdToTotalSimEnergy.size());
     std::copy(m_detIdToTotalSimEnergy.begin(), m_detIdToTotalSimEnergy.end(), std::back_inserter(*totalEnergies));
     std::sort(totalEnergies->begin(), totalEnergies->end());
     event.put(std::move(totalEnergies), "MergedCaloTruth");
+
+    // make sure persisted SimClusters have sorted hits and built ranges
+    applyToSimClusterConfig([](auto &config) { finalizeCollection(config.outputClusters); });
+
   } else {
-    applyToSimClusterConfig(
-        [this](auto &config) { normalizeCollection(config.outputClusters, m_detIdToTotalSimEnergy); });
+    applyToSimClusterConfig([this](auto &config) {
+      normalizeCollection(config.outputClusters, this->m_detIdToTotalSimEnergy);
+      finalizeCollection(config.outputClusters);
+    });
     normalizeCollection(outputCaloParticles_, m_detIdToTotalSimEnergy);
   }
 
