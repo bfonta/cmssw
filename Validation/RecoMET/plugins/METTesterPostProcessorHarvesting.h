@@ -45,11 +45,11 @@ private:
   MonitorElement *mPFChargedHadronEtFraction_MiniAOD_over_Reco;
   MonitorElement *mPFHFHadronEtFraction_MiniAOD_over_Reco;
   MonitorElement *mPFHFEMEtFraction_MiniAOD_over_Reco;
-  MonitorElement *mMETDifference_GenMETTrue_MiniAOD_over_Reco;
+  MonitorElement *mMETDiff_GenMETTrue_MiniAOD_over_Reco;
   MonitorElement *mMETDeltaPhi_GenMETTrue_MiniAOD_over_Reco;
-  MonitorElement *mMETDifference_GenMETTrue_MET20to40_MiniAOD_over_Reco;
-  MonitorElement *mMETDifference_GenMETTrue_MET100to150_MiniAOD_over_Reco;
-  MonitorElement *mMETDifference_GenMETTrue_MET300to400_MiniAOD_over_Reco;
+  MonitorElement *mMETDiff_GenMETTrue_MET20to40_MiniAOD_over_Reco;
+  MonitorElement *mMETDiff_GenMETTrue_MET100to150_MiniAOD_over_Reco;
+  MonitorElement *mMETDiff_GenMETTrue_MET300to400_MiniAOD_over_Reco;
 };
 
 #endif

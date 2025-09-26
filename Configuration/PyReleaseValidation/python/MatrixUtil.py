@@ -142,7 +142,7 @@ class InputInfo(object):
             from os import getenv
             if getenv("CMSSW_USE_IBEOS","false")=="true":
                 return "export CMSSW_USE_IBEOS=true; " + command + " | ibeos-lfn-sort"
-            return command + " | sort -u"
+            return command + " | ibeos-lfn-sort -u"
         else:
             return command
 
