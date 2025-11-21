@@ -176,7 +176,7 @@ def showECAL(infile, outfile, props):
                       zlabel=('PF' if prefix=='Reco' else 'Sim') + ' RecHit Energy [GeV]')
             plotEvent(dfGeom, dfHitsInClusters, dfClusters,
                       out=os.path.join(outfile, outname + '_clhits'),
-                      var='energy', zoom=props.zoom, categorical=False,
+                      var='frac', zoom=props.zoom, categorical=False,
                       zlabel=('PF' if prefix=='Reco' else 'Sim') + ' RecHit Energy [GeV]')
         
     print('INFO: Done.')

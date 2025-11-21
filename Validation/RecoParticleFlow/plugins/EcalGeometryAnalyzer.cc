@@ -246,23 +246,35 @@ void EcalGeometryAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	clusterEnergies_["Reco"].push_back(cl.energy());
 	clusterEtas_["Reco"].push_back(cl.eta());
 	clusterPhis_["Reco"].push_back(cl.phi());
-	
-	// properties of the hits in each cluster
-	for (auto [clhitId, clhitFrac] : cl.hitsAndFractions()) {
+
+	for (auto const& rechit : cl.recHitFractions()) {
+	  const auto& ref = rechit.recHitRef();
+	  DetId clhitId(ref->detId());
 	  if (!inBarrel(clhitId))
 		continue;
 
-	  for (auto& rechit : recHits) {
-		if (clhitId == rechit.detId()) {
-		  float energy = rechit.energy();
-		  clusterHitDetids_["Reco"].push_back(clhitId);
-		  clusterHitClids_["Reco"].push_back(clusterCounter);
-		  clusterHitEnergies_["Reco"].push_back(energy);
-		  clusterHitFractions_["Reco"].push_back(clhitFrac);
-		  break;
-		}
-	  }
+	  clusterHitDetids_["Reco"].push_back(clhitId);
+	  clusterHitClids_["Reco"].push_back(clusterCounter);
+	  clusterHitEnergies_["Reco"].push_back(ref->energy());
+	  clusterHitFractions_["Reco"].push_back(rechit.fraction());
 	}
+
+	// // properties of the hits in each cluster
+	// for (auto [clhitId, clhitFrac] : cl.hitsAndFractions()) {
+	//   if (!inBarrel(clhitId))
+	// 	continue;
+
+	//   for (auto& rechit : recHits) {
+	// 	if (clhitId == rechit.detId()) {
+	// 	  float energy = rechit.energy();
+	// 	  clusterHitDetids_["Reco"].push_back(clhitId);
+	// 	  clusterHitClids_["Reco"].push_back(clusterCounter);
+	// 	  clusterHitEnergies_["Reco"].push_back(energy);
+	// 	  clusterHitFractions_["Reco"].push_back(clhitFrac);
+	// 	  break;
+	// 	}
+	//   }
+	// }
   }
 
   // sim clusters
@@ -276,20 +288,19 @@ void EcalGeometryAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	clusterPhis_["Sim"].push_back(cl.phi());
 	
 	// properties of the hits in each cluster
-	for (auto [clhitId, clhitFrac] : cl.hits_and_fractions()) {
+	const auto& hits_fractions = cl.hits_and_fractions();
+	const auto& hits_energies = cl.hits_and_energies();
+	
+	auto itF = hits_fractions.begin();
+	auto itE = hits_energies.begin();
+	for (; itF != hits_fractions.end() && itE != hits_energies.end(); ++itF, ++itE) {
+	  DetId clhitId(itF->first);
 	  if (!inBarrel(clhitId))
 		continue;
-
-	  for (auto& simhit : simHits) {
-		if (clhitId == simhit.id()) {
-		  float energy = simhit.energy();
-		  clusterHitDetids_["Sim"].push_back(clhitId);
-		  clusterHitClids_["Sim"].push_back(clusterCounter);
-		  clusterHitEnergies_["Sim"].push_back(energy);
-		  clusterHitFractions_["Sim"].push_back(clhitFrac);
-		  break;
-		}
-	  }
+	  clusterHitDetids_["Sim"].push_back(clhitId);
+	  clusterHitClids_["Sim"].push_back(clusterCounter);
+	  clusterHitEnergies_["Sim"].push_back(itE->second);
+	  clusterHitFractions_["Sim"].push_back(itF->second);
 	}
   }
   
