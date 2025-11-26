@@ -122,7 +122,7 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
         df[mode] = pd.merge(hits_in_clusters[mode], geom, how="inner", left_on="detids", right_on="crystalDetId")
         df[mode] = df[mode][df[mode].eventId < 100]
         df[mode]["eventId"] = df[mode]["eventId"].astype(str)
-        src[mode] = ColumnDataSource(df[mode])
+
 
         clusters[mode]["eventId"] = clusters[mode]["eventId"].astype(str)
         srcCluster[mode] = ColumnDataSource(clusters[mode])
@@ -134,28 +134,60 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
         threshFilter[mode] = view[mode].filters[1]
         
         # Create lists of lists for xs and ys
-        xs = [
+        df[mode]['xs'] = [
             [eta1, eta2, eta3, eta4, eta1]  # Close the patch by repeating the first point
             for eta1, eta2, eta3, eta4 in zip(
                     df[mode]["crystalCorner0Eta"], df[mode]["crystalCorner1Eta"],
                     df[mode]["crystalCorner2Eta"], df[mode]["crystalCorner3Eta"]
             )
         ]
-        ys = [
+        df[mode]['ys'] = [
             shift_phi_corners(phi0, phi1, phi2, phi3)  # Close the patch by repeating the first point
             for phi0, phi1, phi2, phi3 in zip(
                     df[mode]["crystalCorner0Phi"], df[mode]["crystalCorner1Phi"],
                     df[mode]["crystalCorner2Phi"], df[mode]["crystalCorner3Phi"]
             )
         ]
-        src[mode].add(xs, "xs")
-        src[mode].add(ys, "ys")
+
+        # Aggregate data for unique patches
+        patch_data = pd.DataFrame({
+            'eventId': df[mode]['eventId'],
+            'xs': df[mode]['xs'],
+            'ys': df[mode]['ys'],
+            'energies': df[mode]['energies'],
+            'fracs': df[mode]['fracs'],
+        })
+
+        patch_data['xs_tuple'] = patch_data['xs'].apply(tuple)
+        patch_data['ys_tuple'] = patch_data['ys'].apply(tuple)
+        aggregated = patch_data.groupby(['xs_tuple', 'ys_tuple'], as_index=False).agg({
+            'energies': 'sum',
+            'fracs': 'sum',
+        })
+
+        aggregated['xs'] = aggregated['xs_tuple'].apply(list)
+        aggregated['ys'] = aggregated['ys_tuple'].apply(list)
+
+        energy_sum_map = aggregated.set_index(['xs_tuple', 'ys_tuple'])['energies'].to_dict()
+        frac_sum_map = aggregated.set_index(['xs_tuple', 'ys_tuple'])['fracs'].to_dict()
+
+        # Add 'energy_sum' to the original DataFrame
+        df[mode]['energies_sum'] = df[mode].apply(
+            lambda row: energy_sum_map.get((tuple(row['xs']), tuple(row['ys'])), 0),
+            axis=1
+        )
+        df[mode]['fracs_sum'] = df[mode].apply(
+            lambda row: frac_sum_map.get((tuple(row['xs']), tuple(row['ys'])), 0),
+            axis=1
+        )
+        src[mode] = ColumnDataSource(df[mode])
+
 
         # Add hover tool
         hover[mode] = HoverTool(
             tooltips=[ # first string is the text
                 ("", """ 
-                ClusterID: @clids, Frac: @fracs{0.000}, En: @energies
+                ClusterID: @clids, Frac: @fracs{0.000}, FracSum: @fracs_sum{0.000}, En: @energies, EnSum: @energies_sum
                 """),
             ],
             mode="mouse",
@@ -178,15 +210,14 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
         )
         
         # continuous figures
-        zaxisDefault = "energies"
-        mapper = LogColorMapper(palette=Viridis256, low=df[mode][zaxisDefault].min(), high=df[mode][zaxisDefault].max())
+        mapper = LogColorMapper(palette=Viridis256, low=df[mode]['energies_sum'].min(), high=df[mode]['energies_sum'].max())
         color_bar = ColorBar(color_mapper=mapper, label_standoff=12,
-                             title=("PF" if mode == "Reco" else "Sim") + " RecHit Energy [GeV]",)
+                             title=("PF" if mode == "Reco" else "Sim") + " RecHit Energy Sum [GeV]",)
         p[mode][1].patches(
             xs="xs", ys="ys",
             source=src[mode],
             view=view[mode],
-            fill_color=log_cmap(zaxisDefault, Viridis256, df[mode][zaxisDefault].min(), df[mode][zaxisDefault].max()),
+            fill_color=log_cmap('energies_sum', Viridis256, df[mode]['energies_sum'].min(), df[mode]['energies_sum'].max()),
             line_color="black",
         )
         p[mode][1].add_layout(color_bar, "right")
@@ -231,13 +262,14 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
     srcReco.change.emit();
     srcClSim.change.emit();
     srcClReco.change.emit();
-""")
+    """)
     numInput.js_on_change("value", numInput_callb)
 
     slider = Slider(start=0, end=1, value=0.1, step=0.01, title="Min Value")
 
-    menu = [("Energy", zaxisDefault), ("Fraction", "fracs")]
-    dropdown = Dropdown(label="Z axis", button_type="warning", menu=menu)
+    menu = [('Energy Sum', 'energies_sum'), ('Energy', 'energies'),
+            ('Fraction Sum', 'fracs_sum'), ('Fraction', 'fracs')]
+    dropdown = Dropdown(label="Z axis", button_type="warning", menu=menu, width=150)
     
     slider_calb = CustomJS(
         args=dict(
@@ -245,8 +277,7 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
             viewSim=view["Sim"], viewReco=view["Reco"],
             threshSim=threshFilter["Sim"], threshReco=threshFilter["Reco"],
             slider=slider, select=numInput,
-            # Pass the current dropdown value as a string
-            varName="energies"  # default
+            varName="energies_sum"  # default
         ),
         code="""
         const minVal = slider.value;
@@ -312,7 +343,7 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
     save(lay)
     print(f"INFO: Event plot saved to {output_path}")
 
-def showECAL(infile, outfile, props):
+def showECAL(infile, outfile, props, outname='EventDisplay'):
     varsGeom = [
         "crystalDetId",
         "crystalCenterEta",
@@ -362,13 +393,12 @@ def showECAL(infile, outfile, props):
         ).rename(columns={"clusterHitEnergies"+pfix: 'energies', "clusterHitDetids"+pfix: 'detids',
                           "clusterHitFractions"+pfix: 'fracs', "clusterHitClids"+pfix: 'clids'})
 
-    outname = "EventDisplay"
     plotEvent(
         dfGeom,
         dfHits,
         dfClusters,
         dfHitsInClusters,
-        output_path=os.path.join(outfile, outname + ".html"),
+        output_path=os.path.join(outfile, args.outname + ".html"),
         variables=("energy", "frac"),
     )
 
@@ -381,9 +411,10 @@ class InputArgs:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Show position of crystals.")
     parser.add_argument("-i", "--file", help="Path to the input ROOT file.")
-    parser.add_argument("-o", "--outdir", help="Path to the output folder where the events will be stored.")
+    parser.add_argument("-o", "--outdir", help="Path to the output folder where the script outputs will be stored.")
+    parser.add_argument("--outname", default='EventDisplay', help="Name of the output html file with the event display.")
     parser.add_argument("-n", "--nevents", help="Number of events to plot.", default=6, type=int)
 
     args = parser.parse_args()
     props = InputArgs(nevents=args.nevents)
-    showECAL(args.file, args.outdir, props)
+    showECAL(args.file, args.outdir, props, args.outname)
