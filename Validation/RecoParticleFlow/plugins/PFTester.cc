@@ -443,7 +443,20 @@ void PFTesterT<RecoClusterCollection>::bookHistograms(DQMStore::IBooker& ibook, 
     }
   }
 
-  ibook.setCurrentFolder(outFolder_ + "/" + matching + "/PFCandidates");
+  for (auto& hVar : histoVarsSim) {
+    auto [nBins, hMin, hMax] = hVar.second;
+    for (unsigned ithr = 0; ithr < nAssocScoreThresholds_; ++ithr) {
+      std::string threshStr = "Score" + doubleToString(assocScoreThresholds_[ithr]);
+      ibook.setCurrentFolder(pfValidFolder + "/" + threshStr);
+      h2d_responsePt_[ithr][hVar.first] =
+          ibook.book2D("ResponsePt_" + hVar.first, "Response p_T;" + hVar.first, nBins, hMin, hMax, 50, 0., 1.5);
+      h2d_responseE_[ithr][hVar.first] =
+          ibook.book2D("ResponseE_" + hVar.first, "Response Energy;" + hVar.first, nBins, hMin, hMax, 50, 0., 1.5);
+    }
+  }
+
+  ibook.setCurrentFolder(outFolder_ + "/PFCandidates");
+
   h_PFCandEt_ = ibook.book1D("PFCandEt", "PFCandEt", 1000, 0, 1000);
   h_PFCandEta_ = ibook.book1D("PFCandEta", "PFCandEta", 200, -5, 5);
   h_PFCandPhi_ = ibook.book1D("PFCandPhi", "PFCandPhi", 200, -M_PI, M_PI);

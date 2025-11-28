@@ -244,6 +244,7 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
 
     dfMin = min(df[mode].eventId.min() for mode in modes)
     dfMax = max(df[mode].eventId.max() for mode in modes)
+
     numInput = NumericInput(value=1, low=int(dfMin), high=int(dfMax),
                             title=f"Enter a number between {dfMin} and {dfMax}:")
 
