@@ -64,12 +64,12 @@ hltHgcalLayerClustersAssociatorsTask = cms.Task(
 # LC to CP and LC to SC associators TICL-based for barrel region (ticl_barrel)
 
 hltBarrelLcAssocByEnergyScoreProducer = _barrelLcAssocByEnergyScoreProducer.clone(
-    hits = cms.VInputTag("hltParticleFlowRecHitECALUnseeded", "hltParticleFlowRecHitHBHE"),
+    hits = cms.InputTag("hltRecHitMapProducer", "RefProdVectorPFRecHitCollection"),
     hitMapTag = cms.InputTag("hltRecHitMapProducer","barrelRecHitMap"),
 )
 
 hltBarrelScAssocByEnergyScoreProducer = _barrelScAssocByEnergyScoreProducer.clone(
-    hits = cms.VInputTag("hltParticleFlowRecHitECALUnseeded", "hltParticleFlowRecHitHBHE"),
+    hits = cms.InputTag("hltRecHitMapProducer", "RefProdVectorPFRecHitCollection"),
     hitMapTag = cms.InputTag("hltRecHitMapProducer","barrelRecHitMap"),
 )
 
