@@ -15,7 +15,8 @@ import pandas as pd
 from dataclasses import dataclass
 
 from bokeh.plotting import figure, output_file, save, ColumnDataSource
-from bokeh.models import HoverTool, Rect, ColumnDataSource, LogColorMapper, ColorBar, NumericInput, Dropdown, CDSView, GroupFilter, BooleanFilter, CustomJS, Slider
+from bokeh.models import (HoverTool, Rect, ColumnDataSource, LinearColorMapper, LogColorMapper,
+                          ColorBar, NumericInput, Dropdown, CDSView, GroupFilter, BooleanFilter, CustomJS, Slider)
 from bokeh.palettes import Viridis256, Category10
 from bokeh.transform import linear_cmap, log_cmap
 from bokeh.layouts import layout
@@ -116,7 +117,7 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
 
     modes = ('Sim', 'Reco')
 
-    p, src, srcCluster, df, hover, view, threshFilter = ({} for _ in range(7))
+    p, src, srcCluster, df, hover, view, mapper_log, mapper_lin, color_bar, threshFilter = ({} for _ in range(10))
     for mode in modes:
         df[mode] = pd.merge(hits_in_clusters[mode], geom, how="inner", left_on="detids", right_on="crystalDetId")
         df[mode] = df[mode][df[mode].eventId < 100]
@@ -186,8 +187,8 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
         )
 
         # Create figure
-        p[mode] = [createFigure(title="Categorical distribution (" + mode + ")"),
-                   createFigure(title="Continuous distribution (" + mode + ")")]
+        p[mode] = [createFigure(title=mode + " Cluster IDs"),
+                   createFigure(title=mode + " Hits Distribution")]
     
         # categorical figures
         colors = [Category10[10][i % 10] for i in df[mode].clids]
@@ -202,9 +203,11 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
         )
         
         # continuous figures
-        mapper = LogColorMapper(palette=Viridis256, low=df[mode]['energies_sum'].min(), high=df[mode]['energies_sum'].max())
-        color_bar = ColorBar(color_mapper=mapper, label_standoff=12,
-                             title=("PF" if mode == "Reco" else "Sim") + " RecHit Energy Sum [GeV]",)
+        mapper_kwargs = dict(palette=Viridis256, low=df[mode]['energies_sum'].min(), high=df[mode]['energies_sum'].max())
+        mapper_log[mode] = LogColorMapper(**mapper_kwargs)
+        mapper_lin[mode] = LinearColorMapper(**mapper_kwargs)
+        color_bar[mode] = ColorBar(color_mapper=mapper_log[mode], label_standoff=12)
+
         p[mode][1].patches(
             xs="xs", ys="ys",
             source=src[mode],
@@ -212,7 +215,7 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
             fill_color=log_cmap('energies_sum', Viridis256, df[mode]['energies_sum'].min(), df[mode]['energies_sum'].max()),
             line_color="black",
         )
-        p[mode][1].add_layout(color_bar, "right")
+        p[mode][1].add_layout(color_bar[mode], "right")
         
         # Add clusters
         # p[mode][1].scatter(
@@ -260,7 +263,7 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
 
     slider = Slider(start=0, end=1, value=0.1, step=0.01, title="Min Value")
 
-    menu = [('Energy Sum', 'energies_sum'), ('Energy', 'energies'),
+    menu = [('Energy Sum [GeV]', 'energies_sum'), ('Energy [GeV]', 'energies'),
             ('Fraction Sum', 'fracs_sum'), ('Fraction', 'fracs')]
     dropdown = Dropdown(label="Z axis", button_type="warning", menu=menu, width=150)
     
@@ -300,20 +303,25 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
 
     dropdown_calb = CustomJS(
         args=dict(
-            srcSim=src["Sim"], srcReco=src["Reco"],
-            patchSim=p["Sim"][1].renderers[0], patchReco=p["Reco"][1].renderers[0],
-            mapperSim=p["Sim"][1].renderers[0].glyph.fill_color["transform"],
-            mapperReco=p["Reco"][1].renderers[0].glyph.fill_color["transform"],
+            srcSim=src['Sim'], srcReco=src['Reco'],
+            patchSim=p['Sim'][1].renderers[0], patchReco=p['Reco'][1].renderers[0],
+            mapperSim={'fracs': mapper_lin['Sim'],'fracs_sum': mapper_lin['Sim'],
+                       'energies': mapper_log['Sim'],'energies_sum': mapper_log['Sim']},
+            mapperReco={'fracs': mapper_lin['Reco'],'fracs_sum': mapper_lin['Reco'],
+                       'energies': mapper_log['Reco'],'energies_sum': mapper_log['Reco']},
+            colorBarSim=color_bar['Sim'], colorBarReco=color_bar['Reco'],
             slider=slider,
             slider_callback=slider_calb
         ),
         code="""
         const varName = this.item;
         // Update color mapper range
-        mapperSim.low = Math.min(...srcSim.data[varName]);
-        mapperSim.high = Math.max(...srcSim.data[varName]);
-        mapperReco.low = Math.min(...srcReco.data[varName]);
-        mapperReco.high = Math.max(...srcReco.data[varName]);
+        colorBarSim.color_mapper = mapperSim[varName];
+        colorBarSim.color_mapper.low = Math.min(...srcSim.data[varName]);
+        colorBarSim.color_mapper.high = Math.max(...srcSim.data[varName]);
+        colorBarReco.color_mapper = mapperReco[varName];
+        colorBarReco.color_mapper.low = Math.min(...srcReco.data[varName]);
+        colorBarReco.color_mapper.high = Math.max(...srcReco.data[varName]);
         // Update patch fill_color field
         patchSim.glyph.fill_color.field = varName;
         patchReco.glyph.fill_color.field = varName;
