@@ -107,7 +107,7 @@ def shift_phi_corners(phi0, phi1, phi2, phi3):
                 corners[i] -= 2 * np.pi
             else:
                 corners[j] -= 2 * np.pi
-    return corners + [corners[0]]  # Close the patch
+    return tuple(corners) + (corners[0],)  # Close the patch
 
 def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
               variables=("energy", "frac"), zlabel=""):
@@ -134,7 +134,7 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
         
         # Create lists of lists for xs and ys
         df[mode]['xs'] = [
-            [eta1, eta2, eta3, eta4, eta1]  # Close the patch by repeating the first point
+            (eta1, eta2, eta3, eta4, eta1)  # Close the patch by repeating the first point
             for eta1, eta2, eta3, eta4 in zip(
                     df[mode]["crystalCorner0Eta"], df[mode]["crystalCorner1Eta"],
                     df[mode]["crystalCorner2Eta"], df[mode]["crystalCorner3Eta"]
@@ -156,29 +156,23 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
             'energies': df[mode]['energies'],
             'fracs': df[mode]['fracs'],
         })
-
-        patch_data['xs_tuple'] = patch_data['xs'].apply(tuple)
-        patch_data['ys_tuple'] = patch_data['ys'].apply(tuple)
-        aggregated = patch_data.groupby(['xs_tuple', 'ys_tuple'], as_index=False).agg({
+        aggr = patch_data.groupby(['eventId', 'xs', 'ys'], as_index=False).agg({
             'energies': 'sum',
             'fracs': 'sum',
         })
 
-        aggregated['xs'] = aggregated['xs_tuple'].apply(list)
-        aggregated['ys'] = aggregated['ys_tuple'].apply(list)
-
-        energy_sum_map = aggregated.set_index(['xs_tuple', 'ys_tuple'])['energies'].to_dict()
-        frac_sum_map = aggregated.set_index(['xs_tuple', 'ys_tuple'])['fracs'].to_dict()
-
-        # Add 'energy_sum' to the original DataFrame
+        # Add summed variables to the original DataFrame
+        energy_sum_map = aggr.set_index(['eventId', 'xs', 'ys'])['energies'].to_dict()
+        frac_sum_map = aggr.set_index(['eventId', 'xs', 'ys'])['fracs'].to_dict()
         df[mode]['energies_sum'] = df[mode].apply(
-            lambda row: energy_sum_map.get((tuple(row['xs']), tuple(row['ys'])), 0),
+            lambda row: energy_sum_map.get((row['eventId'], row['xs'], row['ys']), None),
             axis=1
         )
         df[mode]['fracs_sum'] = df[mode].apply(
-            lambda row: frac_sum_map.get((tuple(row['xs']), tuple(row['ys'])), 0),
+            lambda row: frac_sum_map.get((row['eventId'], row['xs'], row['ys']), None),
             axis=1
         )
+
         src[mode] = ColumnDataSource(df[mode])
 
         # Add hover tool
@@ -324,7 +318,7 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
         patchSim.glyph.fill_color.field = varName;
         patchReco.glyph.fill_color.field = varName;
         // Update slider range and value
-        slider.start = Math.min(...srcSim.data[varName],...srcReco.data[varName]);
+        slider.start = 0.;
         slider.end = Math.max(...srcSim.data[varName],...srcReco.data[varName]);
         slider.value = slider.start;
         slider.step = (slider.end - slider.start) / 100.;
@@ -377,7 +371,7 @@ def showECAL(infile, outfile, props, outname='EventDisplay'):
 
     with uproot.open(infile) as file:
         dfGeom = file["ecalGeometryAnalyzer/Geometry"].arrays(varsGeom, library="pandas")
-        dfEvent = file["ecalGeometryAnalyzer/Event"].arrays(varsEventAll, library="awkward")
+        dfEvent = file["ecalGeometryAnalyzer/Event"].arrays(varsEventAll, entry_stop=props.nevents, library="awkward")
     
     plotGeom(dfGeom, output_path=os.path.join(outfile, "geom.html"))
 
@@ -412,7 +406,7 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--file", help="Path to the input ROOT file.")
     parser.add_argument("-o", "--outdir", help="Path to the output folder where the script outputs will be stored.")
     parser.add_argument("--outname", default='EventDisplay', help="Name of the output html file with the event display.")
-    parser.add_argument("-n", "--nevents", help="Number of events to plot.", default=6, type=int)
+    parser.add_argument("-n", "--nevents", help="Number of events to plot.", default=10, type=int)
 
     args = parser.parse_args()
     props = InputArgs(nevents=args.nevents)
