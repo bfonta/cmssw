@@ -575,11 +575,13 @@ if __name__ == '__main__':
             cached_histos[name] = key.ReadObj()
     debug(' ...done.')
 
-    # for subdir in subdirs:
-    #     checkRootDir(afile, f"{dqm_dir}/{subdir}")
-    #     createDir(f'{args.odir}/{subdir}')
-    #     createIndexPHP(src=args.odir, dest=f'{args.odir}/{subdir}')
-        
+    # create and setup folders
+    for subdir in subdirs:
+        checkRootDir(afile, f"{dqm_dir}/{subdir}")
+        createDir(f'{args.odir}/{subdir}')
+        createIndexPHP(src=args.odir, dest=f'{args.odir}/{subdir}')
+
+    # for subdir in subdirs:       
     #     for name, suf in zip(('', '_Reconstructable'), ('', 'Reconstructable')):
     #         varsDict = {
     #             # Cluster efficiency
