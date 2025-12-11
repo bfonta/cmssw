@@ -42,7 +42,9 @@ def plotGeom(df):
     plt.xlabel(f'$\eta$')
     plt.ylabel(f'$\phi$')
     plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+    plt.tight_layout()
     fig.savefig('test.pdf')
+    plt.close()
 
 def add_black(cmap):
     """Add black at the end of a cmap."""
@@ -54,6 +56,10 @@ def plotEvent(geom, hits, clusters, out, zoom, var='energy', zlabel='', categori
     """
     Plot single event on top of the geometry.
     """
+    pardir = utils.getParentDir(out)
+    utils.createDir(pardir)
+    utils.createIndexPHP(src=utils.getParentDir(pardir), dest=pardir)
+
     df = pd.merge(hits, geom, how='inner', left_on='detid', right_on='crystalDetId')
     # df = df[df[var]>0]
     # df[df.duplicated(subset='detid', keep=False) == True]
@@ -105,11 +111,12 @@ def plotEvent(geom, hits, clusters, out, zoom, var='energy', zlabel='', categori
         ax.set_ylim(-3.15, 3.15)
         
     plt.grid(True, which='both', linestyle='--', linewidth=0.5)
-
+    plt.tight_layout()
     extensions = ('.pdf', '.png')
     for ext in extensions:
         fig.savefig(out + ext)
     print(f"INFO: Figure save under {out}{'/'.join(extensions)}")
+    plt.close()
         
 def showECAL(infile, outfile, props):
     varsGeom = ['crystalDetId', 'crystalCenterEta', 'crystalCenterPhi',

@@ -1,9 +1,27 @@
+import os
 import numpy as np
 import ROOT
 
 def angleDiff(x1, x2):
     return np.arctan2(np.sin(x1 - x2), np.cos(x1 - x2))
 
+def checkRootDir(afile, adir):
+    if not afile.Get(adir):
+        raise RuntimeError(f"Directory '{adir}' not found in {afile}")
+
+def createDir(adir):
+    if not os.path.exists(adir):
+        os.makedirs(adir)
+    return adir
+
+def createIndexPHP(src, dest):
+    """
+    Copy index php file used for visualization in the browser.
+    """
+    php_file = os.path.join(src, 'index.php')
+    if os.path.exists(php_file) and not os.path.exists(os.path.join(src, 'index.php')):
+        os.system(f'cp {php_file} {dest}')
+        
 def findBestGaussianCoreFit(histo, quiet=True, meanForRange=1., rmsForRange=0.1):
     """
     The meanForRange and rmsForRange are initial estimates.
@@ -66,3 +84,9 @@ def findBestGaussianCoreFit(histo, quiet=True, meanForRange=1., rmsForRange=0.1)
         print(f"ChiSquare = {ChiSquareBest}, NDF = {ndfBest}, Prob = {PvalueBest}\n\n")
         
     return histo.GetListOfFunctions().FindObject("gaus")
+
+def getParentDir(adir):
+    pardir = os.path.dirname(adir)
+    if adir[-1] == '/':
+        pardir = os.path.dirname(pardir)
+    return pardir

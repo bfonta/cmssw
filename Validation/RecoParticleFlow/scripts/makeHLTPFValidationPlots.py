@@ -28,20 +28,6 @@ class dotdict(dict):
 def debug(mes):
     print('### INFO: ' + mes)
     
-def createDir(adir):
-    if not os.path.exists(adir):
-        os.makedirs(adir)
-    return adir
-
-def createIndexPHP(src, dest):
-    php_file = os.path.join(src, 'index.php')
-    if os.path.exists(php_file):
-        os.system(f'cp {php_file} {dest}')
-
-def checkRootDir(afile, adir):
-    if not afile.Get(adir):
-        raise RuntimeError(f"Directory '{adir}' not found in {afile}")
-
 def rate_errorbar_declutter(plotter, eff, err, yaxmin, frac=0.01):
     """
     Filter uncertainties if they lie below the minimum (vertical) axis value.
@@ -529,11 +515,11 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
 
-    createDir(args.odir)
+    utils.createDir(args.odir)
     parentDir = os.path.dirname(args.odir)
     if args.odir[-1] == '/':
         parentDir = os.path.dirname(parentDir)
-    createIndexPHP(src=parentDir, dest=args.odir)
+    utils.createIndexPHP(src=parentDir, dest=args.odir)
     
     fontsize = 16    
     colors = hep.style.CMS['axes.prop_cycle'].by_key()['color']
@@ -563,7 +549,7 @@ if __name__ == '__main__':
     else:           sub_folder = 'ParticleFlow'
     dqm_dir = f"DQMData/Run 1/HLT/Run summary/{sub_folder}/{matching}/PFClusterValidation"
     afile = ROOT.TFile.Open(args.file)
-    checkRootDir(afile, dqm_dir)
+    utils.checkRootDir(afile, dqm_dir)
 
     debug('Start caching PFCluster histograms...')
     subdirs = []
@@ -584,9 +570,9 @@ if __name__ == '__main__':
 
     # create and setup folders
     for subdir in subdirs:
-        checkRootDir(afile, f"{dqm_dir}/{subdir}")
-        createDir(f'{args.odir}/{subdir}')
-        createIndexPHP(src=args.odir, dest=f'{args.odir}/{subdir}')
+        utils.checkRootDir(afile, f"{dqm_dir}/{subdir}")
+        utils.createDir(f'{args.odir}/{subdir}')
+        utils.createIndexPHP(src=args.odir, dest=f'{args.odir}/{subdir}')
 
     for subdir in subdirs:       
         for name, suf in zip(('', '_Reconstructable'), ('', 'Reconstructable')):
@@ -939,7 +925,7 @@ if __name__ == '__main__':
     else:           sub_folder = 'ParticleFlow'
     dqm_dir = f"DQMData/Run 1/HLT/Run summary/{sub_folder}/{matching}/CaloParticles"
     afile = ROOT.TFile.Open(args.file)
-    checkRootDir(afile, dqm_dir)
+    utils.checkRootDir(afile, dqm_dir)
 
     debug('Start caching PFCluster histograms...')
     subdirs = []
