@@ -1,9 +1,8 @@
 """
-To get bokeh on lxplus9:
-source /cvmfs/sft.cern.ch/lcg/releases/LCG_108/Python/3.12.11/x86_64-el9-gcc13-opt/Python-env.sh
-
-To get missing software (libarrow as an example):
-source /cvmfs/sft.cern.ch/lcg/releases/LCG_108/pyarrow/20.0.0/x86_64-el9-gcc13-opt/pyarrow-env.sh
+If not available by default, to get bokeh on lxplus:
+ $ cmsenv
+ $ scram-venv
+ $ python3 -m pip install bokeh    
 """
 
 import os
@@ -181,7 +180,6 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
             axis=1
         )
         src[mode] = ColumnDataSource(df[mode])
-
 
         # Add hover tool
         hover[mode] = HoverTool(
