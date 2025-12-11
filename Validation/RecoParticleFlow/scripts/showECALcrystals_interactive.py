@@ -188,7 +188,7 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
 
         # Create figure
         p[mode] = [createFigure(title=mode + " Cluster IDs"),
-                   createFigure(title=mode + " Hits Distribution")]
+                   createFigure(title=mode + " Hits")]
     
         # categorical figures
         colors = [Category10[10][i % 10] for i in df[mode].clids]
@@ -240,7 +240,8 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
     dfMin = min(df[mode].eventId.min() for mode in modes)
     dfMax = max(df[mode].eventId.max() for mode in modes)
 
-    numInput = NumericInput(value=1, low=int(dfMin), high=int(dfMax),
+    eventDefault = 1
+    numInput = NumericInput(value=eventDefault, low=int(dfMin), high=int(dfMax),
                             title=f"Enter a number between {dfMin} and {dfMax}:")
 
     numInput_callb = CustomJS(args=dict(
@@ -261,7 +262,10 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
     """)
     numInput.js_on_change("value", numInput_callb)
 
-    slider = Slider(start=0, end=1, value=0.1, step=0.01, title="Min Value")
+    varNameHolder = ColumnDataSource(data=dict(value=["energies_sum"]))
+
+    enSumMax = max(df[mode][df[mode].eventId == str(eventDefault)].energies_sum.max() for mode in modes)
+    slider = Slider(start=0, end=enSumMax*0.8, value=0.1, step=0.01, title="Min threshold for energies_sum", width=800)
 
     menu = [('Energy Sum [GeV]', 'energies_sum'), ('Energy [GeV]', 'energies'),
             ('Fraction Sum', 'fracs_sum'), ('Fraction', 'fracs')]
@@ -273,11 +277,12 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
             viewSim=view["Sim"], viewReco=view["Reco"],
             threshSim=threshFilter["Sim"], threshReco=threshFilter["Reco"],
             slider=slider, select=numInput,
-            varName="energies_sum"  # default
+            varNameHolder=varNameHolder,
         ),
         code="""
         const minVal = slider.value;
         const eid = select.value.toString();
+        const v = varNameHolder.data['value'][0];
         
         const sim = srcSim.data;
         const rec = srcReco.data;
@@ -285,11 +290,11 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
         let maskSim = [];
         let maskRec = [];
         
-        for (let i = 0; i < sim[varName].length; i++) {
-        maskSim.push(sim[varName][i] >= minVal && sim["eventId"][i] === eid);
+        for (let i = 0; i < sim[v].length; i++) {
+        maskSim.push(sim[v][i] >= minVal && sim["eventId"][i] === eid);
         }
-        for (let i = 0; i < rec[varName].length; i++) {
-        maskRec.push(rec[varName][i] >= minVal && rec["eventId"][i] === eid);
+        for (let i = 0; i < rec[v].length; i++) {
+        maskRec.push(rec[v][i] >= minVal && rec["eventId"][i] === eid);
         }
         
         threshSim.booleans = maskSim;
@@ -300,7 +305,7 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
         """
     )
     slider.js_on_change("value", slider_calb)
-
+    
     dropdown_calb = CustomJS(
         args=dict(
             srcSim=src['Sim'], srcReco=src['Reco'],
@@ -311,7 +316,8 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
                        'energies': mapper_log['Reco'],'energies_sum': mapper_log['Reco']},
             colorBarSim=color_bar['Sim'], colorBarReco=color_bar['Reco'],
             slider=slider,
-            slider_callback=slider_calb
+            slider_callback=slider_calb,
+            varNameHolder=varNameHolder,
         ),
         code="""
         const varName = this.item;
@@ -327,18 +333,21 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
         patchReco.glyph.fill_color.field = varName;
         // Update slider range and value
         slider.start = 0.;
-        slider.end = Math.max(...srcSim.data[varName],...srcReco.data[varName]);
+        slider.end = Math.min(Math.max(...srcSim.data[varName]),Math.max(...srcReco.data[varName]));
         slider.value = slider.start;
-        slider.step = (slider.end - slider.start) / 100.;
+        slider.step = (slider.end - slider.start) / 500.;
+        slider.title = "Min threshold for " + varName;
         // Update the varName in the slider callback
-        slider_callback.args.varName = varName;
+        varNameHolder.data['value'][0] = varName;
+        // Update the sources
+        varNameHolder.change.emit();
         srcSim.change.emit();
         srcReco.change.emit();
         """
     )
     dropdown.js_on_event("menu_item_click", dropdown_calb)
-
-    lay = layout([[numInput, slider, dropdown],
+    
+    lay = layout([[numInput, dropdown, slider],
                   [p['Sim'][1], p['Reco'][1]],
                   [p['Sim'][0], p['Reco'][0]]])
     save(lay)
