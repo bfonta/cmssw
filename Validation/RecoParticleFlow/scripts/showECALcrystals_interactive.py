@@ -15,7 +15,7 @@ import pandas as pd
 from dataclasses import dataclass
 
 from bokeh.plotting import figure, output_file, save, ColumnDataSource
-from bokeh.models import (HoverTool, Rect, ColumnDataSource, LinearColorMapper, LogColorMapper,
+from bokeh.models import (HoverTool, Rect, ColumnDataSource, LinearColorMapper, LogColorMapper, Div,
                           ColorBar, NumericInput, Dropdown, CDSView, GroupFilter, BooleanFilter, CustomJS, Slider)
 from bokeh.palettes import Viridis256, Category10
 from bokeh.transform import linear_cmap, log_cmap
@@ -24,13 +24,15 @@ from bokeh.layouts import layout
 def createFigure(title):
     fig = figure(
         title=title,
+        x_range=(-1.69,1.69),
+        y_range=(-1.05*np.pi,1.05*np.pi),
         x_axis_label=r"$$\eta$$",
         y_axis_label=r"$$\phi$$",
         width=1100,
         height=700,
         tools="pan,wheel_zoom,box_zoom,undo,redo,reset,save",
         active_drag="box_zoom",
-        active_scroll=None
+        active_scroll=None,
     )
     fig.xgrid.grid_line_color = None
     fig.ygrid.grid_line_color = None
@@ -264,8 +266,8 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
 
     varNameHolder = ColumnDataSource(data=dict(value=["energies_sum"]))
 
-    enSumMax = max(df[mode][df[mode].eventId == str(eventDefault)].energies_sum.max() for mode in modes)
-    slider = Slider(start=0, end=enSumMax*0.5, value=0.1, step=0.01, title="Min threshold for energies_sum", width=800)
+    enSumMax = 2.
+    slider = Slider(start=0, end=enSumMax, value=0.1, step=0.01, title="Min threshold for energies_sum", width=800)
 
     menu = [('Energy Sum [GeV]', 'energies_sum'), ('Energy [GeV]', 'energies'),
             ('Fraction Sum', 'fracs_sum'), ('Fraction', 'fracs')]
@@ -314,7 +316,7 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
                        'energies': mapper_log['Sim'],'energies_sum': mapper_log['Sim']},
             mapperReco={'fracs': mapper_lin['Reco'],'fracs_sum': mapper_lin['Reco'],
                        'energies': mapper_log['Reco'],'energies_sum': mapper_log['Reco']},
-            maxVals={'fracs': 1.,'fracs_sum': 1., 'energies': 5., 'energies_sum': 5.},
+            maxVals={'fracs': 1.,'fracs_sum': 1., 'energies': 1.5, 'energies_sum': enSumMax},
             colorBarSim=color_bar['Sim'], colorBarReco=color_bar['Reco'],
             slider=slider,
             slider_callback=slider_calb,
@@ -348,7 +350,8 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
     )
     dropdown.js_on_event("menu_item_click", dropdown_calb)
     
-    lay = layout([[numInput, dropdown, slider],
+    lay = layout([[numInput, Div(text='', width=30, height=1), slider],
+                  [dropdown,],
                   [p['Sim'][1], p['Reco'][1]],
                   [p['Sim'][0], p['Reco'][0]]])
     save(lay)
