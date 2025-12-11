@@ -265,7 +265,7 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
     varNameHolder = ColumnDataSource(data=dict(value=["energies_sum"]))
 
     enSumMax = max(df[mode][df[mode].eventId == str(eventDefault)].energies_sum.max() for mode in modes)
-    slider = Slider(start=0, end=enSumMax*0.8, value=0.1, step=0.01, title="Min threshold for energies_sum", width=800)
+    slider = Slider(start=0, end=enSumMax*0.5, value=0.1, step=0.01, title="Min threshold for energies_sum", width=800)
 
     menu = [('Energy Sum [GeV]', 'energies_sum'), ('Energy [GeV]', 'energies'),
             ('Fraction Sum', 'fracs_sum'), ('Fraction', 'fracs')]
@@ -314,6 +314,7 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
                        'energies': mapper_log['Sim'],'energies_sum': mapper_log['Sim']},
             mapperReco={'fracs': mapper_lin['Reco'],'fracs_sum': mapper_lin['Reco'],
                        'energies': mapper_log['Reco'],'energies_sum': mapper_log['Reco']},
+            maxVals={'fracs': 1.,'fracs_sum': 1., 'energies': 5., 'energies_sum': 5.},
             colorBarSim=color_bar['Sim'], colorBarReco=color_bar['Reco'],
             slider=slider,
             slider_callback=slider_calb,
@@ -333,7 +334,7 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
         patchReco.glyph.fill_color.field = varName;
         // Update slider range and value
         slider.start = 0.;
-        slider.end = Math.min(Math.max(...srcSim.data[varName]),Math.max(...srcReco.data[varName]));
+        slider.end = maxVals[varName];
         slider.value = slider.start;
         slider.step = (slider.end - slider.start) / 500.;
         slider.title = "Min threshold for " + varName;
