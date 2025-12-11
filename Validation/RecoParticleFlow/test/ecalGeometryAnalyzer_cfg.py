@@ -7,7 +7,13 @@ options.register(
     'input', '',
     VarParsing.VarParsing.multiplicity.list,
     VarParsing.VarParsing.varType.string,
-    "Input file(s)"
+    "Input file (only one supported)"
+)
+options.register(
+    'output', 'data.root',
+    VarParsing.VarParsing.multiplicity.singleton,
+    VarParsing.VarParsing.varType.string,
+    "Output file."
 )
 options.parseArguments()
 
@@ -18,7 +24,7 @@ process.load('Configuration.Geometry.GeometryRecoDB_cff')
 
 process.TFileService = cms.Service(
     "TFileService", 
-    fileName = cms.string("data.root"),
+    fileName = cms.string(options.output),
     closeFileFast = cms.untracked.bool(True)
 )
 
@@ -41,6 +47,9 @@ process.GlobalTag.globaltag = '150X_mcRun4_realistic_v1'
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 1
+process.MessageLogger.cerr.threshold = 'INFO'
+process.MessageLogger.cerr.INFO.limit = -1
+process.MessageLogger.debugModules = ["*"]
 
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(options.maxEvents)

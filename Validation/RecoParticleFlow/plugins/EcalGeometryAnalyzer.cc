@@ -188,28 +188,24 @@ void EcalGeometryAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
     }
   }  // if (eventId == 1)
 
-  std::cout << "check1" << std::endl;
   edm::Handle<reco::PFRecHitCollection> recHits_;
   iEvent.getByToken(recHitToken_, recHits_);
   if (!recHits_.isValid()) {
     edm::LogInfo("EcalGeometryAnalyzer") << "Input recHit collection not found.";
     return;
   }
-  std::cout << "check2" << std::endl;
   edm::Handle<std::vector<PCaloHit>> simHits_;
   iEvent.getByToken(simHitToken_, simHits_);
   if (!simHits_.isValid()) {
     edm::LogInfo("EcalGeometryAnalyzer") << "Input simHit collection not found.";
     return;
   }
-  std::cout << "check3" << std::endl;
   edm::Handle<reco::PFClusterCollection> recClusters_;
   iEvent.getByToken(recClusterToken_, recClusters_);
   if (!recClusters_.isValid()) {
     edm::LogInfo("EcalGeometryAnalyzer") << "Input recCluster collection not found.";
     return;
   }
-  std::cout << "check4" << std::endl;
   edm::Handle<SimClusterCollection> simClusters_;
   iEvent.getByToken(simClusterToken_, simClusters_);
   if (!simClusters_.isValid()) {
