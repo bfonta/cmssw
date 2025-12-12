@@ -414,9 +414,12 @@ def showECAL(infile, outfile, props, outname='EventDisplay'):
 
     with uproot.open(infile) as file:
         dfGeom = file["ecalGeometryAnalyzer/Geometry"].arrays(varsGeom, library="pandas")
-        dfEvent = file["ecalGeometryAnalyzer/Event"].arrays(varsEventAll, entry_stop=props.nevents, library="awkward")
-    
-    plotGeom(dfGeom, output_path=os.path.join(outfile, "geom.html"))
+        if not props.geom:
+            dfEvent = file["ecalGeometryAnalyzer/Event"].arrays(varsEventAll, entry_stop=props.nevents, library="awkward")
+
+    if props.geom:
+        plotGeom(dfGeom, output_path=os.path.join(outfile, "geom.html"))
+        return
 
     dfHits, dfClusters, dfHitsInClusters = ({} for _ in range(3))
     for pfix in ("Reco", "Sim"):
@@ -447,6 +450,7 @@ def showECAL(infile, outfile, props, outname='EventDisplay'):
 @dataclass
 class InputArgs:
     nevents: int
+    geom: bool = False
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Show position of crystals.")
@@ -454,7 +458,9 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--outdir", help="Path to the output folder where the script outputs will be stored.")
     parser.add_argument("--outname", default='EventDisplay', help="Name of the output html file with the event display.")
     parser.add_argument("-n", "--nevents", help="Number of events to plot.", default=10, type=int)
+    geom_help_str = "Plot only the geometry. It highlights the position of the center and corners of each ECAL crystal."
+    parser.add_argument("-g", "--geom", help=geom_help_str, default=False, action='store_true')
 
     args = parser.parse_args()
-    props = InputArgs(nevents=args.nevents)
+    props = InputArgs(nevents=args.nevents, geom=args.geom)
     showECAL(args.file, args.outdir, props, args.outname)
