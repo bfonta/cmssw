@@ -454,12 +454,14 @@ def showECAL(infile, outfile, props, outname='EventDisplay'):
         dfClusters,
         output_path=os.path.join(outfile, args.outname + "_clusterHits.html"),
     )
-    plotEvent(
-        dfGeom,
-        dfHits, 
-        dfClusters,
-        output_path=os.path.join(outfile, args.outname + "_allHits.html"),
-    )
+
+    if props.allhits:
+        plotEvent(
+            dfGeom,
+            dfHits, 
+            dfClusters,
+            output_path=os.path.join(outfile, args.outname + "_allHits.html"),
+        )
 
     print("INFO: Done.")
 
@@ -468,6 +470,7 @@ class InputArgs:
     nevents: int
     geom: bool = False
     clusters: bool = False
+    allhits: bool = False
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Show position of crystals.")
@@ -478,7 +481,9 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--clusters", help="Add cluster information.", default=False, action='store_true')
     geom_help_str = "Plot only the geometry. It highlights the position of the center and corners of each ECAL crystal."
     parser.add_argument("-g", "--geom", help=geom_help_str, default=False, action='store_true')
+    all_hits_str = "On top of the clustered hits, add an identical visualization with all hits."
+    parser.add_argument("-a", "--allhits", help=all_hits_str, default=False, action='store_true')
 
     args = parser.parse_args()
-    props = InputArgs(nevents=args.nevents, geom=args.geom, clusters=args.clusters)
+    props = InputArgs(nevents=args.nevents, geom=args.geom, clusters=args.clusters, allhits=args.allhits)
     showECAL(args.file, args.outdir, props, args.outname)
