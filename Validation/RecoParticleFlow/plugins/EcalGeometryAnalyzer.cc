@@ -98,7 +98,7 @@ void EcalGeometryAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& desc
   edm::ParameterSetDescription desc;
   desc.add<edm::InputTag>("recHits", edm::InputTag("hltParticleFlowRecHitECALUnseeded"));
   desc.add<edm::InputTag>("simHits", edm::InputTag("g4SimHits", "EcalHitsEB"));
-  desc.add<edm::InputTag>("recClusters", edm::InputTag("hltParticleFlowClusterECAL"));
+  desc.add<edm::InputTag>("recClusters", edm::InputTag("hltParticleFlowClusterECALUnseeded"));
   desc.add<edm::InputTag>("simClusters", edm::InputTag("mix", "MergedCaloTruth"));    
   descriptions.add("ecalGeometryAnalyzer", desc);
 }

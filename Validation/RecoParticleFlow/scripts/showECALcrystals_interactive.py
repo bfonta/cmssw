@@ -118,21 +118,25 @@ def plotEvent(geom, hits, clusters, output_path):
 
     modes = ('Sim', 'Reco')
 
-    p, src, srcCluster, df, hover, view, mapper_log, mapper_lin, color_bar, threshFilter = ({} for _ in range(10))
+    p, src, srcCluster, df, hover, view, viewCluster, mapper_log, mapper_lin, color_bar, threshFilter = ({} for _ in range(11))
+    hit_renderer, cluster_renderer = ({} for _ in range(2))
     for mode in modes:
         df[mode] = pd.merge(hits[mode], geom, how="inner", left_on="detids", right_on="crystalDetId")
         df[mode] = df[mode][df[mode].eventId < 100]
         df[mode]["eventId"] = df[mode]["eventId"].astype(str)
-
-
-        clusters[mode]["eventId"] = clusters[mode]["eventId"].astype(str)
-        srcCluster[mode] = ColumnDataSource(clusters[mode])
 
         view[mode] = CDSView(filters=[
             GroupFilter(column_name="eventId", group="1"),
             BooleanFilter([True] * len(df[mode]))]
         )
         threshFilter[mode] = view[mode].filters[1]
+
+        clusters[mode]["eventId"] = clusters[mode]["eventId"].astype(str)
+        srcCluster[mode] = ColumnDataSource(clusters[mode])
+        
+        viewCluster[mode] = CDSView(filters=[
+            GroupFilter(column_name="eventId", group="1"),]
+        )
         
         # Create lists of lists for xs and ys
         df[mode]['xs'] = [
@@ -182,20 +186,6 @@ def plotEvent(geom, hits, clusters, output_path):
 
         src[mode] = ColumnDataSource(df[mode])
 
-        hover_string = ''
-        if clids_in_df:
-            hover_string += 'ClusterID: @clids, '
-        if fracs_in_df:
-            hover_string += "Frac: @fracs{0.000}, FracSum: @fracs_sum{0.000}, En: @energies, EnSum: @energies_sum"
-        else:
-            hover_string += "En: @energies, EnSum: @energies_sum"
-
-        # Add hover tool
-        hover[mode] = HoverTool( # first string is the text
-            tooltips=[ ("", hover_string), ],
-            mode="mouse",
-        )
-
         # Create figure
         p[mode] = [createFigure(title=mode + " Hits")]
         if clids_in_df:
@@ -220,31 +210,52 @@ def plotEvent(geom, hits, clusters, output_path):
         mapper_lin[mode] = LinearColorMapper(**mapper_kwargs)
         color_bar[mode] = ColorBar(color_mapper=mapper_log[mode], label_standoff=12)
 
-        p[mode][0].patches(
+        hit_renderer[mode] = p[mode][0].patches(
             xs="xs", ys="ys",
             source=src[mode],
             view=view[mode],
             fill_color=log_cmap('energies_sum', Viridis256, df[mode]['energies_sum'].min(), df[mode]['energies_sum'].max()),
-            line_color="black",
+            line_color="black"
         )
         p[mode][0].add_layout(color_bar[mode], "right")
-        
-        # Add clusters
-        # p[mode][0].scatter(
-        #     x='clusterEtas' + mode,
-        #     y='clusterPhis' + mode,
-        #     source=srcCluster[mode],
-        #     view=view[m3ode],
-        #     color="red",
-        #     marker="x",
-        #     size=10,
-        #     line_width=2,
-        #     legend_label="Clusters",
-        # )
-        
+
+        # Add hover tool
+        hover_string = ''
+        if clids_in_df:
+            hover_string += 'ClusterID: @clids, '
+        if fracs_in_df:
+            hover_string += "Frac: @fracs{0.000}, FracSum: @fracs_sum{0.000}, En: @energies, EnSum: @energies_sum"
+        else:
+            hover_string += "En: @energies, EnSum: @energies_sum"
+        hover[mode] = HoverTool( # first string is the text
+            renderers=[hit_renderer[mode]],
+            tooltips=[ ("", hover_string), ],
+            mode="mouse",
+        )
+
         for idx in range(len(p[mode])):
             p[mode][idx].add_tools(hover[mode])
 
+        # Add clusters to the energy/fraction plot
+        if props.clusters:
+            cluster_renderer[mode] = p[mode][0].scatter(
+                x='clusterEtas' + mode,
+                y='clusterPhis' + mode,
+                source=srcCluster[mode],
+                view=viewCluster[mode],
+                color="red",
+                marker="x",
+                size=20,
+                line_width=4,
+                legend_label="Clusters",
+            )
+            p[mode][0].legend.label_text_font_size = '16pt'                                      
+
+            cluster_hover_string = "Cluster Energy: @clusterEnergies" + mode
+            p[mode][0].add_tools(
+                HoverTool(renderers=[cluster_renderer[mode]],
+                          tooltips=[("", cluster_hover_string), ]))
+            
     p['Sim'][0].x_range, p['Sim'][0].y_range = p['Reco'][0].x_range, p['Reco'][0].y_range
     if clids_in_df:
         p['Sim'][1].x_range, p['Sim'][1].y_range = p['Reco'][0].x_range, p['Reco'][0].y_range
@@ -261,6 +272,7 @@ def plotEvent(geom, hits, clusters, output_path):
         srcSim=src["Sim"], srcReco=src["Reco"],
         srcClSim=srcCluster["Sim"], srcClReco=srcCluster["Reco"],
         viewSim=view["Sim"], viewReco=view["Reco"],
+        viewClSim=viewCluster["Sim"], viewClReco=viewCluster["Reco"],
         select=numInput
     ), code="""
     const eid = select.value.toString();
@@ -268,6 +280,10 @@ def plotEvent(geom, hits, clusters, output_path):
     viewReco.filters[0].group = eid;
     viewSim.change.emit();
     viewReco.change.emit();
+    viewClSim.filters[0].group = eid;
+    viewClReco.filters[0].group = eid;
+    viewClSim.change.emit();
+    viewClReco.change.emit();
     srcSim.change.emit();
     srcReco.change.emit();
     srcClSim.change.emit();
@@ -451,6 +467,7 @@ def showECAL(infile, outfile, props, outname='EventDisplay'):
 class InputArgs:
     nevents: int
     geom: bool = False
+    clusters: bool = False
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Show position of crystals.")
@@ -458,9 +475,10 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--outdir", help="Path to the output folder where the script outputs will be stored.")
     parser.add_argument("--outname", default='EventDisplay', help="Name of the output html file with the event display.")
     parser.add_argument("-n", "--nevents", help="Number of events to plot.", default=10, type=int)
+    parser.add_argument("-c", "--clusters", help="Add cluster information.", default=False, action='store_true')
     geom_help_str = "Plot only the geometry. It highlights the position of the center and corners of each ECAL crystal."
     parser.add_argument("-g", "--geom", help=geom_help_str, default=False, action='store_true')
 
     args = parser.parse_args()
-    props = InputArgs(nevents=args.nevents, geom=args.geom)
+    props = InputArgs(nevents=args.nevents, geom=args.geom, clusters=args.clusters)
     showECAL(args.file, args.outdir, props, args.outname)
