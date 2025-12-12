@@ -112,8 +112,7 @@ def shift_phi_corners(phi0, phi1, phi2, phi3):
                 corners[j] -= 2 * np.pi
     return tuple(corners) + (corners[0],)  # Close the patch
 
-def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
-              variables=("energy", "frac"), zlabel=""):
+def plotEvent(geom, hits, clusters, output_path):
     """Plot single event on top of the geometry, with interactive hover."""
     output_file(output_path)
 
@@ -121,7 +120,7 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
 
     p, src, srcCluster, df, hover, view, mapper_log, mapper_lin, color_bar, threshFilter = ({} for _ in range(10))
     for mode in modes:
-        df[mode] = pd.merge(hits_in_clusters[mode], geom, how="inner", left_on="detids", right_on="crystalDetId")
+        df[mode] = pd.merge(hits[mode], geom, how="inner", left_on="detids", right_on="crystalDetId")
         df[mode] = df[mode][df[mode].eventId < 100]
         df[mode]["eventId"] = df[mode]["eventId"].astype(str)
 
@@ -151,58 +150,69 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
             )
         ]
 
+        fracs_in_df = 'fracs' in df[mode].columns
+        clids_in_df = 'clids' in df[mode].columns
+        
         # Aggregate data for unique patches
-        patch_data = pd.DataFrame({
+        patch_dict = {
             'eventId': df[mode]['eventId'],
             'xs': df[mode]['xs'],
             'ys': df[mode]['ys'],
             'energies': df[mode]['energies'],
-            'fracs': df[mode]['fracs'],
-        })
-        aggr = patch_data.groupby(['eventId', 'xs', 'ys'], as_index=False).agg({
-            'energies': 'sum',
-            'fracs': 'sum',
-        })
+        }
+        aggr_dict = {'energies': 'sum'}
+        if fracs_in_df:
+            patch_dict.update({'fracs': df[mode]['fracs']})
+            aggr_dict.update({'fracs': 'sum'})
+        patch_data = pd.DataFrame(patch_dict)        
+        aggr = patch_data.groupby(['eventId', 'xs', 'ys'], as_index=False).agg(aggr_dict)
 
         # Add summed variables to the original DataFrame
         energy_sum_map = aggr.set_index(['eventId', 'xs', 'ys'])['energies'].to_dict()
-        frac_sum_map = aggr.set_index(['eventId', 'xs', 'ys'])['fracs'].to_dict()
         df[mode]['energies_sum'] = df[mode].apply(
             lambda row: energy_sum_map.get((row['eventId'], row['xs'], row['ys']), None),
             axis=1
         )
-        df[mode]['fracs_sum'] = df[mode].apply(
-            lambda row: frac_sum_map.get((row['eventId'], row['xs'], row['ys']), None),
-            axis=1
-        )
+        if fracs_in_df:
+            frac_sum_map = aggr.set_index(['eventId', 'xs', 'ys'])['fracs'].to_dict()
+            df[mode]['fracs_sum'] = df[mode].apply(
+                lambda row: frac_sum_map.get((row['eventId'], row['xs'], row['ys']), None),
+                axis=1
+            )
 
         src[mode] = ColumnDataSource(df[mode])
 
+        hover_string = ''
+        if clids_in_df:
+            hover_string += 'ClusterID: @clids, '
+        if fracs_in_df:
+            hover_string += "Frac: @fracs{0.000}, FracSum: @fracs_sum{0.000}, En: @energies, EnSum: @energies_sum"
+        else:
+            hover_string += "En: @energies, EnSum: @energies_sum"
+
         # Add hover tool
-        hover[mode] = HoverTool(
-            tooltips=[ # first string is the text
-                ("", """ 
-                ClusterID: @clids, Frac: @fracs{0.000}, FracSum: @fracs_sum{0.000}, En: @energies, EnSum: @energies_sum
-                """),
-            ],
+        hover[mode] = HoverTool( # first string is the text
+            tooltips=[ ("", hover_string), ],
             mode="mouse",
         )
 
         # Create figure
-        p[mode] = [createFigure(title=mode + " Cluster IDs"),
-                   createFigure(title=mode + " Hits")]
-    
-        # categorical figures
-        colors = [Category10[10][i % 10] for i in df[mode].clids]
-        src[mode].add(colors, "colors")
-        p[mode][0].patches(
-            xs="xs", ys="ys",
-            source=src[mode],
-            view=view[mode],
-            fill_color="colors",
-            line_color="black",
-            fill_alpha=0.5,
-        )
+        p[mode] = [createFigure(title=mode + " Hits")]
+        if clids_in_df:
+            p[mode].append(createFigure(title=mode + " Cluster IDs"))
+
+        if clids_in_df:
+            # categorical figures
+            colors = [Category10[10][i % 10] for i in df[mode].clids]
+            src[mode].add(colors, "colors")
+            p[mode][1].patches(
+                xs="xs", ys="ys",
+                source=src[mode],
+                view=view[mode],
+                fill_color="colors",
+                line_color="black",
+                fill_alpha=0.5,
+            )
         
         # continuous figures
         mapper_kwargs = dict(palette=Viridis256, low=df[mode]['energies_sum'].min(), high=df[mode]['energies_sum'].max())
@@ -210,21 +220,21 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
         mapper_lin[mode] = LinearColorMapper(**mapper_kwargs)
         color_bar[mode] = ColorBar(color_mapper=mapper_log[mode], label_standoff=12)
 
-        p[mode][1].patches(
+        p[mode][0].patches(
             xs="xs", ys="ys",
             source=src[mode],
             view=view[mode],
             fill_color=log_cmap('energies_sum', Viridis256, df[mode]['energies_sum'].min(), df[mode]['energies_sum'].max()),
             line_color="black",
         )
-        p[mode][1].add_layout(color_bar[mode], "right")
+        p[mode][0].add_layout(color_bar[mode], "right")
         
         # Add clusters
-        # p[mode][1].scatter(
+        # p[mode][0].scatter(
         #     x='clusterEtas' + mode,
         #     y='clusterPhis' + mode,
         #     source=srcCluster[mode],
-        #     view=view[mode],
+        #     view=view[m3ode],
         #     color="red",
         #     marker="x",
         #     size=10,
@@ -232,12 +242,13 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
         #     legend_label="Clusters",
         # )
         
-        for idx in range(2):
+        for idx in range(len(p[mode])):
             p[mode][idx].add_tools(hover[mode])
 
     p['Sim'][0].x_range, p['Sim'][0].y_range = p['Reco'][0].x_range, p['Reco'][0].y_range
-    p['Sim'][1].x_range, p['Sim'][1].y_range = p['Reco'][0].x_range, p['Reco'][0].y_range
-    p['Reco'][1].x_range, p['Reco'][1].y_range = p['Reco'][0].x_range, p['Reco'][0].y_range
+    if clids_in_df:
+        p['Sim'][1].x_range, p['Sim'][1].y_range = p['Reco'][0].x_range, p['Reco'][0].y_range
+        p['Reco'][1].x_range, p['Reco'][1].y_range = p['Reco'][0].x_range, p['Reco'][0].y_range
 
     dfMin = min(df[mode].eventId.min() for mode in modes)
     dfMax = max(df[mode].eventId.max() for mode in modes)
@@ -269,8 +280,11 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
     enSumMax = 2.
     slider = Slider(start=0, end=enSumMax, value=0.1, step=0.01, title="Min threshold for energies_sum", width=800)
 
-    menu = [('Energy Sum [GeV]', 'energies_sum'), ('Energy [GeV]', 'energies'),
-            ('Fraction Sum', 'fracs_sum'), ('Fraction', 'fracs')]
+    menu_tuple = (('Energy Sum [GeV]', 'energies_sum'), ('Energy [GeV]', 'energies'))
+    if fracs_in_df:
+        menu_tuple += ('Fraction Sum', 'fracs_sum')
+        menu_tuple += ('Fraction', 'fracs')         
+    menu = [*menu_tuple]
     dropdown = Dropdown(label="Z axis", button_type="warning", menu=menu, width=150)
     
     slider_calb = CustomJS(
@@ -307,16 +321,21 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
         """
     )
     slider.js_on_change("value", slider_calb)
-    
+
+    mapperSim = {'energies': mapper_log['Sim'],'energies_sum': mapper_log['Sim']}
+    mapperReco = {'energies': mapper_log['Reco'],'energies_sum': mapper_log['Reco']}
+    maxVals = {'energies': 1.5, 'energies_sum': enSumMax}
+    if fracs_in_df:
+        mapperSim.update({'fracs': mapper_lin['Sim'],'fracs_sum': mapper_lin['Sim']})
+        mapperReco.update({'fracs': mapper_lin['Reco'],'fracs_sum': mapper_lin['Reco']})
+        maxVals.update({'fracs': 1.,'fracs_sum': 1.})
+        
     dropdown_calb = CustomJS(
         args=dict(
             srcSim=src['Sim'], srcReco=src['Reco'],
-            patchSim=p['Sim'][1].renderers[0], patchReco=p['Reco'][1].renderers[0],
-            mapperSim={'fracs': mapper_lin['Sim'],'fracs_sum': mapper_lin['Sim'],
-                       'energies': mapper_log['Sim'],'energies_sum': mapper_log['Sim']},
-            mapperReco={'fracs': mapper_lin['Reco'],'fracs_sum': mapper_lin['Reco'],
-                       'energies': mapper_log['Reco'],'energies_sum': mapper_log['Reco']},
-            maxVals={'fracs': 1.,'fracs_sum': 1., 'energies': 1.5, 'energies_sum': enSumMax},
+            patchSim=p['Sim'][0].renderers[0], patchReco=p['Reco'][0].renderers[0],
+            mapperSim=mapperSim, mapperReco=mapperReco,
+            maxVals=maxVals,
             colorBarSim=color_bar['Sim'], colorBarReco=color_bar['Reco'],
             slider=slider,
             slider_callback=slider_calb,
@@ -349,12 +368,15 @@ def plotEvent(geom, hits, clusters, hits_in_clusters, output_path,
         """
     )
     dropdown.js_on_event("menu_item_click", dropdown_calb)
+
+    lay = [[numInput, Div(text='', width=30, height=1), slider],
+           [dropdown,],
+           [p['Sim'][0], p['Reco'][0]]]
+
+    if clids_in_df:
+        lay.append([p['Sim'][1], p['Reco'][1]])
     
-    lay = layout([[numInput, Div(text='', width=30, height=1), slider],
-                  [dropdown,],
-                  [p['Sim'][1], p['Reco'][1]],
-                  [p['Sim'][0], p['Reco'][0]]])
-    save(lay)
+    save(layout(lay))
     print(f"INFO: Event plot saved to {output_path}")
 
 def showECAL(infile, outfile, props, outname='EventDisplay'):
@@ -409,11 +431,15 @@ def showECAL(infile, outfile, props, outname='EventDisplay'):
 
     plotEvent(
         dfGeom,
-        dfHits,
-        dfClusters,
         dfHitsInClusters,
-        output_path=os.path.join(outfile, args.outname + ".html"),
-        variables=("energy", "frac"),
+        dfClusters,
+        output_path=os.path.join(outfile, args.outname + "_clusterHits.html"),
+    )
+    plotEvent(
+        dfGeom,
+        dfHits, 
+        dfClusters,
+        output_path=os.path.join(outfile, args.outname + "_allHits.html"),
     )
 
     print("INFO: Done.")

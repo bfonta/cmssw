@@ -71,8 +71,8 @@ private:
   using UMap = std::unordered_map<std::string, T>;
 								  
   UMap<unsigned> nHits_;
-  UMap<std::vector<float>> energies_;
   UMap<std::vector<unsigned>> detids_;
+  UMap<std::vector<float>> energies_;
 
   UMap<std::vector<float>> clusterEnergies_;
   UMap<std::vector<float>> clusterEtas_;
@@ -120,8 +120,8 @@ void EcalGeometryAnalyzer::beginJob() {
 
   for (auto& prefix : prefixes_) {
 	eventTree_->Branch(("nHits" + prefix).c_str(), &nHits_[prefix]);
-	eventTree_->Branch(("energies" + prefix).c_str(), &energies_[prefix]);
 	eventTree_->Branch(("detids" + prefix).c_str(), &detids_[prefix]);
+	eventTree_->Branch(("energies" + prefix).c_str(), &energies_[prefix]);
 
 	eventTree_->Branch(("clusterEnergies" + prefix).c_str(), &clusterEnergies_[prefix]);
 	eventTree_->Branch(("clusterEtas" + prefix).c_str(), &clusterEtas_[prefix]);
@@ -226,6 +226,8 @@ void EcalGeometryAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
       continue;
     detids_["Reco"].push_back(rechit.detId());
     energies_["Reco"].push_back(rechit.energy());
+	// if (rechit.energy() > 0.1)
+	//   std::cout << "reco en: " << rechit.energy() << std::endl;
   }
 
   nHits_["Sim"] = simHits.size();
@@ -235,6 +237,8 @@ void EcalGeometryAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
       continue;
     detids_["Sim"].push_back(simhit.id());
     energies_["Sim"].push_back(simhit.energy());
+	// if (simhit.energy() > 0.1)
+	//   std::cout << "sim en: " << simhit.energy() << std::endl;
   }
 
   // reco clusters
@@ -263,8 +267,6 @@ void EcalGeometryAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
   // sim clusters
   clusterCounter = 0;
   for (auto& cl : simClusters) {
-	clusterCounter++;
-	
 	// properties of the clusters
 	clusterEnergies_["Sim"].push_back(cl.energy());
 	clusterEtas_["Sim"].push_back(cl.eta());
@@ -291,3 +293,12 @@ void EcalGeometryAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 }
 
 DEFINE_FWK_MODULE(EcalGeometryAnalyzer);
+
+	  // auto rechitIt =
+	  // 	std::find_if(recHits.begin(), recHits.end(), [clhitId](const reco::PFRecHit& rh) { return rh.detId() == clhitId; });
+	  // if (rechitIt == recHits.end()) {
+	  // 	std::cout << "No rechit has the same DetId as this simhit." << std::endl;
+	  // 	continue;
+	  // } else {
+	  // 	std::cout << "sim en: " << itE->second << ", rec en: " << rechitIt->energy() << std::endl;
+	  // }

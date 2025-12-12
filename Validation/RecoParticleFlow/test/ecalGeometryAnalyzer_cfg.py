@@ -64,7 +64,7 @@ process.ecalGeometryAnalyzer = cms.EDAnalyzer(
     'EcalGeometryAnalyzer',
     recHits = cms.InputTag("hltParticleFlowRecHitECALUnseeded"),
     simHits = cms.InputTag("g4SimHits", "EcalHitsEB"),
-    recClusters = cms.InputTag("hltParticleFlowClusterECAL"),
+    recClusters = cms.InputTag("hltParticleFlowClusterECALUnseeded"),
     simClusters = cms.InputTag("mix", "MergedCaloTruth")
 )
 
