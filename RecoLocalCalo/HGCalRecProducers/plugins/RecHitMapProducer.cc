@@ -36,7 +36,8 @@ DEFINE_FWK_MODULE(RecHitMapProducer);
 
 using DetIdRecHitMap = std::unordered_map<DetId, const unsigned int>;
 
-RecHitMapProducer::RecHitMapProducer(const edm::ParameterSet& ps) : doHgcalHits_(ps.getParameter<bool>("doHgcalHits")), doPFHits_(ps.getParameter<bool>("doPFHits")) {
+RecHitMapProducer::RecHitMapProducer(const edm::ParameterSet& ps)
+    : hgcalOnly_(ps.getParameter<bool>("hgcalOnly")), barrelOnly_(ps.getParameter<bool>("barrelOnly")) {
   std::vector<edm::InputTag> tags = ps.getParameter<std::vector<edm::InputTag>>("hits");
   for (auto& tag : tags) {
     if (tag.label().find("HGCalRecHit") != std::string::npos) {

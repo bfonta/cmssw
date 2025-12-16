@@ -211,13 +211,23 @@ PFTesterT<RecoClusterCollection>::PFTesterT(const edm::ParameterSet& iConfig)
 }
 
 template <typename RecoClusterCollection>
-void PFTesterT<RecoClusterCollection>::bookHistograms(DQMStore::IBooker& ibook, edm::Run const&, edm::EventSetup const&) {
-  std::string matching = doMatchByScore_ ? "MatchByScore" : "MatchByShEnF";
-  ibook.setCurrentFolder(outFolder_ + "/" + matching + "/CaloParticles");
-  h_CPToSCEnergyFraction_ =
-      ibook.book1D("CPToSCEnergyFraction", "CPToSCEnergyFraction;CaloParticle to SimCluster energy fraction", 100, 0, 2);
-  h_CPToSHEnergyFraction_ =
-      ibook.book1D("CPToSHEnergyFraction", "CPToSHEnergyFraction;CaloParticle to SimHits energy fraction", 100, 0, 2);
+void PFTesterT<RecoClusterCollection>::bookHistograms(DQMStore::IBooker& ibook,
+                                                      edm::Run const&,
+                                                      edm::EventSetup const&) {
+  ibook.setCurrentFolder(outFolder_ + "/CaloParticles_EnFracCut" + doubleToString(enFracCut_) + "_PtCut" +
+                         doubleToString(ptCut_));
+  h_CaloParticleToSimClusterEnergyFraction_ =
+      ibook.book1D("CaloParticleToSimClusterEnergyFraction",
+                   "CaloParticleToSimClusterEnergyFraction;CaloParticle to SimCluster energy fraction",
+                   100,
+                   0,
+                   2);
+  h_CaloParticleToSimHitsEnergyFraction_ =
+      ibook.book1D("CaloParticleToSimHitsEnergyFraction",
+                   "CaloParticleToSimHitsEnergyFraction;CaloParticle to SimHits energy fraction",
+                   100,
+                   0,
+                   2);
   h_CP_recoToSimScore_ =
       ibook.book1D("CP_recoToSimScore", "CPrecoToSimScore;CaloParticle Reco #rightarrow Sim score", 51, 0, 1.02);
   h_CP_simToRecoScore_ =
@@ -237,6 +247,7 @@ void PFTesterT<RecoClusterCollection>::bookHistograms(DQMStore::IBooker& ibook, 
                                             0,
                                             1.02);
 
+  std::string matching = doMatchByScore_ ? "MatchByScore" : "MatchByShEnF";
   std::string pfValidFolder = outFolder_ + "/" + matching + "/PFClusterValidation";
   ibook.setCurrentFolder(pfValidFolder);
   h_nSimClusters_ = ibook.book1D("nSimClusters", "Number of SimClusters;Number of SimClusters per event", 100, 0, 100);
@@ -494,7 +505,6 @@ void PFTesterT<RecoClusterCollection>::bookHistograms(DQMStore::IBooker& ibook, 
 
 template <typename RecoClusterCollection>
 void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
-
   // --------------------------------------------------------------------
   // ---------------- PF Clusters and associators -----------------------
   // --------------------------------------------------------------------
@@ -683,7 +693,7 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
     // filter all sim clusters produced by a sim track which crossed the
     // tracker/calorimeter boundary outside the barrel
     auto const scTrack = simClusters[simId].g4Tracks()[0];
-    const math::XYZTLorentzVectorF pos = scTrack.getPositionAtBoundary();
+    const math::XYZTLorentzVectorF& pos = scTrack.getPositionAtBoundary();
     auto const simTrackEtaAtBoundary = pos.Eta();
     if (abs(simTrackEtaAtBoundary) > etaCut_)  // simTrack does not cross the barrel
       continue;
@@ -980,7 +990,7 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
     // filter all sim clusters produced by a sim track which crossed the
     // tracker/calorimeter boundary outside the barrel
     auto const scTrack = simClusters[simId].g4Tracks()[0];
-    const math::XYZTLorentzVectorF pos = scTrack.getPositionAtBoundary();
+    const math::XYZTLorentzVectorF& pos = scTrack.getPositionAtBoundary();
     auto const simTrackEtaAtBoundary = pos.Eta();
     if (abs(simTrackEtaAtBoundary) > etaCut_)  // simTrack does not cross the barrel
       continue;
@@ -1175,7 +1185,7 @@ std::string PFTesterT<RecoClusterCollection>::doubleToString(double x) const {
   result << std::setprecision(2) << x;
 
   std::string xnew = result.str();
-  std::size_t pos = xnew.find(".");
+  std::size_t pos = xnew.find('.');
   if (pos != std::string::npos)
     xnew.replace(pos, 1, "p");
   else  //if the double was provided without decimal places

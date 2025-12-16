@@ -298,8 +298,8 @@ def plotEvent(geom, hits, clusters, output_path):
 
     menu_tuple = (('Energy Sum [GeV]', 'energies_sum'), ('Energy [GeV]', 'energies'))
     if fracs_in_df:
-        menu_tuple += ('Fraction Sum', 'fracs_sum')
-        menu_tuple += ('Fraction', 'fracs')         
+        menu_tuple += (('Fraction Sum', 'fracs_sum'),)
+        menu_tuple += (('Fraction', 'fracs'),)
     menu = [*menu_tuple]
     dropdown = Dropdown(label="Z axis", button_type="warning", menu=menu, width=150)
     

@@ -7,6 +7,8 @@
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
+#include "SimDataFormats/CaloAnalysis/interface/CaloParticle.h"
+#include "SimDataFormats/CaloAnalysis/interface/CaloParticleFwd.h"
 #include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
 #include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
 #include "Geometry/Records/interface/CaloGeometryRecord.h"
@@ -45,10 +47,14 @@ private:
   double inBarrel(const DetId& id);
 
   edm::ESGetToken<CaloGeometry, CaloGeometryRecord> caloGeomToken_;
+  edm::EDGetTokenT<CaloParticleCollection> caloParticleToken_;
   edm::EDGetTokenT<reco::PFRecHitCollection> recHitToken_;
   edm::EDGetTokenT<std::vector<PCaloHit>> simHitToken_;
   edm::EDGetTokenT<reco::PFClusterCollection> recClusterToken_;
   edm::EDGetTokenT<SimClusterCollection> simClusterToken_;
+
+  double enFracCut_;
+  double ptCut_;
 
   TTree *geomTree_, *eventTree_;
 
@@ -85,21 +91,28 @@ private:
 
 EcalGeometryAnalyzer::EcalGeometryAnalyzer(const edm::ParameterSet& iConfig)
   : caloGeomToken_(esConsumes<CaloGeometry, CaloGeometryRecord>()),
+	caloParticleToken_(consumes<CaloParticleCollection>(iConfig.getParameter<edm::InputTag>("caloParticles"))),
 	recHitToken_(consumes<reco::PFRecHitCollection>(iConfig.getParameter<edm::InputTag>("recHits"))),
 	simHitToken_(consumes<std::vector<PCaloHit>>(iConfig.getParameter<edm::InputTag>("simHits"))),
 	recClusterToken_(consumes<reco::PFClusterCollection>(iConfig.getParameter<edm::InputTag>("recClusters"))),
-	simClusterToken_(consumes<SimClusterCollection>(iConfig.getParameter<edm::InputTag>("simClusters"))) {
+	simClusterToken_(consumes<SimClusterCollection>(iConfig.getParameter<edm::InputTag>("simClusters"))),
+	enFracCut_(iConfig.getUntrackedParameter<double>("enFracCut")),
+	ptCut_(iConfig.getUntrackedParameter<double>("ptCut"))
+{
   edm::Service<TFileService> fs;
   geomTree_ = fs->make<TTree>("Geometry", "Geometry data");
   eventTree_ = fs->make<TTree>("Event", "Event data");
 }
-// hltParticleFlowClusterECALUnseeded
+
 void EcalGeometryAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
+  desc.add<edm::InputTag>("caloParticles", edm::InputTag("mix", "MergedCaloTruth"));
   desc.add<edm::InputTag>("recHits", edm::InputTag("hltParticleFlowRecHitECALUnseeded"));
   desc.add<edm::InputTag>("simHits", edm::InputTag("g4SimHits", "EcalHitsEB"));
   desc.add<edm::InputTag>("recClusters", edm::InputTag("hltParticleFlowClusterECALUnseeded"));
-  desc.add<edm::InputTag>("simClusters", edm::InputTag("mix", "MergedCaloTruth"));    
+  desc.add<edm::InputTag>("simClusters", edm::InputTag("mix", "MergedCaloTruth"));
+  desc.addUntracked<double>("enFracCut", 0.);
+  desc.addUntracked<double>("ptCut", 0.);
   descriptions.add("ecalGeometryAnalyzer", desc);
 }
 
@@ -144,9 +157,6 @@ void EcalGeometryAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
   const auto& barrelGeom = caloGeom.getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
   const std::vector<DetId> detids = barrelGeom->getValidDetIds();
 
-  unsigned eventId = iEvent.id().event();
-  eventId_ = eventId;
-
   // Reset vector variables
   for (auto& prefix : prefixes_) {
 	detids_[prefix].clear();
@@ -160,7 +170,10 @@ void EcalGeometryAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	clusterHitDetids_[prefix].clear();
 	clusterHitClids_[prefix].clear();
   }
-  
+
+  unsigned eventId = iEvent.id().event();
+  eventId_ = eventId;
+
   // Geometry fill
   if (eventId == 1) {
     for (auto& did : detids) {
@@ -212,13 +225,54 @@ void EcalGeometryAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
     edm::LogInfo("EcalGeometryAnalyzer") << "Input simCluster collection not found.";
     return;
   }
+  edm::Handle<CaloParticleCollection> caloParticles_;
+  iEvent.getByToken(caloParticleToken_, caloParticles_);
+  if (!caloParticles_.isValid()) {
+    edm::LogPrint("PFTester") << "Input CaloParticle collection not found.";
+	return;
+  }
 
+  auto caloParticles = *caloParticles_; 
   auto recHits = *recHits_;
   auto simHits = *simHits_;
   auto recClusters = *recClusters_;
   auto simClusters = *simClusters_;
 
-  // Event fill
+  edm::Handle<ticl::SimToRecoCollectionWithSimClustersT<RecoClusterCollection>> SimToRecoAssociatorCollection;
+  iEvent.getByToken(SimToRecoAssociatorToken_, SimToRecoAssociatorCollection);
+  if (!SimToRecoAssociatorCollection.isValid()) {
+    edm::LogPrint("PFTester") << "Input ClusterSimClusterAssociator SimToReco collection not found.";
+    return;
+  }
+  auto simToRecoAssoc = *SimToRecoAssociatorCollection;
+
+  edm::Handle<ticl::RecoToSimCollectionWithSimClustersT<RecoClusterCollection>> RecoToSimAssociatorCollection;
+  iEvent.getByToken(RecoToSimAssociatorToken_, RecoToSimAssociatorCollection);
+  if (!RecoToSimAssociatorCollection.isValid()) {
+    edm::LogPrint("PFTester") << "Input ClusterSimClusterAssociator RecoToSim collection not found.";
+    return;
+  }
+  auto recoToSimAssoc = *RecoToSimAssociatorCollection;
+
+  
+  // Build map linking each sim cluster to the energy of their mother calo particle
+  std::unordered_map<uint, double> simClusterToCPEnergyMap;
+  for (unsigned int cpId = 0; cpId < caloParticles.size(); ++cpId) {
+    // Fill map: for each simCluster, the energy of the caloParticle computed as the sum of all simClusters arising from it
+    double energySumSimHits = 0;
+    for (const auto& scRef : caloParticles[cpId].simClusters()) {
+      auto const& sc = *(scRef);
+      // Compute energy of caloParticle as sum of all hits from all simClusters
+      for (auto hit_energy : sc.hits_and_energies()) {
+		energySumSimHits += hit_energy.second;
+      }
+    }
+    for (const auto& scRef : caloParticles[cpId].simClusters()) {
+      simClusterToCPEnergyMap[scRef.key()] = energySumSimHits;
+    }
+  }
+	
+  // Event fill before any cuts
   nHits_["Reco"] = recHits.size();
   for (auto& rechit : recHits) {
     DetId id(rechit.detId());
@@ -226,8 +280,6 @@ void EcalGeometryAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
       continue;
     detids_["Reco"].push_back(rechit.detId());
     energies_["Reco"].push_back(rechit.energy());
-	// if (rechit.energy() > 0.1)
-	//   std::cout << "reco en: " << rechit.energy() << std::endl;
   }
 
   nHits_["Sim"] = simHits.size();
@@ -237,44 +289,76 @@ void EcalGeometryAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
       continue;
     detids_["Sim"].push_back(simhit.id());
     energies_["Sim"].push_back(simhit.energy());
-	// if (simhit.energy() > 0.1)
-	//   std::cout << "sim en: " << simhit.energy() << std::endl;
   }
 
   // reco clusters
-  unsigned clusterCounter = 0;
-  for (auto& cl : recClusters) {
-	clusterCounter++;
+  unsigned recClusterCounter = 0;
+  for (auto& rcl : recClusters) {
+	recClusterCounter++;
 
 	// properties of the clusters
-	clusterEnergies_["Reco"].push_back(cl.energy());
-	clusterEtas_["Reco"].push_back(cl.eta());
-	clusterPhis_["Reco"].push_back(cl.phi());
+	clusterEnergies_["Reco"].push_back(rcl.energy());
+	clusterEtas_["Reco"].push_back(rcl.eta());
+	clusterPhis_["Reco"].push_back(rcl.phi());
 
-	for (auto const& rechit : cl.recHitFractions()) {
+	for (auto const& rechit : rcl.recHitFractions()) {
 	  const auto& ref = rechit.recHitRef();
 	  DetId clhitId(ref->detId());
 	  if (!inBarrel(clhitId))
 		continue;
 
 	  clusterHitDetids_["Reco"].push_back(clhitId);
-	  clusterHitClids_["Reco"].push_back(clusterCounter);
+	  clusterHitClids_["Reco"].push_back(recClusterCounter);
 	  clusterHitEnergies_["Reco"].push_back(ref->energy());
 	  clusterHitFractions_["Reco"].push_back(rechit.fraction());
 	}
   }
 
   // sim clusters
-  clusterCounter = 0;
-  for (auto& cl : simClusters) {
+  std::cout << "event " << eventId << std::endl;
+  unsigned simClusterCounter = 0;
+  for (unsigned int simId = 0; simId < simClusters.size(); ++simId) {
+	auto& scl = simClusters[simId];
+	
+	double energySumSimHits = 0;
+    for (auto hit_energy : scl.hits_and_energies()) {
+      energySumSimHits += hit_energy.second;
+    }
+	
+	// apply cut on energy fraction (sim cluster energy wrt all sim clusters from same calo particle)
+	double SimClusterToCPEnergyFraction = energySumSimHits / simClusterToCPEnergyMap[simId];       
+	if (SimClusterToCPEnergyFraction < enFracCut_)               
+	  continue;
+	// apply cut on pt of the sim track
+	if (simClusters[simId].pt() < ptCut_)       
+	  continue;
+
+	// filter all sim clusters produced by a sim track which crossed the
+	// tracker/calorimeter boundary outside the barrel
+	auto const scTrack = simClusters[simId].g4Tracks()[0];
+	const math::XYZTLorentzVectorF pos = scTrack.getPositionAtBoundary();                                               
+	auto const simTrackEtaAtBoundary = pos.Eta();
+	if (abs(simTrackEtaAtBoundary) > 1.48)  // simTrack does not cross the barrel
+	  continue;
+
+	const edm::Ref<SimClusterCollection> simClusterRef(simClusters_, simId);
+    const auto& simToRecoIt = simToRecoAssoc.find(simClusterRef);
+    if (simToRecoIt == simToRecoAssoc.end())
+      continue;
+    const auto& simToRecoMatched = simToRecoIt->val;
+    if (simToRecoMatched.empty())
+      continue;
+
+	std::cout << "passed " << simId << " / " << simClusters.size() << std::endl;
+	
 	// properties of the clusters
-	clusterEnergies_["Sim"].push_back(cl.energy());
-	clusterEtas_["Sim"].push_back(cl.eta());
-	clusterPhis_["Sim"].push_back(cl.phi());
+	clusterEnergies_["Sim"].push_back(scl.energy());
+	clusterEtas_["Sim"].push_back(scl.eta());
+	clusterPhis_["Sim"].push_back(scl.phi());
 	
 	// properties of the hits in each cluster
-	const auto& hits_fractions = cl.hits_and_fractions();
-	const auto& hits_energies = cl.hits_and_energies();
+	const auto& hits_fractions = scl.hits_and_fractions();
+	const auto& hits_energies = scl.hits_and_energies();
 	
 	auto itF = hits_fractions.begin();
 	auto itE = hits_energies.begin();
@@ -283,13 +367,14 @@ void EcalGeometryAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	  if (!inBarrel(clhitId))
 		continue;
 	  clusterHitDetids_["Sim"].push_back(clhitId);
-	  clusterHitClids_["Sim"].push_back(clusterCounter);
+	  clusterHitClids_["Sim"].push_back(simClusterCounter);
 	  clusterHitEnergies_["Sim"].push_back(itE->second);
 	  clusterHitFractions_["Sim"].push_back(itF->second);
 	}
   }
   
   eventTree_->Fill();
+  std::cout << std::endl;
 }
 
 DEFINE_FWK_MODULE(EcalGeometryAnalyzer);

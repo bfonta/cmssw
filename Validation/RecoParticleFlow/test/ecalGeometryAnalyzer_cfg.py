@@ -47,9 +47,9 @@ process.GlobalTag.globaltag = '150X_mcRun4_realistic_v1'
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 1
-process.MessageLogger.cerr.threshold = 'INFO'
-process.MessageLogger.cerr.INFO.limit = -1
-process.MessageLogger.debugModules = ["*"]
+# process.MessageLogger.cerr.threshold = 'INFO'
+# process.MessageLogger.cerr.INFO.limit = -1
+# process.MessageLogger.debugModules = ["*"]
 
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(options.maxEvents)
@@ -62,10 +62,13 @@ process.source = cms.Source("PoolSource",
 
 process.ecalGeometryAnalyzer = cms.EDAnalyzer(
     'EcalGeometryAnalyzer',
+    caloParticles = cms.InputTag("mix", "MergedCaloTruth"),
     recHits = cms.InputTag("hltParticleFlowRecHitECALUnseeded"),
     simHits = cms.InputTag("g4SimHits", "EcalHitsEB"),
     recClusters = cms.InputTag("hltParticleFlowClusterECALUnseeded"),
-    simClusters = cms.InputTag("mix", "MergedCaloTruth")
+    simClusters = cms.InputTag("mix", "MergedCaloTruth"),
+    enFracCut = cms.untracked.double(0.01),
+    ptCut = cms.untracked.double(0.1),
 )
 
 process.p = cms.Path(process.ecalGeometryAnalyzer)
