@@ -100,7 +100,8 @@ BarrelValidator::BarrelValidator(const edm::ParameterSet& pset)
         consumes<ticl::SimToRecoCollectionWithSimClustersT<reco::CaloClusterCollection>>(itag));
   }
 
-  barrelHitMap_ = consumes<std::unordered_map<DetId, const unsigned int>>(rechitmapTag_);
+  barrelHitMap_ =
+      consumes<std::unordered_map<DetId, const unsigned int>>(edm::InputTag("recHitMapProducer", "pfRecHitMap"));
 
   simClusters_ = consumes<std::vector<SimCluster>>(sclTag_);
 
