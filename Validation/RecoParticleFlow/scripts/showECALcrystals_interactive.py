@@ -15,9 +15,10 @@ import pandas as pd
 from dataclasses import dataclass
 
 from bokeh.plotting import figure, output_file, save, ColumnDataSource
-from bokeh.models import (HoverTool, Rect, ColumnDataSource, LinearColorMapper, LogColorMapper, Div,
-                          ColorBar, NumericInput, Dropdown, CDSView, GroupFilter, BooleanFilter, CustomJS, Slider)
-from bokeh.palettes import Viridis256, Category10
+from bokeh.models import (HoverTool, Rect, ColumnDataSource, LinearColorMapper, LogColorMapper,
+                          Div, Button, ColorBar, NumericInput, Dropdown, CDSView, GroupFilter,
+                          BooleanFilter, CustomJS, Slider)
+from bokeh.palettes import Viridis256, Category20
 from bokeh.transform import linear_cmap, log_cmap
 from bokeh.layouts import layout
 
@@ -117,25 +118,40 @@ def plotEvent(geom, hits, clusters, output_path):
     output_file(output_path)
 
     modes = ('Sim', 'Reco')
-
-    p, src, srcCluster, df, hover, view, viewCluster, mapper_log, mapper_lin, color_bar, threshFilter = ({} for _ in range(11))
+    eventDefault = 1
+    p, df, hover, mapper_log, mapper_lin, color_bar, threshFilter, threshFilterId = ({} for _ in range(8))
+    src, srcCluster, view, viewId, viewCluster, = ({} for _ in range (5))
     hit_renderer, cluster_renderer = ({} for _ in range(2))
     for mode in modes:
         df[mode] = pd.merge(hits[mode], geom, how="inner", left_on="detids", right_on="crystalDetId")
-        df[mode] = df[mode][df[mode].eventId < 100]
+        df[mode] = df[mode][df[mode].eventId < 100] # TODO: change
+
+        fracs_in_df = 'fracs' in df[mode].columns
+        clids_in_df = 'clids' in df[mode].columns
+
         df[mode]["eventId"] = df[mode]["eventId"].astype(str)
+        if clids_in_df:
+            df[mode]["clids"] = df[mode]["clids"].astype(str)
 
         view[mode] = CDSView(filters=[
-            GroupFilter(column_name="eventId", group="1"),
+            GroupFilter(column_name="eventId", group=str(eventDefault)),
             BooleanFilter([True] * len(df[mode]))]
         )
         threshFilter[mode] = view[mode].filters[1]
+
+        if clids_in_df:
+            viewId[mode] = CDSView(filters=[
+                GroupFilter(column_name="eventId", group=str(eventDefault)),
+                BooleanFilter([True] * len(df[mode])),
+                BooleanFilter([True] * len(df[mode]))]
+                                )
+            threshFilterId[mode] = viewId[mode].filters[2]
 
         clusters[mode]["eventId"] = clusters[mode]["eventId"].astype(str)
         srcCluster[mode] = ColumnDataSource(clusters[mode])
         
         viewCluster[mode] = CDSView(filters=[
-            GroupFilter(column_name="eventId", group="1"),]
+            GroupFilter(column_name="eventId", group=str(eventDefault)),]
         )
         
         # Create lists of lists for xs and ys
@@ -153,9 +169,6 @@ def plotEvent(geom, hits, clusters, output_path):
                     df[mode]["crystalCorner2Phi"], df[mode]["crystalCorner3Phi"]
             )
         ]
-
-        fracs_in_df = 'fracs' in df[mode].columns
-        clids_in_df = 'clids' in df[mode].columns
         
         # Aggregate data for unique patches
         patch_dict = {
@@ -193,15 +206,17 @@ def plotEvent(geom, hits, clusters, output_path):
 
         if clids_in_df:
             # categorical figures
-            colors = [Category10[10][i % 10] for i in df[mode].clids]
+            colors = [Category20[20][int(i) % 20] for i in df[mode].clids]
             src[mode].add(colors, "colors")
-            p[mode][1].patches(
-                xs="xs", ys="ys",
-                source=src[mode],
-                view=view[mode],
-                fill_color="colors",
-                line_color="black",
-                fill_alpha=0.5,
+            hit_renderer[mode].append(
+                p[mode][1].patches(
+                    xs="xs", ys="ys",
+                    source=src[mode],
+                    view=viewId[mode],
+                    fill_color="colors",
+                    line_color="black",
+                    fill_alpha=0.5,
+                )
             )
         
         # continuous figures
@@ -264,44 +279,130 @@ def plotEvent(geom, hits, clusters, output_path):
     dfMin = min(df[mode].eventId.min() for mode in modes)
     dfMax = max(df[mode].eventId.max() for mode in modes)
 
-    eventDefault = 1
     numInput = NumericInput(value=eventDefault, low=int(dfMin), high=int(dfMax),
-                            title=f"Enter a number between {dfMin} and {dfMax}:")
-
-    numInput_callb = CustomJS(args=dict(
+                            title=f"Event ID selection: enter a number between {dfMin} and {dfMax}:")
+    numInput_args = dict(
         srcSim=src["Sim"], srcReco=src["Reco"],
         srcClSim=srcCluster["Sim"], srcClReco=srcCluster["Reco"],
-        viewSim=view["Sim"], viewReco=view["Reco"],
+        viewEvSim=view["Sim"], viewEvReco=view["Reco"],
         viewClSim=viewCluster["Sim"], viewClReco=viewCluster["Reco"],
         select=numInput
-    ), code="""
-    const eid = select.value.toString();
-    viewSim.filters[0].group = eid;
-    viewReco.filters[0].group = eid;
-    viewSim.change.emit();
-    viewReco.change.emit();
-    viewClSim.filters[0].group = eid;
-    viewClReco.filters[0].group = eid;
-    viewClSim.change.emit();
-    viewClReco.change.emit();
-    srcSim.change.emit();
-    srcReco.change.emit();
-    srcClSim.change.emit();
-    srcClReco.change.emit();
-    """)
+    )
+    if clids_in_df:
+        numInput_args.update({'viewIdSim': viewId["Sim"], 'viewIdReco': viewId["Reco"],})
+        numInput_code = """
+        const eid = select.value.toString();
+        viewEvSim.filters[0].group = eid;
+        viewEvReco.filters[0].group = eid;
+        viewIdSim.filters[0].group = eid;
+        viewIdReco.filters[0].group = eid;
+        viewEvSim.change.emit();
+        viewEvReco.change.emit();
+        viewIdSim.change.emit();
+        viewIdReco.change.emit();
+        viewClSim.filters[0].group = eid;
+        viewClReco.filters[0].group = eid;
+        viewClSim.change.emit();
+        viewClReco.change.emit();
+        srcSim.change.emit();
+        srcReco.change.emit();
+        srcClSim.change.emit();
+        srcClReco.change.emit();
+        """
+    else:
+        numInput_code = """
+        const eid = select.value.toString();
+        viewEvSim.filters[0].group = eid;
+        viewEvReco.filters[0].group = eid;
+        viewEvSim.change.emit();
+        viewEvReco.change.emit();
+        viewClSim.filters[0].group = eid;
+        viewClReco.filters[0].group = eid;
+        viewClSim.change.emit();
+        viewClReco.change.emit();
+        srcSim.change.emit();
+        srcReco.change.emit();
+        srcClSim.change.emit();
+        srcClReco.change.emit();
+        """
+    
+    numInput_callb = CustomJS(args=numInput_args, code=numInput_code)
     numInput.js_on_change("value", numInput_callb)
 
-    varNameHolder = ColumnDataSource(data=dict(value=["energies_sum"]))
+    title_template_one = f"Only one cluster available."
+    title_template_more = "Cluster ID selection: enter a number between {} and {}:"
+    if clids_in_df:
+        dfClIdSimMin, dfClIdSimMax = df['Sim'].clids.min(), df['Sim'].clids.max()
+        if dfClIdSimMin == dfClIdSimMax:
+            title = title_template_one
+        else:
+            title = title_template_more.format(dfClIdSimMin, dfClIdSimMax)
+        clIdInputSim = NumericInput(value=None, low=int(dfClIdSimMin), high=int(dfClIdSimMax),
+                                    title=title)
+        dfClIdRecoMin, dfClIdRecoMax = df['Reco'].clids.min(), df['Reco'].clids.max()
+        if dfClIdRecoMin == dfClIdRecoMax:
+            title = title_template_one
+        else:
+            title = title_template_more.format(dfClIdRecoMin, dfClIdRecoMax)
+        clIdInputReco = NumericInput(value=None, low=int(dfClIdRecoMin), high=int(dfClIdRecoMax),
+                                     title=title)
 
+        clIdInput_code = """
+        const eid = selectEvent.value.toString();
+        const clid = selectId.value.toString();
+        view.filters[0].group = eid;
+
+        const clids = src.data.clids;
+        const eventIds = src.data.eventId;
+        const mask = clids.map((cid, i) => eventIds[i] === eid && cid === clid);
+        view.filters[1].booleans = mask;
+        
+        view.change.emit();
+        src.change.emit();
+        """
+        clIdInputSim_callb = CustomJS(args=dict(
+            src=src['Sim'], view=viewId['Sim'],
+            selectEvent=numInput, selectId=clIdInputSim,
+        ), code=clIdInput_code)
+        clIdInputSim.js_on_change("value", clIdInputSim_callb)
+
+        clIdInputReco_callb = CustomJS(args=dict(
+            src=src['Reco'], view=viewId['Reco'],
+            selectEvent=numInput, selectId=clIdInputReco,
+        ), code=clIdInput_code)
+        clIdInputReco.js_on_change("value", clIdInputReco_callb)
+
+        showAllButtonSim = Button(label="Show all clusters", button_type="success", width=200)
+        showAllButtonReco = Button(label="Show all clusters", button_type="success", width=200)
+
+        showAll_code = """
+        selectId.value = NaN;
+        const eid = selectEvent.value.toString();
+        const eventIds = src.data.eventId;
+        const mask = eventIds.map((evid) => evid === eid);
+        view.filters[1].booleans = mask;
+        view.change.emit();
+        src.change.emit();
+        """
+        showAllButtonSim.js_on_click(CustomJS(
+            args=dict(view=viewId['Sim'], src=src['Sim'], selectEvent=numInput, selectId=clIdInputSim),
+            code=showAll_code
+        ))
+        showAllButtonReco.js_on_click(CustomJS(
+            args=dict(view=viewId['Reco'], src=src['Reco'], selectEvent=numInput, selectId=clIdInputReco),
+            code=showAll_code
+        ))
+        
+    varNameHolder = ColumnDataSource(data=dict(value=["energies_sum"]))
     enSumMax = 2.
     slider = Slider(start=0, end=enSumMax, value=0.1, step=0.01, title="Min threshold for energies_sum", width=800)
 
-    menu_tuple = (('Energy Sum [GeV]', 'energies_sum'), ('Energy [GeV]', 'energies'))
+    menuVar_tuple = (('Energy Sum [GeV]', 'energies_sum'), ('Energy [GeV]', 'energies'))
     if fracs_in_df:
-        menu_tuple += (('Fraction Sum', 'fracs_sum'),)
-        menu_tuple += (('Fraction', 'fracs'),)
-    menu = [*menu_tuple]
-    dropdown = Dropdown(label="Z axis", button_type="warning", menu=menu, width=150)
+        menuVar_tuple += (('Fraction Sum', 'fracs_sum'),)
+        menuVar_tuple += (('Fraction', 'fracs'),)
+    menuVar = [*menuVar_tuple]
+    dropVar = Dropdown(label="Z axis", button_type="warning", menu=menuVar, width=150)
     
     slider_calb = CustomJS(
         args=dict(
@@ -346,7 +447,7 @@ def plotEvent(geom, hits, clusters, output_path):
         mapperReco.update({'fracs': mapper_lin['Reco'],'fracs_sum': mapper_lin['Reco']})
         maxVals.update({'fracs': 1.,'fracs_sum': 1.})
         
-    dropdown_calb = CustomJS(
+    dropVar_calb = CustomJS(
         args=dict(
             srcSim=src['Sim'], srcReco=src['Reco'],
             patchSim=p['Sim'][0].renderers[0], patchReco=p['Reco'][0].renderers[0],
@@ -383,13 +484,15 @@ def plotEvent(geom, hits, clusters, output_path):
         srcReco.change.emit();
         """
     )
-    dropdown.js_on_event("menu_item_click", dropdown_calb)
+    dropVar.js_on_event("menu_item_click", dropVar_calb)
 
-    lay = [[numInput, Div(text='', width=30, height=1), slider],
-           [dropdown,],
+    lay = [[numInput, Div(text='', width=40, height=1), slider],
+           [dropVar,],
            [p['Sim'][0], p['Reco'][0]]]
 
     if clids_in_df:
+        lay.append([Div(text='', width=30, height=1), clIdInputSim, showAllButtonSim,
+                    Div(text='', width=700, height=1), clIdInputReco, showAllButtonReco])
         lay.append([p['Sim'][1], p['Reco'][1]])
     
     save(layout(lay))
