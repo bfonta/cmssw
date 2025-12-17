@@ -204,6 +204,7 @@ def plotEvent(geom, hits, clusters, output_path):
         if clids_in_df:
             p[mode].append(createFigure(title=mode + " Cluster IDs"))
 
+        hit_renderer[mode] = []
         if clids_in_df:
             # categorical figures
             colors = [Category20[20][int(i) % 20] for i in df[mode].clids]
@@ -225,13 +226,16 @@ def plotEvent(geom, hits, clusters, output_path):
         mapper_lin[mode] = LinearColorMapper(**mapper_kwargs)
         color_bar[mode] = ColorBar(color_mapper=mapper_log[mode], label_standoff=12)
 
-        hit_renderer[mode] = p[mode][0].patches(
-            xs="xs", ys="ys",
-            source=src[mode],
-            view=view[mode],
-            fill_color=log_cmap('energies_sum', Viridis256, df[mode]['energies_sum'].min(), df[mode]['energies_sum'].max()),
-            line_color="black"
+        hit_renderer[mode].append(
+            p[mode][0].patches(
+                xs="xs", ys="ys",
+                source=src[mode],
+                view=view[mode],
+                fill_color=log_cmap('energies_sum', Viridis256, df[mode]['energies_sum'].min(), df[mode]['energies_sum'].max()),
+                line_color="black"
+            )
         )
+        
         p[mode][0].add_layout(color_bar[mode], "right")
 
         # Add hover tool
@@ -243,7 +247,7 @@ def plotEvent(geom, hits, clusters, output_path):
         else:
             hover_string += "En: @energies, EnSum: @energies_sum"
         hover[mode] = HoverTool( # first string is the text
-            renderers=[hit_renderer[mode]],
+            renderers=hit_renderer[mode],
             tooltips=[ ("", hover_string), ],
             mode="mouse",
         )
