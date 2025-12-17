@@ -74,8 +74,8 @@ protected:
   MonitorElement* h_PFClusterHitFraction_;
   MonitorElement* h_PFClusterHitDetId_;
 
-  MonitorElement* h_CaloParticleToSimClusterEnergyFraction_;
-  MonitorElement* h_CaloParticleToSimHitsEnergyFraction_;
+  MonitorElement* h_CPToSCEnergyFraction_;
+  MonitorElement* h_CPToSHEnergyFraction_;
   MonitorElement* h_CP_recoToSimScore_;
   MonitorElement* h_CP_simToRecoScore_;
   MonitorElement* h_CP_simToRecoShEnF_;
@@ -210,24 +210,16 @@ PFTesterT<RecoClusterCollection>::PFTesterT(const edm::ParameterSet& iConfig)
 
 template <typename RecoClusterCollection>
 void PFTesterT<RecoClusterCollection>::bookHistograms(DQMStore::IBooker& ibook, edm::Run const&, edm::EventSetup const&) {
-  ibook.setCurrentFolder(outFolder_ + "/CaloParticles_EnFracCut" + doubleToString(enFracCut_) + "_PtCut" +
-                         doubleToString(ptCut_));
-  h_CaloParticleToSimClusterEnergyFraction_ =
-      ibook.book1D("CaloParticleToSimClusterEnergyFraction",
-                   "CaloParticleToSimClusterEnergyFraction;CaloParticle to SimCluster energy fraction",
-                   100,
-                   0,
-                   2);
-  h_CaloParticleToSimHitsEnergyFraction_ =
-      ibook.book1D("CaloParticleToSimHitsEnergyFraction",
-                   "CaloParticleToSimHitsEnergyFraction;CaloParticle to SimHits energy fraction",
-                   100,
-                   0,
-                   2);
+  std::string matching = doMatchByScore_ ? "MatchByScore" : "MatchByShEnF";
+  ibook.setCurrentFolder(outFolder_ + "/" + matching + "/CaloParticles");
+  h_CPToSCEnergyFraction_ =
+      ibook.book1D("CPToSCEnergyFraction", "CPToSCEnergyFraction;CaloParticle to SimCluster energy fraction", 100, 0, 2);
+  h_CPToSHEnergyFraction_ =
+      ibook.book1D("CPToSHEnergyFraction", "CPToSHEnergyFraction;CaloParticle to SimHits energy fraction", 100, 0, 2);
   h_CP_recoToSimScore_ =
-      ibook.book1D("CP_recoToSimScore", "recoToSimScore;CaloParticle Reco #rightarrow Sim score", 51, 0, 1.02);
+      ibook.book1D("CP_recoToSimScore", "CPrecoToSimScore;CaloParticle Reco #rightarrow Sim score", 51, 0, 1.02);
   h_CP_simToRecoScore_ =
-      ibook.book1D("CP_simToRecoScore", "simToRecoScore;CaloParticle Sim #rightarrow Reco score", 51, 0, 1.02);
+      ibook.book1D("CP_simToRecoScore", "CPsimToRecoScore;CaloParticle Sim #rightarrow Reco score", 51, 0, 1.02);
   h_CP_simToRecoShEnF_ = ibook.book1D("CP_simToRecoShEnF",
                                       "simToRecoSharedEnergy;CaloParticle Sim #rightarrow Reco shared energy fraction",
                                       51,
@@ -243,9 +235,7 @@ void PFTesterT<RecoClusterCollection>::bookHistograms(DQMStore::IBooker& ibook, 
                                             0,
                                             1.02);
 
-  std::string matching = doMatchByScore_ ? "_MatchByScore" : "_MatchByShEnF";
-  std::string pfValidFolder = outFolder_ + "/PFClusterValidation" + matching + "_EnFracCut" +
-                              doubleToString(enFracCut_) + "_PtCut" + doubleToString(ptCut_);
+  std::string pfValidFolder = outFolder_ + "/" + matching + "/PFClusterValidation";
   ibook.setCurrentFolder(pfValidFolder);
   h_nSimClusters_ = ibook.book1D("nSimClusters", "Number of SimClusters;Number of SimClusters per event", 100, 0, 100);
   h_nSimClustersPrimary_ = ibook.book1D(
@@ -333,34 +323,62 @@ void PFTesterT<RecoClusterCollection>::bookHistograms(DQMStore::IBooker& ibook, 
                    0,
                    1.1);
 
+  for (auto& hVar : histoVarsSim) {
+    auto [nBins, hMin, hMax] = hVar.second;
+    h_simClusters_[hVar.first] =
+        ibook.book1D("SimClusters" + hVar.first, "SimClusters;" + hVar.first, nBins, hMin, hMax);
+  }
+
+  for (auto& hVar : histoVarsReco) {
+    auto [nBins, hMin, hMax] = hVar.second;
+    h_recoClusters_[hVar.first] =
+        ibook.book1D("RecoClusters" + hVar.first, "RecoClusters;" + hVar.first, nBins, hMin, hMax);
+  }
+
+  for (auto& h2dVar : histo2dVarsSim) {
+    auto [nBinsX, hMinX, hMaxX, nBinsY, hMinY, hMaxY] = h2dVar.second;
+    auto x_title = h2dVar.first.substr(0, h2dVar.first.find("_"));
+    auto y_title = h2dVar.first.substr(h2dVar.first.find("_") + 1);
+    h2d_simClusters_[h2dVar.first] = ibook.book2D("SimClusters" + h2dVar.first,
+                                                  "SimClusters;" + x_title + ";" + y_title,
+                                                  nBinsX,
+                                                  hMinX,
+                                                  hMaxX,
+                                                  nBinsY,
+                                                  hMinY,
+                                                  hMaxY);
+  }
+  for (auto& h2dVar : histo2dVarsReco) {
+    auto [nBinsX, hMinX, hMaxX, nBinsY, hMinY, hMaxY] = h2dVar.second;
+    auto x_title = h2dVar.first.substr(0, h2dVar.first.find("_"));
+    auto y_title = h2dVar.first.substr(h2dVar.first.find("_") + 1);
+    h2d_recoClusters_[h2dVar.first] = ibook.book2D("RecoClusters" + h2dVar.first,
+                                                   "RecoClusters;" + x_title + ";" + y_title,
+                                                   nBinsX,
+                                                   hMinX,
+                                                   hMaxX,
+                                                   nBinsY,
+                                                   hMinY,
+                                                   hMaxY);
+  }
+  
   for (unsigned ithr = 0; ithr < nAssocScoreThresholds_; ++ithr) {
     std::string threshStr = "Score" + doubleToString(assocScoreThresholds_[ithr]);
     ibook.setCurrentFolder(pfValidFolder + "/" + threshStr);
     h_nSimMatchedToOneReco_[ithr] = ibook.book1D(
-        "nSimMatchedToOneReco",
-        "Number of SimClusters matched to a RecoCluster;Number of RecoClusters; Number of matched SimClusters",
-        10,
-        0,
-        10);
+      "nSimMatchedToOneReco",
+      "Number of SimClusters matched to a RecoCluster;Number of RecoClusters; Number of matched SimClusters",
+      10,
+      0,
+      10);
     h_nRecoMatchedToOneSim_[ithr] = ibook.book1D(
-        "nRecoMatchedToOneSim",
-        "Number of RecoClusters matched to a SimCluster;Number of SimClusters; Number of matched RecoClusters",
-        10,
-        0,
-        10);
-  }
-
-  for (auto& hVar : histoVarsSim) {
-    auto [nBins, hMin, hMax] = hVar.second;
-
-    ibook.setCurrentFolder(pfValidFolder);
-    h_simClusters_[hVar.first] =
-        ibook.book1D("SimClusters" + hVar.first, "SimClusters;" + hVar.first, nBins, hMin, hMax);
-
-    for (unsigned ithr = 0; ithr < nAssocScoreThresholds_; ++ithr) {
-      std::string threshStr = "Score" + doubleToString(assocScoreThresholds_[ithr]);
-
-      ibook.setCurrentFolder(pfValidFolder + "/" + threshStr);
+      "nRecoMatchedToOneSim",
+      "Number of RecoClusters matched to a SimCluster;Number of SimClusters; Number of matched RecoClusters",
+      10,
+      0,
+      10);
+    for (auto& hVar : histoVarsSim) {
+      auto [nBins, hMin, hMax] = hVar.second;
       h_simClustersMatchedRecoClusters_[ithr][hVar.first] =
           ibook.book1D("SimClustersMatchedRecoClusters" + hVar.first,
                        "SimClusters matched to RecoClusters;" + hVar.first,
@@ -373,20 +391,13 @@ void PFTesterT<RecoClusterCollection>::bookHistograms(DQMStore::IBooker& ibook, 
                        nBins,
                        hMin,
                        hMax);
+      h2d_responsePt_[ithr][hVar.first] =
+          ibook.book2D("ResponsePt_" + hVar.first, "Response p_T;" + hVar.first, nBins, hMin, hMax, 50, 0., 2.);
+      h2d_responseE_[ithr][hVar.first] =
+          ibook.book2D("ResponseE_" + hVar.first, "Response Energy;" + hVar.first, nBins, hMin, hMax, 50, 0., 2.);
     }
-  }
-
-  for (auto& hVar : histoVarsReco) {
-    auto [nBins, hMin, hMax] = hVar.second;
-
-    ibook.setCurrentFolder(pfValidFolder);
-    h_recoClusters_[hVar.first] =
-        ibook.book1D("RecoClusters" + hVar.first, "RecoClusters;" + hVar.first, nBins, hMin, hMax);
-
-    for (unsigned ithr = 0; ithr < nAssocScoreThresholds_; ++ithr) {
-      std::string threshStr = "Score" + doubleToString(assocScoreThresholds_[ithr]);
-
-      ibook.setCurrentFolder(pfValidFolder + "/" + threshStr);
+    for (auto& hVar : histoVarsReco) {
+      auto [nBins, hMin, hMax] = hVar.second;
       h_recoClustersMatchedSimClusters_[ithr][hVar.first] =
           ibook.book1D("RecoClustersMatchedSimClusters" + hVar.first,
                        "RecoClusters matched to SimClusters;" + hVar.first,
@@ -400,26 +411,10 @@ void PFTesterT<RecoClusterCollection>::bookHistograms(DQMStore::IBooker& ibook, 
                        hMin,
                        hMax);
     }
-  }
-
-  for (auto& h2dVar : histo2dVarsSim) {
-    auto [nBinsX, hMinX, hMaxX, nBinsY, hMinY, hMaxY] = h2dVar.second;
-
-    ibook.setCurrentFolder(pfValidFolder);
-    auto x_title = h2dVar.first.substr(0, h2dVar.first.find("_"));
-    auto y_title = h2dVar.first.substr(h2dVar.first.find("_") + 1);
-    h2d_simClusters_[h2dVar.first] = ibook.book2D("SimClusters" + h2dVar.first,
-                                                  "SimClusters;" + x_title + ";" + y_title,
-                                                  nBinsX,
-                                                  hMinX,
-                                                  hMaxX,
-                                                  nBinsY,
-                                                  hMinY,
-                                                  hMaxY);
-
-    for (unsigned ithr = 0; ithr < nAssocScoreThresholds_; ++ithr) {
-      std::string threshStr = "Score" + doubleToString(assocScoreThresholds_[ithr]);
-      ibook.setCurrentFolder(pfValidFolder + "/" + threshStr);
+    for (auto& h2dVar : histo2dVarsSim) {
+      auto [nBinsX, hMinX, hMaxX, nBinsY, hMinY, hMaxY] = h2dVar.second;
+      auto x_title = h2dVar.first.substr(0, h2dVar.first.find("_"));
+      auto y_title = h2dVar.first.substr(h2dVar.first.find("_") + 1);
       h2d_simClustersMatchedRecoClusters_[ithr][h2dVar.first] =
           ibook.book2D("SimClustersMatchedRecoClusters" + h2dVar.first,
                        "SimClusters matched to RecoClusters;" + x_title + ";" + y_title,
@@ -430,27 +425,10 @@ void PFTesterT<RecoClusterCollection>::bookHistograms(DQMStore::IBooker& ibook, 
                        hMinY,
                        hMaxY);
     }
-  }
-
-  for (auto& h2dVar : histo2dVarsReco) {
-    auto [nBinsX, hMinX, hMaxX, nBinsY, hMinY, hMaxY] = h2dVar.second;
-
-    ibook.setCurrentFolder(pfValidFolder);
-    auto x_title = h2dVar.first.substr(0, h2dVar.first.find("_"));
-    auto y_title = h2dVar.first.substr(h2dVar.first.find("_") + 1);
-    h2d_recoClusters_[h2dVar.first] = ibook.book2D("RecoClusters" + h2dVar.first,
-                                                   "RecoClusters;" + x_title + ";" + y_title,
-                                                   nBinsX,
-                                                   hMinX,
-                                                   hMaxX,
-                                                   nBinsY,
-                                                   hMinY,
-                                                   hMaxY);
-
-    for (unsigned ithr = 0; ithr < nAssocScoreThresholds_; ++ithr) {
-      std::string threshStr = "Score" + doubleToString(assocScoreThresholds_[ithr]);
-
-      ibook.setCurrentFolder(pfValidFolder + "/" + threshStr);
+    for (auto& h2dVar : histo2dVarsReco) {
+      auto [nBinsX, hMinX, hMaxX, nBinsY, hMinY, hMaxY] = h2dVar.second;
+      auto x_title = h2dVar.first.substr(0, h2dVar.first.find("_"));
+      auto y_title = h2dVar.first.substr(h2dVar.first.find("_") + 1);
       h2d_recoClustersMatchedSimClusters_[ithr][h2dVar.first] =
           ibook.book2D("RecoClustersMatchedSimClusters" + h2dVar.first,
                        "RecoClusters matched to SimClusters;" + x_title + ";" + y_title,
@@ -463,19 +441,7 @@ void PFTesterT<RecoClusterCollection>::bookHistograms(DQMStore::IBooker& ibook, 
     }
   }
 
-  for (auto& hVar : histoVarsSim) {
-    auto [nBins, hMin, hMax] = hVar.second;
-    for (unsigned ithr = 0; ithr < nAssocScoreThresholds_; ++ithr) {
-      std::string threshStr = "Score" + doubleToString(assocScoreThresholds_[ithr]);
-      ibook.setCurrentFolder(pfValidFolder + "/" + threshStr);
-      h2d_responsePt_[ithr][hVar.first] =
-          ibook.book2D("ResponsePt_" + hVar.first, "Response p_T;" + hVar.first, nBins, hMin, hMax, 50, 0., 2.);
-      h2d_responseE_[ithr][hVar.first] =
-          ibook.book2D("ResponseE_" + hVar.first, "Response Energy;" + hVar.first, nBins, hMin, hMax, 50, 0., 2.);
-    }
-  }
-
-  ibook.setCurrentFolder(outFolder_ + "/PFCandidates");
+  ibook.setCurrentFolder(outFolder_ + "/" + matching + "/PFCandidates");
   h_PFCandEt_ = ibook.book1D("PFCandEt", "PFCandEt", 1000, 0, 1000);
   h_PFCandEta_ = ibook.book1D("PFCandEta", "PFCandEta", 200, -5, 5);
   h_PFCandPhi_ = ibook.book1D("PFCandPhi", "PFCandPhi", 200, -M_PI, M_PI);
@@ -483,7 +449,7 @@ void PFTesterT<RecoClusterCollection>::bookHistograms(DQMStore::IBooker& ibook, 
   h_PFCandPdgId_ = ibook.book1D("PFCandPdgId", "PFCandPdgId", 44, -22, 22);
   h_PFCandType_ = ibook.book1D("PFCandidateType", "PFCandidateType", 10, 0, 10);
 
-  ibook.setCurrentFolder(outFolder_ + "/PFBlocks");
+  ibook.setCurrentFolder(outFolder_ + "/" + matching + "/PFBlocks");
   h_NumElements_ = ibook.book1D("NumElements", "NumElements", 25, 0, 25);
   h_NumTrackElements_ = ibook.book1D("NumTrackElements", "NumTrackElements", 5, 0, 5);
   h_NumMuonElements_ = ibook.book1D("NumMuonElements", "NumMuonElements", 5, 0, 5);
@@ -493,13 +459,13 @@ void PFTesterT<RecoClusterCollection>::bookHistograms(DQMStore::IBooker& ibook, 
   h_NumHCALElements_ = ibook.book1D("NumHCALElements", "NumHCALElements", 5, 0, 5);
   h_NumHGCALElements_ = ibook.book1D("NumHGCALElements", "NumHGCALElements", 5, 0, 5);
 
-  ibook.setCurrentFolder(outFolder_ + "/PFTracks");
+  ibook.setCurrentFolder(outFolder_ + "/" + matching + "/PFTracks");
   h_TrackCharge_ = ibook.book1D("TrackCharge", "TrackCharge", 5, -2, 2);
   h_TrackNumPoints_ = ibook.book1D("TrackNumPoints", "TrackNumPoints", 100, 0, 100);
   h_TrackNumMeasurements_ = ibook.book1D("TrackNumMeasurements", "TrackNumMeasurements", 100, 0, 100);
   h_TrackImpactParameter_ = ibook.book1D("TrackImpactParameter", "TrackImpactParameter", 1000, 0, 1);
 
-  ibook.setCurrentFolder(outFolder_ + "/PFClusters");
+  ibook.setCurrentFolder(outFolder_ + "/" + matching + "/PFClusters");
   h_PFClusterE_ = ibook.book1D("PFClusterE", "RecoCluster Energy;E [GeV]", 100, 0, 100);
   h_PFClusterEta_ = ibook.book1D("PFClusterEta", "RecoCluster Eta;#eta", 120, -6, 6);
   h_PFClusterPhi_ = ibook.book1D("PFClusterPhi", "RecoCluster Phi;#phi", 128, -3.2, 3.2);
@@ -627,8 +593,8 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
                               << ", energyFracSumSimHits=" << energyFracSumSimHits << std::endl;
 #endif
 
-    h_CaloParticleToSimClusterEnergyFraction_->Fill(energySumSimClusters / caloParticles[cpId].energy());
-    h_CaloParticleToSimHitsEnergyFraction_->Fill(energySumSimHits / caloParticles[cpId].energy());
+    h_CPToSCEnergyFraction_->Fill(energySumSimClusters / caloParticles[cpId].energy());
+    h_CPToSHEnergyFraction_->Fill(energySumSimHits / caloParticles[cpId].energy());
 
     // SimToReco association for caloParticles
     const edm::Ref<CaloParticleCollection> caloParticleRef(CaloParticle, cpId);

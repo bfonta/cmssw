@@ -479,8 +479,6 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--odir', default="HLTPFValidationPlots", help='Path to the output directory.')
     parser.add_argument('-l', '--sample_label', default="", help='Sample label for plotting.')
     parser.add_argument('-e', '--era', default="Phase2", help="Chose between ['Phase2', 'Run3'].")
-    parser.add_argument('--EnFracCut', default=0.01, help='Cut on the sim cluster energy fraction.')
-    parser.add_argument('--PtCut', default=0.1, help='Cut on the sim cluster energy fraction.')
     parser.add_argument('--match_by_score', default=1, type=int, help='Use association based on score (if false, use shared energy fraction).')
     parser.add_argument('--ticl', default=False, action='store_true', help='Use TiclBarrel folder.')
 
@@ -519,13 +517,13 @@ if __name__ == '__main__':
               'merge': 'Merge Rate'}
 
     if args.match_by_score == 1:
-        matching = '_MatchByScore'
+        matching = 'MatchByScore'
     else:
-        matching = '_MatchByShEnF'
+        matching = 'MatchByShEnF'
         print("### INFO: Using association by shared energy fraction.")
     if args.ticl:   sub_folder = 'TiclBarrel'
     else:           sub_folder = 'ParticleFlow'
-    dqm_dir = f"DQMData/Run 1/HLT/Run summary/{sub_folder}/PFClusterValidation{matching}_EnFracCut{str(args.EnFracCut).replace('.', 'p')}_PtCut{str(args.PtCut).replace('.', 'p')}"
+    dqm_dir = f"DQMData/Run 1/HLT/Run summary/{sub_folder}/{matching}/PFClusterValidation"
     afile = ROOT.TFile.Open(args.file)
     checkRootDir(afile, dqm_dir)
 
@@ -762,7 +760,7 @@ if __name__ == '__main__':
 
     if args.ticl:   sub_folder = 'TiclBarrel'
     else:           sub_folder = 'ParticleFlow'
-    dqm_dir = f"DQMData/Run 1/HLT/Run summary/{sub_folder}/CaloParticles_EnFracCut{str(args.EnFracCut).replace('.', 'p')}_PtCut{str(args.PtCut).replace('.', 'p')}"
+    dqm_dir = f"DQMData/Run 1/HLT/Run summary/{sub_folder}/{matching}/CaloParticles"
     afile = ROOT.TFile.Open(args.file)
     checkRootDir(afile, dqm_dir)
 
