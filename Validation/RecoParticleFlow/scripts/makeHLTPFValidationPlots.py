@@ -276,7 +276,7 @@ def plotOverlay(subdirs, cached_histos, name, props, outdir):
             plotter.limits(x=(bin_edges[0], bin_edges[-1]))
 
     plotter.labels(x=props.xtitle, y=props.ytitle, legend_title='')
-    plotter.ax.grid(color='grey')    
+    plotter.ax.grid(color='grey')
     plt.tight_layout()
     plotter.save( os.path.join(outdir, name) )
 
@@ -884,12 +884,13 @@ if __name__ == '__main__':
                 cached_histos[fitdir.format('Width')].SetBinContent(i, width)
                 cached_histos[fitdir.format('Width')].SetBinError(i, width_err)
                 
-    if props.fit:
-        props.xtitle = 'Energy [GeV]'
-        props.ytitle = 'Response'
-        plotOverlay(subdirs, cached_histos, fitstr.format('Mean'), props, outdir=args.odir)
-        props.ytitle = 'Resolution'
-        plotOverlay(subdirs, cached_histos, fitstr.format('Width'), props, outdir=args.odir)
+    for name, props in vars2DProjection.items():
+        if props.fit:
+            props.xtitle = 'Energy [GeV]'
+            props.ytitle = 'Response'
+            plotOverlay(subdirs, cached_histos, fitstr.format('Mean'), props, outdir=args.odir)
+            props.ytitle = 'Resolution'
+            plotOverlay(subdirs, cached_histos, fitstr.format('Width'), props, outdir=args.odir)
 
     vars2D = {
         'SimClustersEnFrac_Mult': dict(ytitle='Multiplicity', var='# Clusters', xtitle='Energy Fraction'),
