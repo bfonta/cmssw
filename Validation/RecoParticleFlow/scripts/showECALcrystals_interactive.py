@@ -280,6 +280,11 @@ def plotEvent(geom, hits, clusters, output_path):
         p['Sim'][1].x_range, p['Sim'][1].y_range = p['Reco'][0].x_range, p['Reco'][0].y_range
         p['Reco'][1].x_range, p['Reco'][1].y_range = p['Reco'][0].x_range, p['Reco'][0].y_range
 
+    enSumMax = 2.
+    slider = Slider(start=0, end=enSumMax, value=0.1, step=0.01, title="Min threshold for energies_sum", width=800)
+
+    varNameHolder = ColumnDataSource(data=dict(value=["energies_sum"]))
+    
     dfMin = min(df[mode].eventId.min() for mode in modes)
     dfMax = max(df[mode].eventId.max() for mode in modes)
 
@@ -290,7 +295,9 @@ def plotEvent(geom, hits, clusters, output_path):
         srcClSim=srcCluster["Sim"], srcClReco=srcCluster["Reco"],
         viewEvSim=view["Sim"], viewEvReco=view["Reco"],
         viewClSim=viewCluster["Sim"], viewClReco=viewCluster["Reco"],
-        select=numInput
+        select=numInput, slider=slider,
+        threshSim=threshFilter["Sim"], threshReco=threshFilter["Reco"],
+        varNameHolder=varNameHolder,
     )
     if clids_in_df:
         numInput_args.update({'viewIdSim': viewId["Sim"], 'viewIdReco': viewId["Reco"],})
@@ -300,34 +307,55 @@ def plotEvent(geom, hits, clusters, output_path):
         viewEvReco.filters[0].group = eid;
         viewIdSim.filters[0].group = eid;
         viewIdReco.filters[0].group = eid;
-        viewEvSim.change.emit();
-        viewEvReco.change.emit();
-        viewIdSim.change.emit();
-        viewIdReco.change.emit();
         viewClSim.filters[0].group = eid;
         viewClReco.filters[0].group = eid;
-        viewClSim.change.emit();
-        viewClReco.change.emit();
+
+        const minVal = slider.value;
+        const v = varNameHolder.data['value'][0];
+        
+        const sim = srcSim.data;
+        const rec = srcReco.data;
+
+        let maskSim = [];
+        let maskRec = [];
+        
+        for (let i = 0; i < sim[v].length; i++) {
+        maskSim.push(sim[v][i] >= minVal && sim["eventId"][i] === eid);
+        }
+        for (let i = 0; i < rec[v].length; i++) {
+        maskRec.push(rec[v][i] >= minVal && rec["eventId"][i] === eid);
+        }
+        
+        threshSim.booleans = maskSim;
+        threshReco.booleans = maskRec;
+
         srcSim.change.emit();
         srcReco.change.emit();
         srcClSim.change.emit();
         srcClReco.change.emit();
+        viewEvSim.change.emit();
+        viewEvReco.change.emit();
+        viewIdSim.change.emit();
+        viewIdReco.change.emit();
+        viewClSim.change.emit();
+        viewClReco.change.emit();
         """
     else:
         numInput_code = """
         const eid = select.value.toString();
         viewEvSim.filters[0].group = eid;
         viewEvReco.filters[0].group = eid;
-        viewEvSim.change.emit();
-        viewEvReco.change.emit();
         viewClSim.filters[0].group = eid;
         viewClReco.filters[0].group = eid;
-        viewClSim.change.emit();
-        viewClReco.change.emit();
+
         srcSim.change.emit();
         srcReco.change.emit();
         srcClSim.change.emit();
         srcClReco.change.emit();
+        viewEvSim.change.emit();
+        viewEvReco.change.emit();
+        viewClSim.change.emit();
+        viewClReco.change.emit();
         """
     
     numInput_callb = CustomJS(args=numInput_args, code=numInput_code)
@@ -361,8 +389,8 @@ def plotEvent(geom, hits, clusters, output_path):
         const mask = clids.map((cid, i) => eventIds[i] === eid && cid === clid);
         view.filters[1].booleans = mask;
         
-        view.change.emit();
         src.change.emit();
+        view.change.emit();
         """
         clIdInputSim_callb = CustomJS(args=dict(
             src=src['Sim'], view=viewId['Sim'],
@@ -385,9 +413,9 @@ def plotEvent(geom, hits, clusters, output_path):
         const eventIds = src.data.eventId;
         const mask = eventIds.map((evid) => evid === eid);
         view.filters[1].booleans = mask;
-        view.change.emit();
         src.change.emit();
-        """
+        view.change.emit();
+        """    
         showAllButtonSim.js_on_click(CustomJS(
             args=dict(view=viewId['Sim'], src=src['Sim'], selectEvent=numInput, selectId=clIdInputSim),
             code=showAll_code
@@ -396,10 +424,6 @@ def plotEvent(geom, hits, clusters, output_path):
             args=dict(view=viewId['Reco'], src=src['Reco'], selectEvent=numInput, selectId=clIdInputReco),
             code=showAll_code
         ))
-        
-    varNameHolder = ColumnDataSource(data=dict(value=["energies_sum"]))
-    enSumMax = 2.
-    slider = Slider(start=0, end=enSumMax, value=0.1, step=0.01, title="Min threshold for energies_sum", width=800)
 
     menuVar_tuple = (('Energy [GeV]', 'energies_sum'),)
     if fracs_in_df:
@@ -482,9 +506,9 @@ def plotEvent(geom, hits, clusters, output_path):
         // Update the varName in the slider callback
         varNameHolder.data['value'][0] = varName;
         // Update the sources
-        varNameHolder.change.emit();
         srcSim.change.emit();
         srcReco.change.emit();
+        varNameHolder.change.emit();
         """
     )
     dropVar.js_on_event("menu_item_click", dropVar_calb)
