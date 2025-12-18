@@ -12,6 +12,7 @@ import awkward as ak
 import utils
 import numpy as np
 import pandas as pd
+import utils
 from dataclasses import dataclass
 
 from bokeh.plotting import figure, output_file, save, ColumnDataSource
@@ -608,7 +609,13 @@ def plotEvent(geom, hits, clusters, output_path):
     save(layout(lay))
     print(f"INFO: Event plot saved to {output_path}")
 
-def showECAL(infile, outfile, props, outname='EventDisplay'):
+def showECAL(infile, outdir, props, outname='EventDisplay'):
+    utils.createDir(outdir)
+    parentDir = os.path.dirname(outdir)
+    if outdir[-1] == '/':
+        parentDir = os.path.dirname(parentDir)
+    utils.createIndexPHP(src=parentDir, dest=outdir)
+
     varsGeom = [
         "crystalDetId",
         "crystalCenterEta",
@@ -647,7 +654,7 @@ def showECAL(infile, outfile, props, outname='EventDisplay'):
             dfEvent = file["ecalGeometryAnalyzer/Event"].arrays(varsEventAll, entry_stop=props.nevents, library="awkward")
 
     if props.geom:
-        plotGeom(dfGeom, output_path=os.path.join(outfile, "geom.html"))
+        plotGeom(dfGeom, output_path=os.path.join(outdir, "geom.html"))
         return
 
     dfHits, dfClusters, dfHitsInClusters = ({} for _ in range(3))
@@ -665,7 +672,7 @@ def showECAL(infile, outfile, props, outname='EventDisplay'):
         dfGeom,
         dfHitsInClusters,
         dfClusters,
-        output_path=os.path.join(outfile, args.outname + "_clusterHits.html"),
+        output_path=os.path.join(outdir, outname + "_clusterHits.html"),
     )
 
     if props.allhits:
@@ -673,7 +680,7 @@ def showECAL(infile, outfile, props, outname='EventDisplay'):
             dfGeom,
             dfHits, 
             dfClusters,
-            output_path=os.path.join(outfile, args.outname + "_allHits.html"),
+            output_path=os.path.join(outdir, outname + "_allHits.html"),
         )
 
     print("INFO: Done.")
