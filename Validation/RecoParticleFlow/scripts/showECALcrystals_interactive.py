@@ -401,10 +401,9 @@ def plotEvent(geom, hits, clusters, output_path):
     enSumMax = 2.
     slider = Slider(start=0, end=enSumMax, value=0.1, step=0.01, title="Min threshold for energies_sum", width=800)
 
-    menuVar_tuple = (('Energy Sum [GeV]', 'energies_sum'), ('Energy [GeV]', 'energies'))
+    menuVar_tuple = (('Energy [GeV]', 'energies_sum'),)
     if fracs_in_df:
-        menuVar_tuple += (('Fraction Sum', 'fracs_sum'),)
-        menuVar_tuple += (('Fraction', 'fracs'),)
+        menuVar_tuple += (('Fraction', 'fracs_sum'),)
     menuVar = [*menuVar_tuple]
     dropVar = Dropdown(label="Z axis", button_type="warning", menu=menuVar, width=150)
     
