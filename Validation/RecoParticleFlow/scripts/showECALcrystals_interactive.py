@@ -26,6 +26,8 @@ def writeIntructions():
     text = """
     <b> Interactive event display </b>
 
+    <br>
+    
     <p>
     This event display was developed to enable a flexible visualization of PF clusters in ECAL.
     Its original goal was to facilitate PF validation at HLT.
@@ -34,6 +36,8 @@ def writeIntructions():
     <p>    
     This page can be created by running:
 
+    <br>
+    
     <pre>
     python3 Validation/RecoParticleFlow/scripts/showECALcrystals_interactive.py -i data.root --outdir . --nevents 10
     </pre>    
@@ -43,40 +47,62 @@ def writeIntructions():
     <p>
     The input "data.root" file holds the geometry and event information, and can be in turn produced with:
 
+    <br>
+    
     <pre>
-    cmsRun Validation/RecoParticleFlow/test/ecalGeometryAnalyzer_cfg.py input=<a step2 file>.root
+    cmsRun Validation/RecoParticleFlow/test/ecalGeometryAnalyzer_cfg.py input="your step2 file".root output=data.root maxEvents=100
     </pre>
     where the input file refers to a CMS step2 file, where cluster information and ECAL geometry is available.
     </p>
 
+    <hr />
+    
     <b> Capabilites </b>
 
     <p>
-    This tool enables you to:
+    This tool enables the comparison of simulated (left) and reconstructed (right) hits and clusters. Specifically, you can:
+
+    <br>
+    
     <ul>
     <li>Visualize different events by changing the event number in "Event ID selection"</li>
-    <li>Filter crytals based on the released energy</li>
-    <li>Select specific clusters by ID</li>
-    <li>Use some selection tool on the right of each plot (zoom, undo, ...)</li>
+    <li>Filter crystals based on the deposited energy</li>
+    <li>Select specific clusters by their ID</li>
+    <li>Use selection tools on all figures simultaneously, available at the right of each plot (zoom, undo, ...)</li>
     </ul>
     </p>
     
     <p>
     The energy displayed corresponds to the total energy deposited in a given crystal.
-    Hover the data with your mouse to inspect the contributions of individual clusters.
+    Hover the crystals with your mouse to inspect the contributions of individual clusters.
     </p>
     <p>
-    Energy fractions in a given crystal are available mostly as a debugging tool: we expect "FracsSum" to be one for all crystals.
+    Energy fractions in a given crystal are available mostly as a debugging tool: we expect "FracSum" to be one for all crystals.
     </p>
+    
+    <br>
     
     <p>
     <i>Note:</i> You might need to click twice on the "Show all clusters" buttons for them to work correctly.
     </p>
-    
+
     <hr />
     """
     return Div(text=text)
-    
+
+def writeContacts():
+    text = """
+    <hr />
+    <p>
+    Tool developed under the <a href="https://nextgentriggers.web.cern.ch/">Next Generation Trigger project</a> (task 3.1.1).
+    </p>
+    <p>
+    <i>Contact:</i> For bug reports or feature requests please reach out to <code>bruno.alves@cern.ch</code>.
+    </p>
+    <br>
+    """
+    return Div(text=text)
+
 def createFigure(title):
     fig = figure(
         title=title,
@@ -179,7 +205,6 @@ def plotEvent(geom, hits, clusters, output_path):
     hit_renderer, cluster_renderer = ({} for _ in range(2))
     for mode in modes:
         df[mode] = pd.merge(hits[mode], geom, how="inner", left_on="detids", right_on="crystalDetId")
-        df[mode] = df[mode][df[mode].eventId < 100] # TODO: change
 
         fracs_in_df = 'fracs' in df[mode].columns
         clids_in_df = 'clids' in df[mode].columns
@@ -344,7 +369,7 @@ def plotEvent(geom, hits, clusters, output_path):
     dfMax = max(df[mode].eventId.max() for mode in modes)
 
     numInput = NumericInput(value=eventDefault, low=int(dfMin), high=int(dfMax),
-                            title=f"Event ID selection: enter a number between {dfMin} and {dfMax}:")
+                            title=f"Event ID selection (enter a number between {dfMin} and {dfMax}):")
     numInput_args = dict(
         srcSim=src["Sim"], srcReco=src["Reco"],
         srcClSim=srcCluster["Sim"], srcClReco=srcCluster["Reco"],
@@ -417,7 +442,7 @@ def plotEvent(geom, hits, clusters, output_path):
     numInput.js_on_change("value", numInput_callb)
 
     title_template_one = f"Only one cluster available."
-    title_template_more = "Cluster ID selection: enter a number between {} and {}:"
+    title_template_more = "Cluster ID selection (enter a number between {} and {}):"
     if clids_in_df:
         dfClIdSimMin, dfClIdSimMax = df['Sim'].clids.min(), df['Sim'].clids.max()
         if dfClIdSimMin == dfClIdSimMax:
@@ -459,8 +484,8 @@ def plotEvent(geom, hits, clusters, output_path):
         ), code=clIdInput_code)
         clIdInputReco.js_on_change("value", clIdInputReco_callb)
 
-        showAllButtonSim = Button(label="Show all clusters", button_type="success", width=200)
-        showAllButtonReco = Button(label="Show all clusters", button_type="success", width=200)
+        showAllButtonSim = Button(label="Show all clusters", button_type="success", width=150)
+        showAllButtonReco = Button(label="Show all clusters", button_type="success", width=150)
 
         showAll_code = """
         selectId.value = NaN;
@@ -484,7 +509,7 @@ def plotEvent(geom, hits, clusters, output_path):
     if fracs_in_df:
         menuVar_tuple += (('Fraction', 'fracs_sum'),)
     menuVar = [*menuVar_tuple]
-    dropVar = Dropdown(label="Z axis", button_type="warning", menu=menuVar, width=150)
+    dropVar = Dropdown(label="Z axis", button_type="warning", menu=menuVar, width=100)
     
     slider_calb = CustomJS(
         args=dict(
@@ -568,17 +593,17 @@ def plotEvent(geom, hits, clusters, output_path):
     )
     dropVar.js_on_event("menu_item_click", dropVar_calb)
 
-    markdownText = writeIntructions()
-
-    lay = [[markdownText],
+    lay = [[writeIntructions()],
            [numInput, Div(text='', width=40, height=1), slider],
            [dropVar,],
            [p['Sim'][0], p['Reco'][0]]]
 
     if clids_in_df:
         lay.append([Div(text='', width=30, height=1), clIdInputSim, showAllButtonSim,
-                    Div(text='', width=700, height=1), clIdInputReco, showAllButtonReco])
+                    Div(text='', width=650, height=1), clIdInputReco, showAllButtonReco])
         lay.append([p['Sim'][1], p['Reco'][1]])
+
+    lay.append([writeContacts()])
     
     save(layout(lay))
     print(f"INFO: Event plot saved to {output_path}")
