@@ -1,23 +1,74 @@
 import FWCore.ParameterSet.Config as cms
 import FWCore.ParameterSet.VarParsing as VarParsing
-
+    
 # cmsRun <full_path_to>/ecalGeometryAnalyzer_cfg.py input=step2.root maxEvents=10
-options = VarParsing.VarParsing('analysis')
-options.register(
+opt = VarParsing.VarParsing('analysis')
+opt.register(
     'input', '',
     VarParsing.VarParsing.multiplicity.singleton,
     VarParsing.VarParsing.varType.string,
     "Input file (only one supported)"
 )
-options.register(
-    'output', 'data.root',
+opt.register(
+    'output', '',
     VarParsing.VarParsing.multiplicity.singleton,
     VarParsing.VarParsing.varType.string,
     "Output file."
 )
-options.parseArguments()
+opt.register(
+    'kinematicCuts', False,
+    VarParsing.VarParsing.multiplicity.singleton,
+    VarParsing.VarParsing.varType.bool,
+    "Whether to apply similar kinematic cuts as done in the PF cluster validation."
+)
+opt.register(
+    'enFracCut', 0.01,
+    VarParsing.VarParsing.multiplicity.singleton,
+    VarParsing.VarParsing.varType.float,
+    """
+    Cut on the energy fraction (wrt CaloParticle energy) for each sim cluster.
+    Considered only if kinematicCuts = True.
+    """
+)
+opt.register(
+    'ptCut', 0.1,
+    VarParsing.VarParsing.multiplicity.singleton,
+    VarParsing.VarParsing.varType.float,
+    """
+    Cut on the pT of each sim cluster.
+    Considered only if kinematicCuts = True.
+    """
+)
+opt.register(
+    'scoreCut', 1.,
+    VarParsing.VarParsing.multiplicity.singleton,
+    VarParsing.VarParsing.varType.float,
+    """
+    Cut on the score of the matching between a sim cluster and all reco clusters.
+    The score is a distance metric: 0 corresponds to a "perfect" matching, while 1 is the absence of matching.
+    Considered only if kinematicCuts = True.
+    """
+)
+opt.register(
+    'responseCut', 0.,
+    VarParsing.VarParsing.multiplicity.singleton,
+    VarParsing.VarParsing.varType.float,
+    """
+    Cut on the response of each sim cluster wrt to each reco cluster.
+    The event is filled only if there is at least one sim/reco combination with a response larger than the cut threshold.
+    Always considered.
+    """
+)
+opt.parseArguments()
 
-from RecoLocalCalo.HGCalRecProducers.recHitMapProducer_cff import recHitMapProducer as _recHitMapProducer
+def noDots(sss):
+    return str(sss).replace('.','p')
+
+if opt.output == '':
+    if opt.kinematicCuts:
+        opt.output = f'data_response{noDots(opt.responseCut)}_pt{noDots(opt.ptCut)}_enfrac{noDots(opt.enFracCut)}_score{noDots(opt.scoreCut)}.root'
+    else:
+        opt.output = f'data_response{noDots(opt.responseCut)}_nokincut.root'
 
 from Configuration.Eras.Era_Phase2C17I13M9_cff import Phase2C17I13M9
 from Configuration.ProcessModifiers.enableCPfromPU_cff import enableCPfromPU
@@ -34,17 +85,15 @@ process.load('Configuration.StandardSequences.SimL1Emulator_cff')
 process.load('Configuration.StandardSequences.L1TrackTrigger_cff')
 process.load('Configuration.StandardSequences.SimPhase2L1GlobalTriggerEmulator_cff')
 process.load('L1Trigger.Configuration.Phase2GTMenus.SeedDefinitions.step1_2024.l1tGTMenu_cff')
-# process.load('HLTrigger.Configuration.HLT_75e33_cff')
 process.load('Configuration.StandardSequences.Validation_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-# process.GlobalTag.globaltag = '150X_mcRun4_realistic_v1'
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic_T33', '') 
 
 process.TFileService = cms.Service(
     "TFileService", 
-    fileName = cms.string(options.output),
+    fileName = cms.string(opt.output),
     closeFileFast = cms.untracked.bool(True)
 )
 
@@ -55,11 +104,11 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1
 # process.MessageLogger.debugModules = ["*"]
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(options.maxEvents)
+    input = cms.untracked.int32(opt.maxEvents)
 )
 
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:' + options.input)
+    fileNames = cms.untracked.vstring('file:' + opt.input)
 )
 
 ecalRecoClusters = "hltParticleFlowClusterECALUnseeded"
@@ -67,7 +116,8 @@ ecalRecoClusters = "hltParticleFlowClusterECALUnseeded"
 process.hltPFScAssocByEnergyScoreProducer = cms.EDProducer("BarrelPCToSCAssociatorByEnergyScoreProducer",
     hardScatterOnly = cms.bool(True),
     hitMapTag = cms.InputTag("hltRecHitMapProducer:barrelRecHitMap"),
-    hits = cms.VInputTag("hltParticleFlowRecHitECALUnseeded", "hltParticleFlowRecHitHBHE"), # hltParticleFlowClusterHO
+    hits = cms.VInputTag("hltParticleFlowRecHitECALUnseeded", "hltParticleFlowRecHitHBHE"),
+    # hltParticleFlowClusterHO
 )
 
 process.hltPFClusterSimClusterAssociationProducerECAL = cms.EDProducer("PCToSCAssociatorEDProducer",
@@ -84,10 +134,11 @@ process.ecalGeometryAnalyzer = cms.EDAnalyzer(
     recClusters = cms.InputTag(ecalRecoClusters),
     simClusters = cms.InputTag("mix", "MergedCaloTruth"),
     clusterAssociator = cms.InputTag("hltPFClusterSimClusterAssociationProducerECAL"),
-    enFracCut = cms.untracked.double(0.01),
-    ptCut = cms.untracked.double(0.1),
-    scoreCut = cms.untracked.double(1.0),
-    responseCut = cms.untracked.double(0.6),
+    kinematicCuts = cms.untracked.bool(opt.kinematicCuts),
+    enFracCut = cms.untracked.double(opt.enFracCut),
+    ptCut = cms.untracked.double(opt.ptCut),
+    scoreCut = cms.untracked.double(opt.scoreCut),
+    responseCut = cms.untracked.double(opt.responseCut),
 )
 
 process.p = cms.Path(

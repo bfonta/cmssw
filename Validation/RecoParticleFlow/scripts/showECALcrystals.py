@@ -115,7 +115,7 @@ def plotEvent(geom, hits, clusters, out, zoom, var='energy', zlabel='', categori
     extensions = ('.pdf', '.png')
     for ext in extensions:
         fig.savefig(out + ext)
-    print(f"INFO: Figure save under {out}{'/'.join(extensions)}")
+    print(f"INFO: Figure saved under {out}{'/'.join(extensions)}")
     plt.close()
         
 def showECAL(infile, outfile, props):

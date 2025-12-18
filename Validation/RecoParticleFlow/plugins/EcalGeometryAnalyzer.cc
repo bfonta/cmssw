@@ -57,6 +57,7 @@ private:
   edm::EDGetTokenT<ticl::RecoToSimCollectionWithSimClustersT<reco::PFClusterCollection>> RecoToSimAssociatorToken_;
   edm::EDGetTokenT<ticl::SimToRecoCollectionWithSimClustersT<reco::PFClusterCollection>> SimToRecoAssociatorToken_;
 
+  bool kinematicCuts_;
   double enFracCut_;
   double ptCut_;
   double scoreCut_;
@@ -103,6 +104,7 @@ EcalGeometryAnalyzer::EcalGeometryAnalyzer(const edm::ParameterSet& iConfig)
 	recClusterToken_(consumes<reco::PFClusterCollection>(iConfig.getParameter<edm::InputTag>("recClusters"))),
 	simClusterToken_(consumes<SimClusterCollection>(iConfig.getParameter<edm::InputTag>("simClusters"))),
 	SimToRecoAssociatorToken_(consumes<ticl::SimToRecoCollectionWithSimClustersT<reco::PFClusterCollection>>(iConfig.getParameter<edm::InputTag>("clusterAssociator"))),
+	kinematicCuts_(iConfig.getUntrackedParameter<bool>("kinematicCuts")),
 	enFracCut_(iConfig.getUntrackedParameter<double>("enFracCut")),
 	ptCut_(iConfig.getUntrackedParameter<double>("ptCut")),
 	scoreCut_(iConfig.getUntrackedParameter<double>("scoreCut")),
@@ -126,6 +128,7 @@ void EcalGeometryAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& desc
   desc.add<edm::InputTag>("recClusters", edm::InputTag("hltParticleFlowClusterECALUnseeded"));
   desc.add<edm::InputTag>("simClusters", edm::InputTag("mix", "MergedCaloTruth"));
   desc.add<edm::InputTag>("clusterAssociator", edm::InputTag("hltPFClusterSimClusterAssociationProducerECAL"));
+  desc.addUntracked<bool>("kinematicCuts", false);
   desc.addUntracked<double>("enFracCut", 0.01);
   desc.addUntracked<double>("ptCut", 0.1);
   desc.addUntracked<double>("scoreCut", 1.);
@@ -354,51 +357,55 @@ void EcalGeometryAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
   for (unsigned int simId = 0; simId < simClusters.size(); ++simId) {
 	if (!passResponseMatch)
 	  break;
-	
+
 	auto& scl = simClusters[simId];
+
+	if (kinematicCuts_)
+	  {
+		double energySumSimHits = 0;
+		for (auto hit_energy : scl.hits_and_energies()) {
+		  energySumSimHits += hit_energy.second;
+		}
 	
-	double energySumSimHits = 0;
-    for (auto hit_energy : scl.hits_and_energies()) {
-      energySumSimHits += hit_energy.second;
-    }
-	
-	// apply cut on energy fraction (sim cluster energy wrt all sim clusters from same calo particle)
-	double SimClusterToCPEnergyFraction = energySumSimHits / simClusterToCPEnergyMap[simId];       
-	if (SimClusterToCPEnergyFraction < enFracCut_)               
-	  continue;
-	// apply cut on pt of the sim track
-	if (simClusters[simId].pt() < ptCut_)       
-	  continue;
+		// apply cut on energy fraction
+		// (sim cluster energy wrt all sim clusters from same calo particle)
+		double SimClusterToCPEnergyFraction = energySumSimHits / simClusterToCPEnergyMap[simId];       
+		if (SimClusterToCPEnergyFraction < enFracCut_)               
+		  continue;
+		// apply cut on pt of the sim track
+		if (simClusters[simId].pt() < ptCut_)       
+		  continue;
 
-	// filter all sim clusters produced by a sim track which crossed the
-	// tracker/calorimeter boundary outside the barrel
-	auto const scTrack = simClusters[simId].g4Tracks()[0];
-	const math::XYZTLorentzVectorF pos = scTrack.getPositionAtBoundary();                                               
-	auto const simTrackEtaAtBoundary = pos.Eta();
-	if (abs(simTrackEtaAtBoundary) > 1.48)  // simTrack does not cross the barrel
-	  continue;
+		// filter all sim clusters produced by a sim track which crossed the
+		// tracker/calorimeter boundary outside the barrel
+		auto const scTrack = simClusters[simId].g4Tracks()[0];
+		const math::XYZTLorentzVectorF pos = scTrack.getPositionAtBoundary();                                               
+		auto const simTrackEtaAtBoundary = pos.Eta();
+		if (abs(simTrackEtaAtBoundary) > 1.48)  // simTrack does not cross the barrel
+		  continue;
 
-	const edm::Ref<SimClusterCollection> simClusterRef(simClusters_, simId);
-    const auto& simToRecoIt = simToRecoAssoc.find(simClusterRef);
-    if (simToRecoIt == simToRecoAssoc.end())
-      continue;
-    const auto& simToRecoMatched = simToRecoIt->val;
-    if (simToRecoMatched.empty())
-      continue;
+		const edm::Ref<SimClusterCollection> simClusterRef(simClusters_, simId);
+		const auto& simToRecoIt = simToRecoAssoc.find(simClusterRef);
+		if (simToRecoIt == simToRecoAssoc.end())
+		  continue;
+		const auto& simToRecoMatched = simToRecoIt->val;
+		if (simToRecoMatched.empty())
+		  continue;
 
-	// remove the cluster (not the event!)
-	// if the sim cluster is not matched to a reco cluster
-	// with a score lower than "scoreCut"
-	bool passScoreMatch = false;
-	for (const auto& recoPair : simToRecoMatched) {
-	  if (recoPair.second.second <= scoreCut_) {
-		passScoreMatch = true;
-		break;
+		// remove the cluster (not the event!)
+		// if the sim cluster is not matched to a reco cluster
+		// with a score lower than "scoreCut"
+		bool passScoreMatch = false;
+		for (const auto& recoPair : simToRecoMatched) {
+		  if (recoPair.second.second <= scoreCut_) {
+			passScoreMatch = true;
+			break;
+		  }
+		}
+		if (!passScoreMatch)
+		  continue;
 	  }
-	}
-	if (!passScoreMatch)
-	  continue;
-
+	
 	// properties of the clusters
 	clusterEnergies_["Sim"].push_back(scl.energy());
 	clusterEtas_["Sim"].push_back(scl.eta());
