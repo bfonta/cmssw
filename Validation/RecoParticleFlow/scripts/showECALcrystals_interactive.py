@@ -22,6 +22,61 @@ from bokeh.palettes import Viridis256, Category20
 from bokeh.transform import linear_cmap, log_cmap
 from bokeh.layouts import layout
 
+def writeIntructions():
+    text = """
+    <b> Interactive event display </b>
+
+    <p>
+    This event display was developed to enable a flexible visualization of PF clusters in ECAL.
+    Its original goal was to facilitate PF validation at HLT.
+    </p>
+
+    <p>    
+    This page can be created by running:
+
+    <pre>
+    python3 Validation/RecoParticleFlow/scripts/showECALcrystals_interactive.py -i data.root --outdir . --nevents 10
+    </pre>    
+    within a CMSSW release.
+    Check all options by adding "--help".
+
+    <p>
+    The input "data.root" file holds the geometry and event information, and can be in turn produced with:
+
+    <pre>
+    cmsRun Validation/RecoParticleFlow/test/ecalGeometryAnalyzer_cfg.py input=<a step2 file>.root
+    </pre>
+    where the input file refers to a CMS step2 file, where cluster information and ECAL geometry is available.
+    </p>
+
+    <b> Capabilites </b>
+
+    <p>
+    This tool enables you to:
+    <ul>
+    <li>Visualize different events by changing the event number in "Event ID selection"</li>
+    <li>Filter crytals based on the released energy</li>
+    <li>Select specific clusters by ID</li>
+    <li>Use some selection tool on the right of each plot (zoom, undo, ...)</li>
+    </ul>
+    </p>
+    
+    <p>
+    The energy displayed corresponds to the total energy deposited in a given crystal.
+    Hover the data with your mouse to inspect the contributions of individual clusters.
+    </p>
+    <p>
+    Energy fractions in a given crystal are available mostly as a debugging tool: we expect "FracsSum" to be one for all crystals.
+    </p>
+    
+    <p>
+    <i>Note:</i> You might need to click twice on the "Show all clusters" buttons for them to work correctly.
+    </p>
+    
+    <hr />
+    """
+    return Div(text=text)
+    
 def createFigure(title):
     fig = figure(
         title=title,
@@ -513,7 +568,10 @@ def plotEvent(geom, hits, clusters, output_path):
     )
     dropVar.js_on_event("menu_item_click", dropVar_calb)
 
-    lay = [[numInput, Div(text='', width=40, height=1), slider],
+    markdownText = writeIntructions()
+
+    lay = [[markdownText],
+           [numInput, Div(text='', width=40, height=1), slider],
            [dropVar,],
            [p['Sim'][0], p['Reco'][0]]]
 
