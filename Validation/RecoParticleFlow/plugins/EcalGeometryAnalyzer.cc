@@ -47,6 +47,7 @@ private:
   void analyze(edm::Event const&, edm::EventSetup const&) override;
   void endJob() override {}
   double inBarrel(const DetId& id);
+  bool needsAssociator(bool kinCuts, double respCut);
 
   edm::ESGetToken<CaloGeometry, CaloGeometryRecord> caloGeomToken_;
   edm::EDGetTokenT<CaloParticleCollection> caloParticleToken_;
@@ -103,7 +104,6 @@ EcalGeometryAnalyzer::EcalGeometryAnalyzer(const edm::ParameterSet& iConfig)
 	simHitToken_(consumes<std::vector<PCaloHit>>(iConfig.getParameter<edm::InputTag>("simHits"))),
 	recClusterToken_(consumes<reco::PFClusterCollection>(iConfig.getParameter<edm::InputTag>("recClusters"))),
 	simClusterToken_(consumes<SimClusterCollection>(iConfig.getParameter<edm::InputTag>("simClusters"))),
-	SimToRecoAssociatorToken_(consumes<ticl::SimToRecoCollectionWithSimClustersT<reco::PFClusterCollection>>(iConfig.getParameter<edm::InputTag>("clusterAssociator"))),
 	kinematicCuts_(iConfig.getUntrackedParameter<bool>("kinematicCuts")),
 	enFracCut_(iConfig.getUntrackedParameter<double>("enFracCut")),
 	ptCut_(iConfig.getUntrackedParameter<double>("ptCut")),
@@ -118,6 +118,12 @@ EcalGeometryAnalyzer::EcalGeometryAnalyzer(const edm::ParameterSet& iConfig)
   assert(ptCut_ >= 0.);
   assert(scoreCut_ >= 0. && scoreCut_ <= 1.);
   assert(responseCut_ >= 0.);
+
+  // this cut avoids the need to have associator information in the event if
+  // it is not needed
+  if (needsAssociator(kinematicCuts_, responseCut_)) {
+	SimToRecoAssociatorToken_ = consumes<ticl::SimToRecoCollectionWithSimClustersT<reco::PFClusterCollection>>(iConfig.getParameter<edm::InputTag>("clusterAssociator"));
+  }
 }
 
 void EcalGeometryAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
@@ -127,12 +133,12 @@ void EcalGeometryAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& desc
   desc.add<edm::InputTag>("simHits", edm::InputTag("g4SimHits", "EcalHitsEB"));
   desc.add<edm::InputTag>("recClusters", edm::InputTag("hltParticleFlowClusterECALUnseeded"));
   desc.add<edm::InputTag>("simClusters", edm::InputTag("mix", "MergedCaloTruth"));
-  desc.add<edm::InputTag>("clusterAssociator", edm::InputTag("hltPFClusterSimClusterAssociationProducerECAL"));
   desc.addUntracked<bool>("kinematicCuts", false);
   desc.addUntracked<double>("enFracCut", 0.01);
   desc.addUntracked<double>("ptCut", 0.1);
   desc.addUntracked<double>("scoreCut", 1.);
   desc.addUntracked<double>("responseCut", 0.);
+  desc.addOptional<edm::InputTag>("clusterAssociator", edm::InputTag("hltPFClusterSimClusterAssociationProducerECAL"));
   descriptions.add("ecalGeometryAnalyzer", desc);
 }
 
@@ -169,6 +175,10 @@ void EcalGeometryAnalyzer::beginJob() {
 // check the detid lies in the ECAL barrel
 double EcalGeometryAnalyzer::inBarrel(const DetId& id) {
   return id.det() == DetId::Ecal && id.subdetId() == EcalBarrel;
+}
+
+bool EcalGeometryAnalyzer::needsAssociator(bool kinCuts, double respCut) {
+  return kinCuts || respCut > 0.;
 }
 
 void EcalGeometryAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
@@ -258,14 +268,20 @@ void EcalGeometryAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
   auto recClusters = *recClusters_;
   auto simClusters = *simClusters_;
 
-  // associators
+  // Sim to Reco associator
   edm::Handle<ticl::SimToRecoCollectionWithSimClustersT<reco::PFClusterCollection>> SimToRecoAssociatorCollection;
-  iEvent.getByToken(SimToRecoAssociatorToken_, SimToRecoAssociatorCollection);
-  if (!SimToRecoAssociatorCollection.isValid()) {
-    edm::LogPrint("EcalGeometryAnalyzer") << "Input clusterAssociator SimToReco collection not found.";
-    return;
+  ticl::SimToRecoCollectionWithSimClustersT<reco::PFClusterCollection> simToRecoAssoc;
+  if (needsAssociator(kinematicCuts_, responseCut_)) {
+	iEvent.getByToken(SimToRecoAssociatorToken_, SimToRecoAssociatorCollection);
+	if (!SimToRecoAssociatorCollection.isValid()) {
+	  edm::LogPrint("EcalGeometryAnalyzer") << "Input clusterAssociator SimToReco collection not found.";
+	  return;
+	}
+	simToRecoAssoc = *SimToRecoAssociatorCollection;
   }
-  auto simToRecoAssoc = *SimToRecoAssociatorCollection;
+  else {
+	simToRecoAssoc = ticl::SimToRecoCollectionWithSimClustersT<reco::PFClusterCollection>();
+  }
 
   // Build map linking each sim cluster to the energy of their mother calo particle
   std::unordered_map<uint, double> simClusterToCPEnergyMap;
@@ -282,7 +298,7 @@ void EcalGeometryAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
       simClusterToCPEnergyMap[scRef.key()] = energySumSimHits;
     }
   }
-	
+
   // Event fill before any cuts
   nHits_["Reco"] = recHits.size();
   for (auto& rechit : recHits) {
@@ -331,26 +347,31 @@ void EcalGeometryAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	 with a response higher than "responseCut"
   */
   bool passResponseMatch = false;
-  for (unsigned int simId = 0; simId < simClusters.size(); ++simId) {
-	const edm::Ref<SimClusterCollection> simClusterRef(simClusters_, simId);
-    const auto& simToRecoIt = simToRecoAssoc.find(simClusterRef);
-    if (simToRecoIt == simToRecoAssoc.end())
-      continue;
-    const auto& simToRecoMatched = simToRecoIt->val;
-    if (simToRecoMatched.empty())
-      continue;
+  if (needsAssociator(kinematicCuts_, responseCut_)) {
+	for (unsigned int simId = 0; simId < simClusters.size(); ++simId) {
+	  const edm::Ref<SimClusterCollection> simClusterRef(simClusters_, simId);
+	  const auto& simToRecoIt = simToRecoAssoc.find(simClusterRef);
+	  if (simToRecoIt == simToRecoAssoc.end())
+		continue;
+	  const auto& simToRecoMatched = simToRecoIt->val;
+	  if (simToRecoMatched.empty())
+		continue;
 
-	for (const auto& recoPair : simToRecoMatched) {
-	  auto recoId = recoPair.first.index();
-	  double response = recClusters[recoId].energy() / simClusters[simId].energy();
-	  if (response >= responseCut_) {
-		passResponseMatch = true;
-		break;
+	  for (const auto& recoPair : simToRecoMatched) {
+		auto recoId = recoPair.first.index();
+		double response = recClusters[recoId].energy() / simClusters[simId].energy();
+		if (response >= responseCut_) {
+		  passResponseMatch = true;
+		  break;
+		}
 	  }
-	}
 
-	if (passResponseMatch)
-	  break;
+	  if (passResponseMatch)
+		break;
+	}
+  }
+  else {
+	passResponseMatch = true;
   }
 
   unsigned simClusterCounter = 0;  
@@ -359,7 +380,6 @@ void EcalGeometryAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	  break;
 
 	auto& scl = simClusters[simId];
-
 	if (kinematicCuts_)
 	  {
 		double energySumSimHits = 0;
@@ -429,7 +449,7 @@ void EcalGeometryAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	  clusterHitFractions_["Sim"].push_back(itF->second);
 	}
   }
-  
+
   eventTree_->Fill();
 }
 

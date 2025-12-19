@@ -133,7 +133,6 @@ process.ecalGeometryAnalyzer = cms.EDAnalyzer(
     simHits = cms.InputTag("g4SimHits", "EcalHitsEB"),
     recClusters = cms.InputTag(ecalRecoClusters),
     simClusters = cms.InputTag("mix", "MergedCaloTruth"),
-    clusterAssociator = cms.InputTag("hltPFClusterSimClusterAssociationProducerECAL"),
     kinematicCuts = cms.untracked.bool(opt.kinematicCuts),
     enFracCut = cms.untracked.double(opt.enFracCut),
     ptCut = cms.untracked.double(opt.ptCut),
@@ -141,8 +140,16 @@ process.ecalGeometryAnalyzer = cms.EDAnalyzer(
     responseCut = cms.untracked.double(opt.responseCut),
 )
 
-process.p = cms.Path(
-    process.hltPFScAssocByEnergyScoreProducer
-    * process.hltPFClusterSimClusterAssociationProducerECAL
-    * process.ecalGeometryAnalyzer
-)
+"""
+This cut avoids the need to have associator information in the event
+if it is not needed
+"""
+if opt.kinematicCuts or opt.responseCut > 0.:
+    process.ecalGeometryAnalyzer.clusterAssociator = cms.InputTag("hltPFClusterSimClusterAssociationProducerECAL")
+    process.p = cms.Path(
+        process.hltPFScAssocByEnergyScoreProducer
+        * process.hltPFClusterSimClusterAssociationProducerECAL
+        * process.ecalGeometryAnalyzer
+    )
+else:
+    process.p = cms.Path(process.ecalGeometryAnalyzer)
