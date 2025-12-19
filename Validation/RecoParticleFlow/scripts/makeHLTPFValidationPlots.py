@@ -16,6 +16,9 @@ import ROOT
 import mplhep as hep
 hep.style.use("CMS")
 
+colorblind_palette = ('#1F77B4', '#AEC7E8', '#FF7F0E', '#FFBB78', '#2CA02C', '#98DF8A', '#D62728',
+                      '#FF9896', '#9467BD', '#C5B0D5', '#8C564B', '#C49C94', '#E377C2', '#F7B6D2',
+                      '#7F7F7F', '#C7C7C7', '#BCBD22', '#DBDB8D', '#17BECF', '#9EDAE5')
 import warnings
 warnings.filterwarnings("ignore", message="The value of the smallest subnormal")
 
@@ -177,8 +180,7 @@ def plotProject(h, props, rebin_edges, outname):
     """
     Project and plot slices of a 2D histogram.
     """
-    colors_iter = iter(('#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628',
-                        '#984ea3', '#999999', '#e41a1c', '#dede00')) #colour-blind friendly
+    colors_iter = iter(colorblind_palette)
 
     valuesList, errorsList = [], []
     fit_params = {} if props.fit else None
@@ -227,8 +229,8 @@ def plotOverlay(subdirs, cached_histos, name, props, outdir):
     """
     Plots 1D distributions, overlaying plots with identical names in different 'subdirs'.
     """
-    colors_iter = iter(('#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628',
-                        '#984ea3', '#999999', '#e41a1c', '#dede00')) #colour-blind friendly
+    colors_iter = iter(colorblind_palette)
+    
     pattern = r"Score(\d+)p(\d+)"
     matching = "score" if args.match_by_score else "shared energy fraction"
     replacement = lambda m: f"{matching} = {m.group(1)}.{m.group(2)}"
@@ -282,8 +284,7 @@ def plotOverlayRatio(subdirs, cached_histos, num, den, props, outdir):
     """
     Plots 1D distributions of numerator / denominator.
     """
-    colors_iter = iter(('#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628',
-                        '#984ea3', '#999999', '#e41a1c', '#dede00')) #colour-blind friendly
+    colors_iter = iter(colorblind_palette)
     pattern = r"Score(\d+)p(\d+)"
     matching = "score" if args.match_by_score else "shared energy fraction"
     replacement = lambda m: f"{matching} = {m.group(1)}.{m.group(2)}"
@@ -844,7 +845,7 @@ if __name__ == '__main__':
         **{f'{subdir}/ResponseE_Eta':
            InputArgs(
                xtitle=titles['response'], ytitle='# Clusters', var=r'$\eta$',
-               rebin=(-1.5, -0.75, 0., 0.75, 1.5)
+               rebin=(-1.5, -1.3, -1., -0.75, -0.5, -0.25, 0., 0.25, 0.5, 0.75, 1., 1.3, 1.5)
            ) for subdir in subdirs},
         **{f'{subdir}/ResponseE_Phi':
            InputArgs(
