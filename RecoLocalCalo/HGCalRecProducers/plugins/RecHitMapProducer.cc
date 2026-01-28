@@ -25,6 +25,8 @@ public:
   void produce(edm::StreamID, edm::Event&, const edm::EventSetup&) const override;
 
 private:
+  std::vector<edm::InputTag> hgcal_hits_tag_;
+  std::vector<edm::InputTag> pf_hits_tag_;
   std::vector<edm::EDGetTokenT<HGCRecHitCollection>> hgcal_hits_token_;
   std::vector<edm::EDGetTokenT<reco::PFRecHitCollection>> pf_hits_token_;
 
@@ -37,12 +39,14 @@ DEFINE_FWK_MODULE(RecHitMapProducer);
 using DetIdRecHitMap = std::unordered_map<DetId, const unsigned int>;
 
 RecHitMapProducer::RecHitMapProducer(const edm::ParameterSet& ps)
-    : hgcalOnly_(ps.getParameter<bool>("hgcalOnly")), barrelOnly_(ps.getParameter<bool>("barrelOnly")) {
+    : doHgcalHits_(ps.getParameter<bool>("doHgcalHits")), doPFHits_(ps.getParameter<bool>("doPFHits")) {
   std::vector<edm::InputTag> tags = ps.getParameter<std::vector<edm::InputTag>>("hits");
   for (auto& tag : tags) {
     if (tag.label().find("HGCalRecHit") != std::string::npos) {
+	  hgcal_hits_tag_.push_back(tag);
       hgcal_hits_token_.push_back(consumes<HGCRecHitCollection>(tag));
     } else {
+	  pf_hits_tag_.push_back(tag);
       pf_hits_token_.push_back(consumes<reco::PFRecHitCollection>(tag));
     }
   }
@@ -76,8 +80,11 @@ void RecHitMapProducer::produce(edm::StreamID, edm::Event& evt, const edm::Event
 
     // Check validity of all handles
     if (!ee_hits.isValid() || !fh_hits.isValid() || !bh_hits.isValid()) {
-      edm::LogWarning("HGCalRecHitMapProducer") << "One or more HGCal hit collections are unavailable. Returning an "
-                                                  "empty map and an empty RefProdVectorHGCRecHitCollection";
+      edm::LogWarning("HGCalRecHitMapProducer") << "One or more of the following HGCal hit collections are unavailable: ";
+	  for (auto& tag : hgcal_hits_tag_) {
+		edm::LogWarning("HGCalRecHitMapProducer") << " - " << tag;
+	  }
+	  edm::LogWarning("HGCalRecHitMapProducer") << "Returning an empty map and an empty RefProdVectorHGCRecHitCollection";
       evt.put(std::make_unique<edm::RefProdVector<HGCRecHitCollection>>(), "RefProdVectorHGCRecHitCollection");
       evt.put(std::move(hitMapHGCal), "hgcalRecHitMap");
     } else {
@@ -109,8 +116,11 @@ void RecHitMapProducer::produce(edm::StreamID, edm::Event& evt, const edm::Event
     const auto& hbhe_hits = evt.getHandle(pf_hits_token_[1]);
 
     if (!ecal_hits.isValid() || !hbhe_hits.isValid()) {
-      edm::LogWarning("HGCalRecHitMapProducer")
-          << "One or more PF hit collections are unavailable. Returning an empty map.";
+      edm::LogWarning("HGCalRecHitMapProducer") << "One or more of the following PF hit collections are unavailable: ";
+	  for (auto& tag : pf_hits_tag_) {
+		edm::LogWarning("HGCalRecHitMapProducer") << " - " << tag;
+	  }
+	  edm::LogWarning("HGCalRecHitMapProducer") << "Returning an empty map.";
       evt.put(std::make_unique<edm::RefProdVector<reco::PFRecHitCollection>>(), "RefProdVectorPFRecHitCollection");
       evt.put(std::move(hitMapPF), "pfRecHitMap");
     } else {
