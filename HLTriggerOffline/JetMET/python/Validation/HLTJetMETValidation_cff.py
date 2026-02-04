@@ -8,8 +8,9 @@ from Validation.RecoMET.hltMETValidation_cff import *
 def sumModules(alist):
     return reduce(lambda x, y: x + y, alist)
 
-met_run3_analyzers = [hltMetAnalyzerPF, hltMetAnalyzerPFCalo]
-met_ph2_analyzers = [hltMetAnalyzerPF, hltMetAnalyzerPFPuppi, hltMetTypeOneAnalyzerPFPuppi]
+met_common_analyzers = [hltMetAnalyzerPF, hltMetAnalyzerPFCalo, hltMetTypeOneAnalyzerPFPuppi] 
+met_run3_analyzers = met_common_analyzers + [hltMetAnalyzerPFNoMu]
+met_ph2_analyzers =  met_common_analyzers + [hltMetAnalyzerPFPuppi]
 
 ##please do NOT include paths here!
 HLTJetMETValSeq = cms.Sequence(
