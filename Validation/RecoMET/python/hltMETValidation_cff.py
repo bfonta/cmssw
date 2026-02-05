@@ -33,11 +33,11 @@ hltMetAnalyzerPFPuppi = _hltMetTester.clone(
 )
 phase2_common.toModify(hltMetAnalyzerPFPuppi, inputMETLabel = 'hltPFPuppiMET')
 
-hltMetTypeOneAnalyzerPFPuppi = _hltMetTester.clone(
+hltMetTypeOneAnalyzerPF = _hltMetTester.clone(
     inputMETLabel = 'hltPFMETTypeOne',
     METType = 'pf',
 )
-phase2_common.toModify(hltMetTypeOneAnalyzerPFPuppi, inputMETLabel = 'hltPFPuppiMETTypeOne')
+phase2_common.toModify(hltMetTypeOneAnalyzerPF, inputMETLabel = 'hltPFPuppiMETTypeOne')
 
 hltMetAnalyzerPFCalo = _hltMetTester.clone(
     inputMETLabel = 'hltMet',
@@ -50,4 +50,3 @@ hltMetAnalyzerPFNoMu = _hltMetTester.clone(
     inputMETLabel = 'hltPFMETNoMuProducer',
     METType = 'pf',
 )
-
