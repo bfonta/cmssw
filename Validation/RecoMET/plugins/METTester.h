@@ -164,6 +164,8 @@ private:
   bool isGenMET;
   bool isMiniAODMET;
   std::string runDir;
+  std::string mGenMetTrueLabel;
+  std::string mGenMetCaloLabel;
 };
 
 #endif  // METTESTER_H

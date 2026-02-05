@@ -24,9 +24,13 @@ METTester::METTester(const edm::ParameterSet &iConfig) {
   else if (isGenMET)
     genMETsToken_ = consumes<reco::GenMETCollection>(inputMETLabel_);
 
+  mGenMetTrueLabel = iConfig.getParameter<std::string>("genMetTrue");
+  mGenMetCaloLabel = iConfig.getParameter<std::string>("genMetCalo");
   if (!isMiniAODMET) {
-    genMETsTrueToken_ = consumes<reco::GenMETCollection>(edm::InputTag("genMetTrue"));
-    genMETsCaloToken_ = consumes<reco::GenMETCollection>(edm::InputTag("genMetCalo"));
+	genMETsTrueToken_ = consumes<reco::GenMETCollection>(edm::InputTag(mGenMetTrueLabel));
+	if (mGenMetTrueLabel != mGenMetCaloLabel) { // gen met has 2 definitions, mht only one
+	  genMETsCaloToken_ = consumes<reco::GenMETCollection>(edm::InputTag(mGenMetCaloLabel));
+	}
   }
 
   pvTokenTag_ = iConfig.getParameter<edm::InputTag>("primaryVertices");
@@ -343,7 +347,7 @@ void METTester::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetup)
       edm::LogInfo("OutputInfo") << " failed to retrieve data required by MET Task:  genMetTrue";
     }
   }
-  if (!isMiniAODMET) {
+  if (!isMiniAODMET and mGenMetTrueLabel != mGenMetCaloLabel) {
     edm::Handle<GenMETCollection> genCalo;
     iEvent.getByToken(genMETsCaloToken_, genCalo);
     if (genCalo.isValid()) {
@@ -467,7 +471,7 @@ void METTester::fillDescriptions(edm::ConfigurationDescriptions &descriptions) {
   desc.add<edm::InputTag>("primaryVertices", edm::InputTag("PixelVertices"));
   desc.add<edm::InputTag>("inputMETLabel", edm::InputTag("pfMet"));
   desc.addUntracked<std::string>("METType", "pf");
-  desc.add<edm::InputTag>("genMetTrue", edm::InputTag("genMetTrue"));
-  desc.add<edm::InputTag>("genMetCalo", edm::InputTag("genMetCalo"));
+  desc.add<std::string>("genMetTrueLabel", "genMetTrue");
+  desc.add<std::string>("genMetCaloLabel", "genMetCalo");
   descriptions.addWithDefaultLabel(desc);
 }
