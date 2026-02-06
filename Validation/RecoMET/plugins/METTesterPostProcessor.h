@@ -26,6 +26,7 @@ private:
 
   void mFillAggrHistograms(std::string, DQMStore::IGetter&);
   bool mCheckHisto(MElem* h);
+  float mComputeSignErr(float significance, float metRMS, float metMean, float metRMSError);
 
   template <typename T>
   using ArrayVariant = std::variant<std::array<T, METTester::mNMETBins + 1>, std::array<T, METTester::mNPhiBins + 1>>;
@@ -50,15 +51,16 @@ private:
   using ElemMapArr =
       std::unordered_map<std::string, ArrayVariant<MElem*>>;  // one entry per bin type, for instance "MET" and "Phi"
 
-  ElemMapArr mMET;
+  ElemMapArr mMET, mGenMETTrue;
   ElemMapArr mMETDiff_GenMETTrue;
   ElemMapArr mMETRatio_GenMETTrue;
   ElemMapArr mMETDeltaPhi_GenMETTrue;
 
   ElemMap mMETDiffAggr;
+  ElemMap mMETDeltaPhiAggr;
   ElemMap mMETRespAggr;
-  ElemMap mMETResolAggr;
-  ElemMap mMETSignAggr;
+  ElemMap mMETResolAggr, mMETGenResolAggr, mMETResolDiffAggr;
+  ElemMap mMETSignAggr, mMETGenSignAggr, mMETSignDiffAggr;
 
   std::string runDir;
 

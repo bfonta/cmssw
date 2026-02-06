@@ -63,11 +63,15 @@ private:
   edm::EDGetTokenT<std::vector<reco::Vertex>> pvToken_;
   edm::EDGetTokenT<reco::CaloMETCollection> caloMETsToken_;
   edm::EDGetTokenT<reco::PFMETCollection> pfMETsToken_;
+  edm::EDGetTokenT<reco::METCollection> recoMHTToken_;
+  edm::EDGetTokenT<reco::METCollection> genMHTToken_;
   edm::EDGetTokenT<reco::GenMETCollection> genMETsToken_;
   edm::EDGetTokenT<reco::GenMETCollection> genMETsTrueToken_;
   edm::EDGetTokenT<reco::GenMETCollection> genMETsCaloToken_;
   edm::EDGetTokenT<pat::METCollection> patMETToken_;
 
+  edm::Handle<reco::METCollection> genMhtHandle_;
+  
   // Events variables
   MonitorElement *mNvertex;
 
@@ -76,10 +80,10 @@ private:
   MonitorElement *mMEy;
   MonitorElement *mMETSignPseudo;
   MonitorElement *mMETSignReal;
+  MonitorElement *mGenMETTrue;
+  MonitorElement *mGenMETCalo;
   MonitorElement *mMET;
-  MonitorElement *mMETFine;
   MonitorElement *mMET_Nvtx;
-  MonitorElement *mMETEta;
   MonitorElement *mMETPhi;
   MonitorElement *mSumET;
   MonitorElement *mMETDiff_GenMETTrue;
@@ -149,9 +153,9 @@ private:
   template <size_t S>
   using ElemArr = std::array<MonitorElement *, S>;
 
-  ElemArr<mNMETBins> mMET_METBins;
-  ElemArr<mNPhiBins> mMET_PhiBins;
-
+  ElemArr<mNMETBins> mMET_METBins, mGenMETTrue_METBins, mGenMETCalo_METBins;
+  ElemArr<mNPhiBins> mMET_PhiBins, mGenMETTrue_PhiBins, mGenMETCalo_PhiBins;
+  
   ElemArr<mNMETBins> mMETDiff_GenMETTrue_METBins;
   ElemArr<mNPhiBins> mMETDiff_GenMETTrue_PhiBins;
   ElemArr<mNMETBins> mMETRatio_GenMETTrue_METBins;
@@ -161,6 +165,7 @@ private:
 
   bool isCaloMET;
   bool isPFMET;
+  bool isMHT;
   bool isGenMET;
   bool isMiniAODMET;
   std::string runDir;

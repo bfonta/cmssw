@@ -14,13 +14,22 @@ from Validation.RecoMET.metTester_cfi import metTester as _metTester
 _hltMetTester = _metTester.clone(
     runDir = "HLT/JetMET/METValidation/",
     primaryVertices = 'hltPixelVertices',
-    genMetTrue = 'genMetTrue',
-    genMetCalo = 'genMetCalo',
+    genMetTrueLabel = 'genMetTrue',
+    genMetCaloLabel = 'genMetCalo',
+)
+
+_hltMhtTester = _metTester.clone(
+    runDir = "HLT/JetMET/METValidation/",
+    primaryVertices = 'hltPixelVertices',
+    genMetTrueLabel = 'genMht',
+    genMetCaloLabel = 'genMht',
 )
 
 from Configuration.Eras.Modifier_phase2_common_cff import phase2_common
 phase2_common.toModify(_hltMetTester, primaryVertices = 'hltPhase2PixelVertices')
+phase2_common.toModify(_hltMhtTester, primaryVertices = 'hltPhase2PixelVertices')
 
+####### MET #######
 hltMetAnalyzerPF = _hltMetTester.clone(
     inputMETLabel = 'hltPFMETProducer', 
     METType = 'pf',
@@ -50,3 +59,22 @@ hltMetAnalyzerPFNoMu = _hltMetTester.clone(
     inputMETLabel = 'hltPFMETNoMuProducer',
     METType = 'pf',
 )
+
+####### MHT #######
+# Run 3 only
+hltMhtAnalyzer = _hltMhtTester.clone(
+    inputMETLabel = 'hltMht', 
+    METType = 'mht',
+)
+
+# Run 3 only
+hltMhtAnalyzerPFTightID = _hltMhtTester.clone(
+    inputMETLabel = 'hltPFMHTTightID',
+    METType = 'mht',
+)
+
+hltMhtAnalyzerPFPuppi = _hltMhtTester.clone(
+    inputMETLabel = 'dummy (phase2-only)',
+    METType = 'mht',
+)
+phase2_common.toModify(hltMhtAnalyzerPFPuppi, inputMETLabel = 'hltPFPuppiMHT')

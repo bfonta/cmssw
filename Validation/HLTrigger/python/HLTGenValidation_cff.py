@@ -589,6 +589,7 @@ for label in hltGenValSourceLabels:
                              hltPathsToCheck = ['DST_PFScouting'])
 
 from RecoMET.Configuration.RecoGenMET_cff import genMetCalo,genMetTrue
+from RecoMET.Configuration.GenMHT_cff import genMht
 from RecoMET.Configuration.GenMETParticles_cff import genCandidatesForMET, genParticlesForMETAllVisible
 from PhysicsTools.JetMCAlgos.TauGenJets_cfi import tauGenJets
 
@@ -596,6 +597,7 @@ hltGENValidation = cms.Sequence(genCandidatesForMET+
                                 genParticlesForMETAllVisible+
                                 genMetCalo+
                                 genMetTrue+
+                                genMht+
                                 tauGenJets+
                                 HLTGenResSource+
                                 HLTGenValSourceMU+

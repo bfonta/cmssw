@@ -12,6 +12,7 @@ import array
 import ROOT
 import mplhep as hep
 hep.style.use("CMS")
+from dataclasses import dataclass
 
 import warnings
 warnings.filterwarnings("ignore", message="The value of the smallest subnormal")
@@ -22,6 +23,14 @@ class dotdict(dict):
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
 
+@dataclass
+class HLTMETInputs:
+    x: str    
+    y: str
+    rebin: int = None
+    out: str = ''
+    logY: bool = False
+    
 def createDir(adir):
     if not os.path.exists(adir):
         os.makedirs(adir)
@@ -71,11 +80,11 @@ def histo_values_errors(h):
     return values, errors
 
 class Plotter:
-    def __init__(self, label, fontsize=18, grid_color='grey'):
+    def __init__(self, label, period='Phase-2', fontsize=18, grid_color='grey'):
         self._fig, self._ax = plt.subplots(figsize=(10, 10))
         self.fontsize = fontsize
         
-        hep.cms.text(' Phase-2 Simulation Preliminary', ax=self._ax, fontsize=fontsize)
+        hep.cms.text(f' {period} Simulation Preliminary', ax=self._ax, fontsize=fontsize)
         hep.cms.lumitext(label + " | 14 TeV", ax=self._ax, fontsize=fontsize)
         if grid_color:
             self._ax.grid(which='major', color=grid_color)
@@ -108,14 +117,14 @@ class Plotter:
         if logY:
             self._ax.set_yscale('log')
 
-    def limits_with_margin(self, values, errors):
+    def limits_with_margin(self, values, errors, logY=False):
         values[np.isinf(values) | np.isnan(values)] = 0.
         errors[np.isinf(errors) | np.isnan(errors)] = 0.
         
         up = values + errors
         do = values - errors
         diff_step = 0.05 * abs(up.max()-do.min())
-        self.limits(y=(do.min() - diff_step, up.max() + 2*diff_step), logY=False)
+        self.limits(y=(do.min() - diff_step, up.max() + 2*diff_step), logY=logY)
 
     def save(self, name):
         for ext in self.extensions:
@@ -128,28 +137,33 @@ def plot1Dvars(afile, adir, avars, outdir, metType, top_text=False):
     Plots 1D distributions.
     The `avars` variables is a dictionary whose values are (xlabel, ylabel, rebin).
     """
-    for var, (xlabel, ylabel, rebin) in avars.items():
-        plotter = Plotter(args.sample_label)
-        root_hist = checkRootFile(afile, f"{adir}/{var}", rebin=rebin)
+    createDir(outdir)
+    
+    for var, props in avars.items():
+        if props.out is not None:
+            createDir(os.path.join(outdir, props.out))
+            
+        plotter = Plotter(args.sample_label, period=args.period)
+        root_hist = checkRootFile(afile, f"{adir}/{var}", rebin=props.rebin)
         nbins, bin_edges, bin_centers, bin_widths = define_bins(root_hist)
         values, errors = histo_values_errors(root_hist)
         errors /= 2
         
         plotter.ax.errorbar(bin_centers, values, xerr=None, yerr=errors,
-                            fmt='s', color='black', label=xlabel, **errorbar_kwargs)
+                            fmt='s', color='black', label=props.x, **errorbar_kwargs)
         plotter.ax.stairs(values, bin_edges, color='black', linewidth=2, baseline=None)
         plotter.ax.text(0.03, 0.97, metType, transform=plotter.ax.transAxes, fontsize=fontsize,
                         verticalalignment='top', horizontalalignment='left')
 
         print(adir, var)
-        plotter.limits_with_margin(values, errors)
-        plotter.labels(x=xlabel, y=ylabel)
+        plotter.limits_with_margin(values, errors, logY=props.logY)
+        plotter.labels(x=props.x, y=props.y)
 
         if top_text:
             plotter.ax.text(0.97, 0.97, root_hist.GetTitle().replace('ET', r'$E_T$'), transform=plotter.ax.transAxes, fontsize=fontsize,
                             verticalalignment='top', horizontalalignment='right')
 
-        plotter.save( os.path.join(outdir, var) )
+        plotter.save( os.path.join(outdir, props.out, var) )
 
 def plot1Dtrigger(afile, adir, avars, metType, outdir):
     avarsDict = {}
@@ -173,7 +187,7 @@ def plot1DCollectionComparison(afile, adir, avars, outdir, metTypes):
     createDir(outdir)
 
     for var, (xlabel, ylabel, rebin) in avars.items():
-        plotter = Plotter(args.sample_label)
+        plotter = Plotter(args.sample_label, period=args.period)
 
         amax, amin = float('-inf'), float('+inf')
         for metType in metTypes:
@@ -205,7 +219,7 @@ def plot1DFilesComparison(adir, avars, outdir, files, files_labels, metType):
     createDir(outdir)
 
     for var, (xlabel, ylabel, rebin) in avars.items():
-        plotter = Plotter(args.sample_label)
+        plotter = Plotter(args.sample_label, period=args.period)
 
         amax, amin = float('-inf'), float('+inf')
         for afile, alabel in zip(files, files_labels):
@@ -228,6 +242,83 @@ def plot1DFilesComparison(adir, avars, outdir, files, files_labels, metType):
         plotter.labels(x=xlabel, y=ylabel)
         plotter.ax.legend(prop={'size': 15})
         plotter.save( os.path.join(outdir, var) )
+
+def varsToPlot(metColl):
+    """
+    Define which variables to plot and the plots corresponding properties.
+    """
+    vars1D = {
+        # MET and MHT common variables
+        'MET'                     : HLTMETInputs(x=r'$MET_\text{Reco}$ [GeV]', y=nEvts, rebin=2, logY=False),
+        'METGenTrue'              : HLTMETInputs(x=r'$MET_\text{Gen}$ [GeV]', y=nEvts, rebin=2),
+        'MEx'                     : HLTMETInputs(x=r'$MET_x$ [GeV]', y=nEvts, rebin=4),
+        'MEy'                     : HLTMETInputs(x=r'$MET_y$ [GeV]', y=nEvts, rebin=4),
+        'METPhi'                  : HLTMETInputs(x=r'$\text{MET}\phi_\text{Reco}$', y=nEvts, rebin=2),
+        'METDeltaPhi_GenMETTrue'  : HLTMETInputs(x=r'$\text{MET}\phi_\text{Reco} - \text{MET}\phi_\text{Gen}$', y=nEvts, rebin=2),
+        'METDiff_GenMETTrue'      : HLTMETInputs(x=r'$\text{MET}_\text{Reco} - \text{MET}_\text{Gen}$ [GeV]', y=nEvts, rebin=10),
+        'METSignPseudo'           : HLTMETInputs(x=r'MET / $\sqrt{\sum E_T}$ "Significance" (event-by-event)', y=nEvts), # Et / std: (: (sqrt(sumEt)
+        'METSignReal'             : HLTMETInputs(x='MET Significance (Likelihood)', y=nEvts), # covariance matrix missing
+        'MET_Nvtx'                : HLTMETInputs(x='Number of vertices (MET-weighted)', y=nEvts, rebin=10),
+        'Nvertex'                 : HLTMETInputs(x='Number of vertices', y=nEvts, rebin=6),
+        'SumET'                   : HLTMETInputs(x=r'$\sum E_T$ [GeV]', y=nEvts, rebin=4),
+        # MET post-processing
+        'METDiffAggr_MET'      : HLTMETInputs(x=r'$\text{MET}_{\text{Gen}}$ [GeV]', y=r'$\langle\text{MET}_\text{Reco} - \text{MET}_\text{Gen}\rangle$ [GeV]'),
+        'METDiffAggr_Phi'      : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\langle\text{MET}_\text{Reco} - \text{MET}_\text{Gen}\rangle$ [GeV]'),
+        'METDeltaPhiAggr_MET'  : HLTMETInputs(x=r'$\text{MET}_{\text{Gen}}$ [GeV]', y=r'$\langle\text{MET}\phi_\text{Reco} - \text{MET}\phi_\text{Gen}\rangle$'),
+        'METDeltaPhiAggr_Phi'  : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\langle\text{MET}\phi_\text{Reco} - \text{MET}\phi_\text{Gen}\rangle$'),
+        'METRespAggr_MET'      : HLTMETInputs(x=r'$\text{MET}_{\text{Gen}}$ [GeV]', y=r'$\langle\text{MET}_\text{Reco} / \text{MET}_\text{Gen}\rangle$'),
+        'METRespAggr_Phi'      : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\langle\text{MET}_\text{Reco} / \text{MET}_\text{Gen}\rangle$'),
+        'METResolAggr_Phi'     : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\sigma(\text{MET}_\text{Reco})$ [GeV]'),
+        'METGenResolAggr_Phi'  : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\sigma(\text{MET}_\text{Gen})$ [GeV]'),
+        'METResolDiffAggr_Phi' : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\sigma(\text{MET}\phi_\text{Reco}) - \sigma(\text{MET}\phi_\text{Gen})$ [GeV]'),
+        'METSignAggr_Phi'      : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\langle\text{MET}_\text{Reco}\rangle / \sigma(\text{MET}_\text{Reco})$'),
+        'METGenSignAggr_Phi'   : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\langle\text{MET}_\text{Gen}\rangle / \sigma(\text{MET}_\text{Gen})$'),
+        'METSignDiffAggr_Phi'  : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\langle\text{MET}_\text{Gen}\rangle / \sigma(\text{MET}_\text{Gen})$'),
+    }
+
+    if 'MHT' not in metColl:
+        vars1D.update({
+            # (PF)MET-specific
+            'METDeltaPhi_GenMETCalo'  : HLTMETInputs(x=r'$\text{MET}\phi_\text{Reco} - \text{MET}\phi^{Calo}_\text{Gen}$', y=nEvts, rebin=2),
+            'METDiff_GenMETCalo'      : HLTMETInputs(x=r'$\text{MET}_\text{Reco} - \text{MET}^\text{Calo}_\text{Gen}$ [GeV]', y=nEvts, rebin=10),
+            'HFEMEt'                  : HLTMETInputs(x=r'HF EM $E_T$  [GeV]', y=nEvts),
+            'HFEMEtFraction'          : HLTMETInputs(x=r'HF EM $E_T$ fraction', y=nEvts),
+            'HFHadronEt'              : HLTMETInputs(x=r'HF Hadron $E_T$ [GeV]', y=nEvts, rebin=2),
+            'HFHadronEtFraction'      : HLTMETInputs(x='HF Hadron $E_T$ fraction', y=nEvts, rebin=2),
+            'chargedHadronEt'         : HLTMETInputs(x=r'Charged Hadron $E_T$ [GeV]', y=nEvts, rebin=2),
+            'chargedHadronEtFraction' : HLTMETInputs(x=r'Charged Hadron $E_T$ fraction', y=nEvts, rebin=2),
+            'neutralHadronEt'         : HLTMETInputs(x=r'Neutral Hadron $E_T$ [GeV]', y=nEvts, rebin=2),
+            'neutralHadronEtFraction' : HLTMETInputs(x=r'Neutral Hadron $E_T$ fraction', y=nEvts, rebin=2),
+            'photonEt'                : HLTMETInputs(x=r'Photon $E_T$ [GeV]', y=nEvts, rebin=2),
+            'photonEtFraction'        : HLTMETInputs(x=r'Photon $E_T$ fraction', y=nEvts, rebin=2),
+            'muonEt'                  : HLTMETInputs(x=r'Muon $E_T$ [GeV]', y=nEvts),
+            'muonEtFraction'          : HLTMETInputs(x=r'Muon $E_T$ fraction', y=nEvts),
+            'electronEt'              : HLTMETInputs(x=r'Electron $E_T$ [GeV]', y=nEvts),
+            'electronEtFraction'      : HLTMETInputs(x=r'Electron $E_T$ fraction', y=nEvts),
+        })
+    else:
+        for k in vars1D:
+            vars1D[k].x = vars1D[k].x.replace('MET', 'MHT')
+            vars1D[k].y = vars1D[k].y.replace('MET', 'MHT')
+
+    # The binning should be synchronized with Validation/RecoMET/plugins/METTester.h
+    bins = {'MET': (0., 20., 40., 60., 80., 100., 150., 200., 300., 400., 500., 1000.),
+            'Phi': (-3.15, -2., -1., 0., 1., 2., 3.15)}
+
+    # Differential distributions for debugging
+    for bt in ('Phi', 'MET'):
+        for left, right in zip(bins[bt][:-1],bins[bt][1:]):
+            if bt == 'MET':
+                edges = (str(int(left)) + 'to' + str(int(right))).replace('.','p')
+            elif bt == 'Phi':
+                edges = f"{left:.2f}to{right:.2f}".replace('.', 'p')
+            vars1D.update({'METDiff_GenMETTrue_' + bt + edges: HLTMETInputs(x=r'$\text{MET}_\text{Reco} - \text{MET}_\text{Gen}$ [GeV]',
+                                                                                y=nEvts, rebin=2, out='Differential')})
+            vars1D.update({'METRatio_GenMETTrue_' + bt + edges: HLTMETInputs(x=r'$\text{MET}_\text{Reco} / \text{MET}_\text{Gen}$',
+                                                                                y=nEvts, rebin=2, out='Differential')})
+            vars1D.update({'METDeltaPhi_GenMETTrue_' + bt + edges: HLTMETInputs(x=r'$\text{MET}\phi_\text{Reco} - \text{MET}\phi_\text{Gen}$',
+                                                                                y=nEvts, rebin=2, out='Differential')})
+    return vars1D
 
 if __name__ == '__main__':
 
@@ -252,13 +343,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Make HLT MET validation plots. \nRun all MET paths with\n' + full_command)
     parser.add_argument('-o', '--odir', default="HLTMETValidationPlots", required=False, help='Path to the output directory.')
     parser.add_argument('-l', '--sample_label', default="QCD (200 PU)", required=False, help='Sample label for plotting.')
+    parser.add_argument('-p', '--period', default="Phase-2", required=False, choices=('Phase-2', 'Run 3'), help='Sample label for plotting.')
 
     mutual_excl1 = parser.add_mutually_exclusive_group(required=True)
     mutual_excl1.add_argument('-m', '--met', nargs='+',
                              required=False, help='Name of the met collection(s).')
     mutual_excl1.add_argument('-c', '--compare_collections', nargs='+',
                              type=check_list_length, required=False,
-                             choices=('hltPFMET', 'hltPFPuppiMET', 'hltPFPuppiMETTypeOne'),
                              help='Name of the met collection(s) to compare, in the same file.', )
 
     mutual_excl2 = parser.add_mutually_exclusive_group(required=True)
@@ -281,60 +372,32 @@ if __name__ == '__main__':
                           'E': (30, 40, 50, 80, 100, 120, 140, 160, 200, 250, 300, 350, 400, 500, 600), # endcap
                           'F': (30, 40, 50, 80, 120, 240, 600)} # forward
 
-    METType = {'hltPFMET': "PF MET",
-               'hltPFPuppiMET': "PF PUPPI MET",
-               'hltPFPuppiMETTypeOne': "PF Type-1 PUPPI MET"}
+    METType = {
+        # Run3
+        'hltMet': 'Calo MET Run3',
+        'hltCaloMET': 'Calo MET Run3',
+        'hltPFMETProducer': 'PF MET Run3',
+        'hltPFMETNoMuProducer': 'PF MET NoMu Run3',
+        'hltPFMHTTightID': 'PF MHT w/ Tight ID Run3',
+        'hltMht': 'MHT Run3',
+        # Phase2
+        'hltPFMET': 'PF MET Phase2',
+        'hltPFPuppiMET': 'PF PUPPI MET',
+        'hltPFPuppiMETTypeOne': 'PF Type-1 PUPPI MET',
+        'hltPFPuppiMHT': 'PF PUPPI MHT'
+    }
     
     colors = hep.style.CMS['axes.prop_cycle'].by_key()['color']
     markers = ('o', 's', 'd')
     errorbar_kwargs = dict(capsize=3, elinewidth=0.8, capthick=2, linewidth=2, linestyle='')
 
-    nEventsLabel = '# Events'
-    vars1D = {
-        # MET tester producer
-        'HFEMEt'                  : (r'HF EM $E_T$', nEventsLabel, None),
-        'HFEMEtFraction'          : (r'HF EM $E_T$ fraction', nEventsLabel, None),
-        'HFHadronEt'              : (r'HF Hadron $E_T$', nEventsLabel, 2),
-        'HFHadronEtFraction'      : ('HF Hadron $E_T$ fraction', nEventsLabel, 2),
-        'MET'                     : ('MET', nEventsLabel, 2),
-        'MEx'                     : ('MET x', nEventsLabel, 4),
-        'MEy'                     : ('MET y', nEventsLabel, 4),
-        'METPhi'                  : (r'MET $\phi$', nEventsLabel, 2),
-        'METDeltaPhi_GenMETCalo'  : (r'MET$_{Calo}$ $\Delta\phi$', nEventsLabel, 2),
-        'METDeltaPhi_GenMETTrue'  : (r'MET $\Delta\phi$', nEventsLabel, 2),
-        'METDiff_GenMETCalo'      : (r'MET - gen MET$_{Calo}$', nEventsLabel, 10),
-        'METDiff_GenMETTrue'      : ('MET - gen MET', nEventsLabel, 10),
-        'METSignPseudo'           : (r'MET / $\sqrt{\sum E_T}$ "Significance" (event-by-event)', nEventsLabel, None), # Et / std: (: (sqrt(sumEt)
-        'METSignReal'             : ('MET Significance (Likelihood)', nEventsLabel, None), # covariance matrix missing
-        'MET_Nvtx'                : ('Number of vertices (MET-weighted)', nEventsLabel, 10),
-        'Nvertex'                 : ('Number of vertices', nEventsLabel, 6),
-        'SumET'                   : (r'$\sum E_T$', nEventsLabel, 4),
-        'chargedHadronEt'         : (r'Charged Hadron $E_T$', nEventsLabel, 2),
-        'chargedHadronEtFraction' : (r'Charged Hadron $E_T$ fraction', nEventsLabel, 2),
-        'neutralHadronEt'         : (r'Neutral Hadron $E_T$', nEventsLabel, 2),
-        'neutralHadronEtFraction' : (r'Neutral Hadron $E_T$ fraction', nEventsLabel, 2),
-        'photonEt'                : (r'Photon $E_T$', nEventsLabel, 2),
-        'photonEtFraction'        : (r'Photon $E_T$ fraction', nEventsLabel, 2),
-        'muonEt'                  : (r'Muon $E_T$', nEventsLabel, None),
-        'muonEtFraction'          : (r'Muon $E_T$ fraction', nEventsLabel, None),
-        'electronEt'              : (r'Electron $E_T$', nEventsLabel, None),
-        'electronEtFraction'      : (r'Electron $E_T$ fraction', nEventsLabel, None),
-        # MET post-processing
-        'METDiffAggr_MET': ('MET', 'MET Mean Difference', None),
-        'METDiffAggr_Phi': (r'$\phi$', 'MET Mean Difference', None),
-        'METResolAggr_MET': ('MET', 'MET Resolution', None),
-        'METResolAggr_Phi': (r'$\phi$', 'MET Resolution', None),
-        'METRespAggr_MET': ('MET', 'MET Response', None),
-        'METRespAggr_Phi': (r'$\phi$', 'MET Response', None),
-        'METSignAggr_MET': ('MET', 'MET Mean / MET RMS (Significance)', None),
-        'METSignAggr_Phi': (r'$\phi$', 'MET Mean / MET RMS (Significance)', None)
-    }
+    nEvts = '# Events'
 
     if args.compare_collections is not None:
         afile = ROOT.TFile.Open(args.file)
         dqm_dir = f"DQMData/Run 1/HLT/Run summary/JetMET/METValidation"
         checkRootDir(afile, dqm_dir)
-        plot1DCollectionComparison(afile, dqm_dir, vars1D, outdir=args.odir,
+        plot1DCollectionComparison(afile, dqm_dir, varsToPlot(args.met[0]), outdir=args.odir,
                                    metTypes=args.compare_collections)
 
     elif args.compare_files is not None:
@@ -342,7 +405,7 @@ if __name__ == '__main__':
         for afile, alabel in zip(args.compare_files, args.compare_files_labels):
             afile = ROOT.TFile.Open(afile)
             checkRootDir(afile, dqm_dir)
-        plot1DFilesComparison(dqm_dir, vars1D, outdir=args.odir, metType=args.met[0],
+        plot1DFilesComparison(dqm_dir, varsToPlot(args.met[0]), outdir=args.odir, metType=args.met[0],
                               files=args.compare_files,
                               files_labels=args.compare_files_labels)
 
@@ -354,14 +417,14 @@ if __name__ == '__main__':
         for metType in args.met:
             dqm_dir_met = os.path.join(dqm_dir, metType)
             checkRootDir(afile, dqm_dir_met)
-            plot1Dvars(afile, dqm_dir_met, vars1D, outdir=os.path.join(args.odir, metType),
+            plot1Dvars(afile, dqm_dir_met, varsToPlot(metType), outdir=os.path.join(args.odir, metType),
                        metType=METType[metType])
 
-        # Plot MET turn-on curves
-        trigger = 'HLT_PFPuppiMETTypeOne140_PFPuppiMHT140'
-        turnon_dir = f"DQMData/Run 1/HLT/Run summary/JetMET/TurnOnValidation/{trigger}"
-        checkRootDir(afile, turnon_dir)
-        vars1Dtrigger = ('TurnOngMET', 'TurnOngMETLow', 'TurnOnhMET', 'TurnOnhMETLow')
-        outdir = createDir(os.path.join(args.odir, trigger))
-        createIndexPHP(src=args.odir, dest=trigger)
-        plot1Dtrigger(afile, turnon_dir, vars1Dtrigger, outdir=outdir, metType=METType[metType])
+        # Plot MET turn-on curves for Phase 2
+        # trigger = 'HLT_PFPuppiMETTypeOne140_PFPuppiMHT140'
+        # turnon_dir = f"DQMData/Run 1/HLT/Run summary/JetMET/TurnOnValidation/{trigger}"
+        # checkRootDir(afile, turnon_dir)
+        # vars1Dtrigger = ('TurnOngMET', 'TurnOngMETLow', 'TurnOnhMET', 'TurnOnhMETLow')
+        # outdir = createDir(os.path.join(args.odir, trigger))
+        # createIndexPHP(src=args.odir, dest=trigger)
+        # plot1Dtrigger(afile, turnon_dir, vars1Dtrigger, outdir=outdir, metType=METType[metType])
