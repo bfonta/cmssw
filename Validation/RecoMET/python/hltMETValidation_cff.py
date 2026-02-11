@@ -78,4 +78,4 @@ hltMhtAnalyzerPFPuppi = _hltMhtTester.clone(
     inputMHTLabel = 'dummy (phase2-only)',
     METType = 'mht',
 )
-phase2_common.toModify(hltMhtAnalyzerPFPuppi, inputMETLabel = 'hltPFPuppiMHT')
+phase2_common.toModify(hltMhtAnalyzerPFPuppi, inputMHTLabel = 'hltPFPuppiMHT')
