@@ -150,11 +150,11 @@ void METTester::bookHistograms(DQMStore::IBooker &ibooker, edm::Run const &iRun,
   mMET2 = ibooker.book1D("MET2", "MET2 (20 GeV binning)", 100, 0, 2000);
   mMET1_vs_MET2 = ibooker.book2D("METvsMHT", "MET vs MHT", 100, 0., 2000., 100, 0., 2000.);
   mMET_Nvtx = ibooker.bookProfile("MET_Nvtx", "MET vs. nvtx", 450, 0., 450., 0., 2000., "");
-  mMETPhi = ibooker.book1D("METPhi", "METPhi", 80, -4, 4);
+  mMETPhi = ibooker.book1D("METPhi", "METPhi", 80, -3.2, 3.2);
   mSumET = ibooker.book1D("SumET", "SumET", 200, 0, 5000);  // 10GeV
   mMETDiff_GenMETTrue = ibooker.book1D("METDiff_GenMETTrue", "METDiff_GenMETTrue", 800, -800, 800);
   mMETRatio_GenMETTrue = ibooker.book1D("METRatio_GenMETTrue", "METRatio_GenMETTrue", 800, -800, 800);
-  mMETDeltaPhi_GenMETTrue = ibooker.book1D("METDeltaPhi_GenMETTrue", "METDeltaPhi_GenMETTrue", 80, 0, 4);
+  mMETDeltaPhi_GenMETTrue = ibooker.book1D("METDeltaPhi_GenMETTrue", "METDeltaPhi_GenMETTrue", 80, 0, 3.2);
 
   for (unsigned metIdx = 0; metIdx < mNMETBins; ++metIdx) {
     std::string suffix = binStr(mMETBins[metIdx], mMETBins[metIdx + 1], true);
