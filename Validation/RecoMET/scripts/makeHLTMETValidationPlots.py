@@ -31,6 +31,7 @@ class HLTMETInputs:
     out: str = ''
     logy: bool = False
     logz: bool = False
+    drawdiag: bool = False
     
 def createDir(adir):
     if not os.path.exists(adir):
@@ -190,9 +191,13 @@ def plot2D(plotter, h, text, props):
             cmap='viridis',
             shading='auto'
         )
- 
-    plotter.labels(x=props.x, y=props.y)
-    plotter.fig.colorbar(pcm, ax=plotter.ax)
+
+    if props.drawdiag:
+        diag = np.linspace(*plotter.ax.get_xlim(), 1000)
+        plotter.ax.plot(diag, diag, label=r'$y=x$', c='black')
+
+    plotter.labels(x=props.x, y=props.y, legend_title='', legend_loc='best')
+    plotter.fig.colorbar(pcm, ax=plotter.ax, label="# Events")
     return plotter
 
 def plotVars(afile, adir, avars, mode, outdir, metType, top_text=False):
@@ -378,7 +383,7 @@ def varsToPlot(metColl):
             vars1D.update({'METDeltaPhi_GenMETTrue_' + bt + edges: HLTMETInputs(x=r'$\text{MET}\phi_\text{Reco} - \text{MET}\phi_\text{Gen}$',
                                                                                 y=nEvts, rebin=2, out='Differential')})
     vars2D = {
-        'METvsMHT': HLTMETInputs(x=r'$MET_\text{Reco}$ [GeV]', y=r'$MHT_\text{Reco}$ [GeV]', logz=False),
+        'METvsMHT': HLTMETInputs(x=r'$MET_\text{Reco}$ [GeV]', y=r'$MHT_\text{Reco}$ [GeV]', logz=False, drawdiag=True),
     }
 
     return vars1D, vars2D
@@ -484,8 +489,8 @@ if __name__ == '__main__':
                      mode='1D', metType=METType[metType])
             plotVars(afile, dqm_dir_met, varsToPlot(metType)[1], outdir=os.path.join(args.odir, metType),
                      mode='2D', metType=METType[metType])
-
-        # Plot MET turn-on curves for Phase 2
+    
+        # Plot MET turn-on curve for Phase 2
         # trigger = 'HLT_PFPuppiMETTypeOne140_PFPuppiMHT140'
         # turnon_dir = f"DQMData/Run 1/HLT/Run summary/JetMET/TurnOnValidation/{trigger}"
         # checkRootDir(afile, turnon_dir)
