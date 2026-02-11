@@ -29,7 +29,8 @@ class HLTMETInputs:
     y: str
     rebin: int = None
     out: str = ''
-    logY: bool = False
+    logy: bool = False
+    logz: bool = False
     
 def createDir(adir):
     if not os.path.exists(adir):
@@ -78,6 +79,27 @@ def histo_values_errors(h):
     values = np.array([h.GetBinContent(i+1) for i in range(N)])
     errors = np.array([h.GetBinError(i+1) for i in range(N)])
     return values, errors
+
+def define_bins_2D(h):
+    Nx = h.GetNbinsX()
+    Ny = h.GetNbinsY()
+    
+    x_edges = np.array([h.GetXaxis().GetBinLowEdge(i+1) for i in range(Nx)])
+    x_edges = np.append(x_edges, h.GetXaxis().GetBinUpEdge(Nx))
+    
+    y_edges = np.array([h.GetYaxis().GetBinLowEdge(j+1) for j in range(Ny)])
+    y_edges = np.append(y_edges, h.GetYaxis().GetBinUpEdge(Ny))
+
+    return Nx, Ny, x_edges, y_edges
+
+def histo_values_2D(h, error=False):
+    Nx = h.GetNbinsX()
+    Ny = h.GetNbinsY()
+    values = np.array([
+        [h.GetBinContent(i+1, j+1) for i in range(Nx)]
+        for j in range(Ny)
+    ])
+    return values
 
 class Plotter:
     def __init__(self, label, period='Phase-2', fontsize=18, grid_color='grey'):
@@ -132,9 +154,50 @@ class Plotter:
             plt.savefig(name + '.' + ext)
         plt.close()
 
-def plot1Dvars(afile, adir, avars, outdir, metType, top_text=False):
+def plot1D(plotter, h, text, props):
+    """Plot 1D distributions."""
+    nbins, bin_edges, bin_centers, bin_widths = define_bins(h)
+    values, errors = histo_values_errors(h)
+    errors /= 2
+    
+    plotter.ax.errorbar(bin_centers, values, xerr=None, yerr=errors,
+                        fmt='s', color='black', label=props.x, **errorbar_kwargs)
+    plotter.ax.stairs(values, bin_edges, color='black', linewidth=2, baseline=None)
+    plotter.ax.text(0.03, 0.97, text, transform=plotter.ax.transAxes, fontsize=fontsize,
+                    verticalalignment='top', horizontalalignment='left')
+    
+    plotter.limits_with_margin(values, errors, logY=props.logy)
+    plotter.labels(x=props.x, y=props.y)
+    return plotter
+
+def plot2D(plotter, h, text, props):
+    """Plot 2D distributions."""
+    nbins_x, nbins_y, x_edges, y_edges = define_bins_2D(h)
+    values = histo_values_2D(h)
+
+    values = np.where(values == 0., np.nan, values)
+    if props.logz:
+        values_log = values[~np.isnan(values)] # avoid log(0) errors
+        pcm = plotter.ax.pcolormesh(
+            x_edges, y_edges, values,
+            cmap='viridis',
+            shading='auto',
+            norm=LogNorm(vmin=values_log.min(), vmax=values_log.max())
+        )
+    else:
+        pcm = plotter.ax.pcolormesh(
+            x_edges, y_edges, values,
+            cmap='viridis',
+            shading='auto'
+        )
+ 
+    plotter.labels(x=props.x, y=props.y)
+    plotter.fig.colorbar(pcm, ax=plotter.ax)
+    return plotter
+
+def plotVars(afile, adir, avars, mode, outdir, metType, top_text=False):
     """
-    Plots 1D distributions.
+    Plots 1D and 2D distributions.
     The `avars` variables is a dictionary whose values are (xlabel, ylabel, rebin).
     """
     createDir(outdir)
@@ -145,24 +208,19 @@ def plot1Dvars(afile, adir, avars, outdir, metType, top_text=False):
             
         plotter = Plotter(args.sample_label, period=args.period)
         root_hist = checkRootFile(afile, f"{adir}/{var}", rebin=props.rebin)
-        nbins, bin_edges, bin_centers, bin_widths = define_bins(root_hist)
-        values, errors = histo_values_errors(root_hist)
-        errors /= 2
-        
-        plotter.ax.errorbar(bin_centers, values, xerr=None, yerr=errors,
-                            fmt='s', color='black', label=props.x, **errorbar_kwargs)
-        plotter.ax.stairs(values, bin_edges, color='black', linewidth=2, baseline=None)
-        plotter.ax.text(0.03, 0.97, metType, transform=plotter.ax.transAxes, fontsize=fontsize,
-                        verticalalignment='top', horizontalalignment='left')
 
-        print(adir, var)
-        plotter.limits_with_margin(values, errors, logY=props.logY)
-        plotter.labels(x=props.x, y=props.y)
+        if mode == '1D':
+            plotter = plot1D(plotter, root_hist, metType, props)
+        elif mode == '2D':
+            plotter = plot2D(plotter, root_hist, metType, props)
+        else:
+            raise RuntimeError(f'Mode {mode} not supported.')
 
         if top_text:
             plotter.ax.text(0.97, 0.97, root_hist.GetTitle().replace('ET', r'$E_T$'), transform=plotter.ax.transAxes, fontsize=fontsize,
                             verticalalignment='top', horizontalalignment='right')
 
+        plt.tight_layout()
         plotter.save( os.path.join(outdir, props.out, var) )
 
 def plot1Dtrigger(afile, adir, avars, metType, outdir):
@@ -175,7 +233,7 @@ def plot1Dtrigger(afile, adir, avars, metType, outdir):
 
         avarsDict[var] = (xlabel, ylabel, None)
 
-    plot1Dvars(afile, adir, avarsDict, outdir, metType=metType, top_text=True)
+    plotVars(afile, adir, avarsDict, outdir, mode='1D', metType=metType, top_text=True)
 
 
 def plot1DCollectionComparison(afile, adir, avars, outdir, metTypes):
@@ -242,14 +300,14 @@ def plot1DFilesComparison(adir, avars, outdir, files, files_labels, metType):
         plotter.labels(x=xlabel, y=ylabel)
         plotter.ax.legend(prop={'size': 15})
         plotter.save( os.path.join(outdir, var) )
-
+    
 def varsToPlot(metColl):
     """
     Define which variables to plot and the plots corresponding properties.
     """
     vars1D = {
         # MET and MHT common variables
-        'MET'                     : HLTMETInputs(x=r'$MET_\text{Reco}$ [GeV]', y=nEvts, rebin=2, logY=False),
+        'MET1'                    : HLTMETInputs(x=r'$MET_\text{Reco}$ [GeV]', y=nEvts, rebin=2, logy=False),
         'METGenTrue'              : HLTMETInputs(x=r'$MET_\text{Gen}$ [GeV]', y=nEvts, rebin=2),
         'MEx'                     : HLTMETInputs(x=r'$MET_x$ [GeV]', y=nEvts, rebin=4),
         'MEy'                     : HLTMETInputs(x=r'$MET_y$ [GeV]', y=nEvts, rebin=4),
@@ -270,10 +328,11 @@ def varsToPlot(metColl):
         'METRespAggr_Phi'      : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\langle\text{MET}_\text{Reco} / \text{MET}_\text{Gen}\rangle$'),
         'METResolAggr_Phi'     : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\sigma(\text{MET}_\text{Reco})$ [GeV]'),
         'METGenResolAggr_Phi'  : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\sigma(\text{MET}_\text{Gen})$ [GeV]'),
-        'METResolDiffAggr_Phi' : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\sigma(\text{MET}\phi_\text{Reco}) - \sigma(\text{MET}\phi_\text{Gen})$ [GeV]'),
+        'METResolDiffAggr_Phi' : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\sigma(\text{MET}_\text{Reco}) - \sigma(\text{MET}_\text{Gen})$ [GeV]'),
         'METSignAggr_Phi'      : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\langle\text{MET}_\text{Reco}\rangle / \sigma(\text{MET}_\text{Reco})$'),
         'METGenSignAggr_Phi'   : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\langle\text{MET}_\text{Gen}\rangle / \sigma(\text{MET}_\text{Gen})$'),
-        'METSignDiffAggr_Phi'  : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\langle\text{MET}_\text{Gen}\rangle / \sigma(\text{MET}_\text{Gen})$'),
+        'METSignDiffAggr_Phi'  : HLTMETInputs(x=r'$\phi_{\text{Gen}}$',
+                                              y=r'$\langle\text{MET}_\text{Reco}\rangle / \sigma(\text{MET}_\text{Reco}) - \langle\text{MET}_\text{Gen}\rangle / \sigma(\text{MET}_\text{Gen})$'),
     }
 
     if 'MHT' not in metColl:
@@ -318,7 +377,11 @@ def varsToPlot(metColl):
                                                                                 y=nEvts, rebin=2, out='Differential')})
             vars1D.update({'METDeltaPhi_GenMETTrue_' + bt + edges: HLTMETInputs(x=r'$\text{MET}\phi_\text{Reco} - \text{MET}\phi_\text{Gen}$',
                                                                                 y=nEvts, rebin=2, out='Differential')})
-    return vars1D
+    vars2D = {
+        'METvsMHT': HLTMETInputs(x=r'$MET_\text{Reco}$ [GeV]', y=r'$MHT_\text{Reco}$ [GeV]', logz=False),
+    }
+
+    return vars1D, vars2D
 
 if __name__ == '__main__':
 
@@ -397,7 +460,7 @@ if __name__ == '__main__':
         afile = ROOT.TFile.Open(args.file)
         dqm_dir = f"DQMData/Run 1/HLT/Run summary/JetMET/METValidation"
         checkRootDir(afile, dqm_dir)
-        plot1DCollectionComparison(afile, dqm_dir, varsToPlot(args.met[0]), outdir=args.odir,
+        plot1DCollectionComparison(afile, dqm_dir, varsToPlot(args.met[0])[0], outdir=args.odir,
                                    metTypes=args.compare_collections)
 
     elif args.compare_files is not None:
@@ -405,7 +468,7 @@ if __name__ == '__main__':
         for afile, alabel in zip(args.compare_files, args.compare_files_labels):
             afile = ROOT.TFile.Open(afile)
             checkRootDir(afile, dqm_dir)
-        plot1DFilesComparison(dqm_dir, varsToPlot(args.met[0]), outdir=args.odir, metType=args.met[0],
+        plot1DFilesComparison(dqm_dir, varsToPlot(args.met[0])[0], outdir=args.odir, metType=args.met[0],
                               files=args.compare_files,
                               files_labels=args.compare_files_labels)
 
@@ -417,8 +480,10 @@ if __name__ == '__main__':
         for metType in args.met:
             dqm_dir_met = os.path.join(dqm_dir, metType)
             checkRootDir(afile, dqm_dir_met)
-            plot1Dvars(afile, dqm_dir_met, varsToPlot(metType), outdir=os.path.join(args.odir, metType),
-                       metType=METType[metType])
+            plotVars(afile, dqm_dir_met, varsToPlot(metType)[0], outdir=os.path.join(args.odir, metType),
+                     mode='1D', metType=METType[metType])
+            plotVars(afile, dqm_dir_met, varsToPlot(metType)[1], outdir=os.path.join(args.odir, metType),
+                     mode='2D', metType=METType[metType])
 
         # Plot MET turn-on curves for Phase 2
         # trigger = 'HLT_PFPuppiMETTypeOne140_PFPuppiMHT140'

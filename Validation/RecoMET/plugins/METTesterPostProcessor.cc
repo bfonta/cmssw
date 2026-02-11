@@ -35,24 +35,24 @@ void METTesterPostProcessor::dqmEndJob(DQMStore::IBooker &ibook_, DQMStore::IGet
 	// resolution
 	mMETResolAggr["Phi"] = ibook_.book1D("METResolAggr_Phi",
 										 "METResolAggr_Phi",
-										 mNBins[bt], std::visit(getData, mEdges[bt]));
+										 mNBins["Phi"], std::visit(getData, mEdges["Phi"]));
 	mMETGenResolAggr["Phi"] = ibook_.book1D("METGenResolAggr_Phi",
 											"METGenResolAggr_Phi",
-											mNBins[bt], std::visit(getData, mEdges[bt]));
+											mNBins["Phi"], std::visit(getData, mEdges["Phi"]));
 	mMETResolDiffAggr["Phi"] = ibook_.book1D("METResolDiffAggr_Phi",
 											 "METResolDiffAggr_Phi",
-											 mNBins[bt], std::visit(getData, mEdges[bt]));
+											 mNBins["Phi"], std::visit(getData, mEdges["Phi"]));
 	
 	// significance
 	mMETSignAggr["Phi"] = ibook_.book1D("METSignAggr_Phi",
 										"METSignAggr_Phi",
-										mNBins[bt], std::visit(getData, mEdges[bt]));
+										mNBins["Phi"], std::visit(getData, mEdges["Phi"]));
 	mMETGenSignAggr["Phi"] = ibook_.book1D("METGenSignAggr_Phi",
 										   "METGenSignAggr_Phi",
-										   mNBins[bt], std::visit(getData, mEdges[bt]));
+										   mNBins["Phi"], std::visit(getData, mEdges["Phi"]));
 	mMETSignDiffAggr["Phi"] = ibook_.book1D("METSignDiffAggr_Phi",
 											"METSignDiffAggr_Phi",
-											mNBins[bt], std::visit(getData, mEdges[bt]));
+											mNBins["Phi"], std::visit(getData, mEdges["Phi"]));
 	
 	mFillAggrHistograms(met_dirs[i], iget_);
   }

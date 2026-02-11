@@ -31,8 +31,9 @@ phase2_common.toModify(_hltMhtTester, primaryVertices = 'hltPhase2PixelVertices'
 
 ####### MET #######
 hltMetAnalyzerPF = _hltMetTester.clone(
-    inputMETLabel = 'hltPFMETProducer', 
+    inputMETLabel = 'hltPFMETProducer',
     METType = 'pf',
+    inputMHTLabel = 'hltPFMHTTightID', 
 )
 phase2_common.toModify(hltMetAnalyzerPF, inputMETLabel = 'hltPFMET')
 
@@ -63,18 +64,18 @@ hltMetAnalyzerPFNoMu = _hltMetTester.clone(
 ####### MHT #######
 # Run 3 only
 hltMhtAnalyzer = _hltMhtTester.clone(
-    inputMETLabel = 'hltMht', 
+    inputMHTLabel = 'hltMht', 
     METType = 'mht',
 )
 
 # Run 3 only
 hltMhtAnalyzerPFTightID = _hltMhtTester.clone(
-    inputMETLabel = 'hltPFMHTTightID',
+    inputMHTLabel = 'hltPFMHTTightID',
     METType = 'mht',
 )
 
 hltMhtAnalyzerPFPuppi = _hltMhtTester.clone(
-    inputMETLabel = 'dummy (phase2-only)',
+    inputMHTLabel = 'dummy (phase2-only)',
     METType = 'mht',
 )
 phase2_common.toModify(hltMhtAnalyzerPFPuppi, inputMETLabel = 'hltPFPuppiMHT')

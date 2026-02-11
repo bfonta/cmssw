@@ -1,6 +1,5 @@
 #ifndef METTESTERPOSTPROCESSOR_H
 #define METTESTERPOSTPROCESSOR_H
-// author: Matthias Weber, Feb 2015
 
 // user include files
 #include "DQMServices/Core/interface/DQMEDHarvester.h"

@@ -42,7 +42,7 @@ void METTesterPostProcessorHarvesting::dqmEndJob(DQMStore::IBooker &ibook_, DQMS
   if (found_miniaod_dir && found_reco_dir) {
     std::string rundir_reco = RunDir + inputMETLabelRECO_.label();
     std::string rundir_miniaod = RunDir + inputMETLabelMiniAOD_.label();
-    MonitorElement *mMET_Reco = iget_.get(rundir_reco + "/" + "MET");
+    MonitorElement *mMET_Reco = iget_.get(rundir_reco + "/" + "MET1");
     MonitorElement *mMETPhi_Reco = iget_.get(rundir_reco + "/" + "METPhi");
     MonitorElement *mSumET_Reco = iget_.get(rundir_reco + "/" + "SumET");
     MonitorElement *mMETDiff_GenMETTrue_Reco = iget_.get(rundir_reco + "/" + "METDiff_GenMETTrue");
@@ -73,7 +73,7 @@ void METTesterPostProcessorHarvesting::dqmEndJob(DQMStore::IBooker &ibook_, DQMS
     ME_Reco.push_back(mMETDiff_GenMETTrue_MET100to150_Reco);
     ME_Reco.push_back(mMETDiff_GenMETTrue_MET300to400_Reco);
 
-    MonitorElement *mMET_MiniAOD = iget_.get(rundir_miniaod + "/" + "MET");
+    MonitorElement *mMET_MiniAOD = iget_.get(rundir_miniaod + "/" + "MET1");
     MonitorElement *mMETPhi_MiniAOD = iget_.get(rundir_miniaod + "/" + "METPhi");
     MonitorElement *mSumET_MiniAOD = iget_.get(rundir_miniaod + "/" + "SumET");
     MonitorElement *mMETDiff_GenMETTrue_MiniAOD = iget_.get(rundir_miniaod + "/" + "METDiff_GenMETTrue");

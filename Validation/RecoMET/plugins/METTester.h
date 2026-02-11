@@ -54,24 +54,30 @@ private:
 
   // Inputs from Configuration File
   edm::InputTag mInputCollection_;
-  edm::InputTag inputMETLabel_;
+  std::string inputMETLabel_;
+  std::string inputMHTLabel_;
   std::string METType_;
   edm::InputTag inputCaloMETLabel_;
 
   // Tokens
   edm::InputTag pvTokenTag_;
   edm::EDGetTokenT<std::vector<reco::Vertex>> pvToken_;
-  edm::EDGetTokenT<reco::CaloMETCollection> caloMETsToken_;
-  edm::EDGetTokenT<reco::PFMETCollection> pfMETsToken_;
-  edm::EDGetTokenT<reco::METCollection> recoMHTToken_;
-  edm::EDGetTokenT<reco::METCollection> genMHTToken_;
-  edm::EDGetTokenT<reco::GenMETCollection> genMETsToken_;
-  edm::EDGetTokenT<reco::GenMETCollection> genMETsTrueToken_;
-  edm::EDGetTokenT<reco::GenMETCollection> genMETsCaloToken_;
-  edm::EDGetTokenT<pat::METCollection> patMETToken_;
+  edm::EDGetTokenT<reco::CaloMETCollection> caloMetToken_;
+  edm::EDGetTokenT<reco::PFMETCollection> pfMetToken_;
+  edm::EDGetTokenT<reco::METCollection> recoMhtToken_;
+  edm::EDGetTokenT<reco::METCollection> genMhtToken_;
+  edm::EDGetTokenT<reco::GenMETCollection> genMetToken_;
+  edm::EDGetTokenT<reco::GenMETCollection> genMetTrueToken_;
+  edm::EDGetTokenT<reco::GenMETCollection> genMetCaloToken_;
+  edm::EDGetTokenT<pat::METCollection> patMetToken_;
 
+  edm::Handle<reco::CaloMETCollection> caloMetHandle_;
+  edm::Handle<reco::PFMETCollection> pfMetHandle_;
+  edm::Handle<reco::GenMETCollection> genMetHandle_;
+  edm::Handle<pat::METCollection> patMetHandle_;
   edm::Handle<reco::METCollection> genMhtHandle_;
-  
+  edm::Handle<reco::METCollection> recoMhtHandle_;
+
   // Events variables
   MonitorElement *mNvertex;
 
@@ -82,7 +88,9 @@ private:
   MonitorElement *mMETSignReal;
   MonitorElement *mGenMETTrue;
   MonitorElement *mGenMETCalo;
-  MonitorElement *mMET;
+  MonitorElement *mMET1;
+  MonitorElement *mMET2;
+  MonitorElement *mMET1_vs_MET2;
   MonitorElement *mMET_Nvtx;
   MonitorElement *mMETPhi;
   MonitorElement *mSumET;
