@@ -249,12 +249,12 @@ def plot1DCollectionComparison(afile, adir, avars, outdir, metTypes):
     outdir = os.path.join(outdir, 'ComparisonCollections_' + '_'.join(metTypes))
     createDir(outdir)
 
-    for var, (xlabel, ylabel, rebin) in avars.items():
+    for var, props in avars.items():
         plotter = Plotter(args.sample_label, period=args.period)
 
         amax, amin = float('-inf'), float('+inf')
         for metType in metTypes:
-            root_hist = checkRootFile(afile, f"{adir}/{metType}/{var}", rebin=rebin)
+            root_hist = checkRootFile(afile, f"{adir}/{metType}/{var}", rebin=props.rebin)
             nbins, bin_edges, bin_centers, bin_widths = define_bins(root_hist)
             values, errors = histo_values_errors(root_hist)
             errors /= 2 # symmetrize
@@ -269,7 +269,7 @@ def plot1DCollectionComparison(afile, adir, avars, outdir, metTypes):
 
         diff_step = 0.05 * abs(amax-amin)
         plotter.limits(y=(amin - diff_step, amax + 2*diff_step), logY=False)
-        plotter.labels(x=xlabel, y=ylabel)
+        plotter.labels(x=props.x, y=props.y)
         plotter.ax.legend(prop={'size': 15})
         plotter.save( os.path.join(outdir, var) )
 
@@ -281,13 +281,13 @@ def plot1DFilesComparison(adir, avars, outdir, files, files_labels, metType):
     outdir = os.path.join(outdir, 'ComparisonFiles_' + '_'.join(files_labels), metType)
     createDir(outdir)
 
-    for var, (xlabel, ylabel, rebin) in avars.items():
+    for var, props in avars.items():
         plotter = Plotter(args.sample_label, period=args.period)
 
         amax, amin = float('-inf'), float('+inf')
         for afile, alabel in zip(files, files_labels):
             afile = ROOT.TFile.Open(afile)
-            root_hist = checkRootFile(afile, f"{adir}/{metType}/{var}", rebin=rebin)
+            root_hist = checkRootFile(afile, f"{adir}/{metType}/{var}", rebin=props.rebin)
             nbins, bin_edges, bin_centers, bin_widths = define_bins(root_hist)
             values, errors = histo_values_errors(root_hist)
             errors /= 2 # symmetrize
@@ -302,7 +302,7 @@ def plot1DFilesComparison(adir, avars, outdir, files, files_labels, metType):
 
         diff_step = 0.05 * abs(amax-amin)
         plotter.limits(y=(amin - diff_step, amax + 2*diff_step), logY=False)
-        plotter.labels(x=xlabel, y=ylabel)
+        plotter.labels(x=props.x, y=props.y)
         plotter.ax.legend(prop={'size': 15})
         plotter.save( os.path.join(outdir, var) )
     
@@ -397,6 +397,8 @@ if __name__ == '__main__':
 
     class DependencyAction(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
+            if namespace.met is None:
+                parser.error("You must specify the MET collections (--met) before the comparison flags.")
             if option_string == "--compare_files_labels" and not namespace.compare_files:
                 parser.error("`--compare_files_labels` requires `--compare_files` to be set")
             if option_string == "--compare_files_labels" and not namespace.met:
@@ -427,7 +429,7 @@ if __name__ == '__main__':
                               help='Compare the same collection in different DQM files.', )
     parser.add_argument('-y', '--compare_files_labels', nargs='+',
                         action=DependencyAction, required=False,
-                        help='Compare the same collection in different DQM files.',)
+                        help='Labels for the different DQM files being compared. Specify after --met and --compare_files.',)
     
     args = parser.parse_args()
 
@@ -465,8 +467,8 @@ if __name__ == '__main__':
         afile = ROOT.TFile.Open(args.file)
         dqm_dir = f"DQMData/Run 1/HLT/Run summary/JetMET/METValidation"
         checkRootDir(afile, dqm_dir)
-        plot1DCollectionComparison(afile, dqm_dir, varsToPlot(args.met[0])[0], outdir=args.odir,
-                                   metTypes=args.compare_collections)
+        plot1DCollectionComparison(afile, dqm_dir, varsToPlot(args.compare_collections[0])[0],
+                                   outdir=args.odir, metTypes=args.compare_collections)
 
     elif args.compare_files is not None:
         dqm_dir = f"DQMData/Run 1/HLT/Run summary/JetMET/METValidation"
