@@ -102,12 +102,12 @@ def histo_values_2D(h, error=False):
     return values
 
 class Plotter:
-    def __init__(self, label, period='Phase-2', fontsize=18, grid_color='grey'):
+    def __init__(self, label, period='Phase-2', fontsize=18, grid_color='grey', en_com='13'):
         self._fig, self._ax = plt.subplots(figsize=(10, 10))
         self.fontsize = fontsize
         
-        hep.cms.text(f' {period} Simulation Preliminary', ax=self._ax, fontsize=fontsize)
-        hep.cms.lumitext(label + " | 14 TeV", ax=self._ax, fontsize=fontsize)
+        hep.cms.text(f'{period} Simulation Preliminary', ax=self._ax, fontsize=fontsize)
+        hep.cms.lumitext(f"{label} | {en_com} TeV", ax=self._ax, fontsize=fontsize)
         if grid_color:
             self._ax.grid(which='major', color=grid_color)
         
@@ -163,7 +163,7 @@ def plot1D(plotter, h, text, props):
     plotter.ax.errorbar(bin_centers, values, xerr=None, yerr=errors,
                         fmt='s', color='black', label=props.x, **errorbar_kwargs)
     plotter.ax.stairs(values, bin_edges, color='black', linewidth=2, baseline=None)
-    plotter.ax.text(0.03, 0.97, text, transform=plotter.ax.transAxes, fontsize=fontsize,
+    plotter.ax.text(0.03, 0.97, text, transform=plotter.ax.transAxes, fontsize=16,
                     verticalalignment='top', horizontalalignment='left')
     
     plotter.limits_with_margin(values, errors, logY=props.logy)
@@ -201,12 +201,12 @@ def plotVars(afile, adir, avars, mode, outdir, metType, top_text=False):
     The `avars` variables is a dictionary whose values are (xlabel, ylabel, rebin).
     """
     createDir(outdir)
-    
+    fontsize = 14
     for var, props in avars.items():
         if props.out is not None:
             createDir(os.path.join(outdir, props.out))
             
-        plotter = Plotter(args.sample_label, period=args.period)
+        plotter = Plotter(args.sample_label, period=args.period, fontsize=fontsize, en_com=args.energy)
         root_hist = checkRootFile(afile, f"{adir}/{var}", rebin=props.rebin)
 
         if mode == '1D':
@@ -217,8 +217,8 @@ def plotVars(afile, adir, avars, mode, outdir, metType, top_text=False):
             raise RuntimeError(f'Mode {mode} not supported.')
 
         if top_text:
-            plotter.ax.text(0.97, 0.97, root_hist.GetTitle().replace('ET', r'$E_T$'), transform=plotter.ax.transAxes, fontsize=fontsize,
-                            verticalalignment='top', horizontalalignment='right')
+            plotter.ax.text(0.97, 0.97, root_hist.GetTitle().replace('ET', r'$E_T$'), transform=plotter.ax.transAxes,
+                            fontsize=fontsize, verticalalignment='top', horizontalalignment='right')
 
         plt.tight_layout()
         plotter.save( os.path.join(outdir, props.out, var) )
@@ -407,6 +407,7 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--odir', default="HLTMETValidationPlots", required=False, help='Path to the output directory.')
     parser.add_argument('-l', '--sample_label', default="QCD (200 PU)", required=False, help='Sample label for plotting.')
     parser.add_argument('-p', '--period', default="Phase-2", required=False, choices=('Phase-2', 'Run 3'), help='Sample label for plotting.')
+    parser.add_argument('-e', '--energy', default='14', required=False, choices=('13', '13.6', '14'), help='Energy of the center of mass.')
 
     mutual_excl1 = parser.add_mutually_exclusive_group(required=True)
     mutual_excl1.add_argument('-m', '--met', nargs='+',
@@ -430,7 +431,6 @@ if __name__ == '__main__':
         for metType in args.met:
             outdir = createDir(os.path.join(args.odir, metType))
     
-    fontsize = 16
     tprofile_rebinning = {'B': (30, 40, 50, 80, 100, 120, 140, 160, 200, 250, 300, 350, 400, 500, 600), #barrel
                           'E': (30, 40, 50, 80, 100, 120, 140, 160, 200, 250, 300, 350, 400, 500, 600), # endcap
                           'F': (30, 40, 50, 80, 120, 240, 600)} # forward
