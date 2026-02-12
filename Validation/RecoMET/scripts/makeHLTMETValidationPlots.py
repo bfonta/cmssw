@@ -314,7 +314,7 @@ def varsToPlot(metColl):
     """
     vars1D = {
         # MET and MHT common variables
-        'MET1'                    : HLTMETInputs(x=r'$MET_\text{Reco}$ [GeV]', y=nEvts, rebin=2, logy=False),
+        'MET'                     : HLTMETInputs(x=r'$MET_\text{Reco}$ [GeV]', y=nEvts, rebin=2, logy=False),
         'METGenTrue'              : HLTMETInputs(x=r'$MET_\text{Gen}$ [GeV]', y=nEvts, rebin=2),
         'MEx'                     : HLTMETInputs(x=r'$MET_x$ [GeV]', y=nEvts, rebin=4),
         'MEy'                     : HLTMETInputs(x=r'$MET_y$ [GeV]', y=nEvts, rebin=4),
@@ -369,16 +369,16 @@ def varsToPlot(metColl):
 
     vars2D = {
         'METvsMHT': HLTMETInputs(x=r'$MET_\text{Reco}$ [GeV]', y=r'$MHT_\text{Reco}$ [GeV]', logz=False, drawdiag=True),
-        'GenMETTrue1vsGenMETTrue2': HLTMETInputs(x=r'$MET_\text{Gen}$ [GeV]', y=r'$MHT_\text{Gen}$ [GeV]', drawdiag=True),
+        'GenMETTruevsGenMHT': HLTMETInputs(x=r'$MET_\text{Gen}$ [GeV]', y=r'$MHT_\text{Gen}$ [GeV]', drawdiag=True),
         'GenMETTruevsMET': HLTMETInputs(x=r'$MET_\text{Gen}$ [GeV]', y=r'$MET_\text{Reco}$ [GeV]', drawdiag=True),
-        'GenMETPhivsMET': HLTMETInputs(x=r'$\text{MET}\phi_\text{Gen}$ [GeV]', y=r'$MET_\text{Reco}$ [GeV]'),
-        'GenMETTruevsGenMETPhi': HLTMETInputs(x=r'$MET_\text{Gen}$ [GeV]', y=r'$\text{MET}\phi_\text{Gen}$ [GeV]'),
+        'GenMETPhivsMET': HLTMETInputs(x=r'$\text{MET}\phi_\text{Gen}$', y=r'$MET_\text{Reco}$ [GeV]'),
+        'GenMETTruevsGenMETPhi': HLTMETInputs(x=r'$MET_\text{Gen}$ [GeV]', y=r'$\text{MET}\phi_\text{Gen}$'),
         'METDiffvsGenMETTrue': HLTMETInputs(x=r'$\text{MET}_\text{Reco} - \text{MET}_\text{Gen}$ [GeV]', y=r'$\text{MET}_\text{Gen}$ [GeV]'),
         'METDiffvsGenMETPhi': HLTMETInputs(x=r'$\text{MET}_\text{Reco} - \text{MET}_\text{Gen}$ [GeV]', y=r'$\text{MET}\phi_\text{Gen}$'),
         'METRatiovsGenMETTrue': HLTMETInputs(x=r'$\text{MET}_\text{Reco} / \text{MET}_\text{Gen}$ [GeV]', y=r'$\text{MET}_\text{Gen}$ [GeV]'),
         'METRatiovsGenMETPhi': HLTMETInputs(x=r'$\text{MET}_\text{Reco} / \text{MET}_\text{Gen}$ [GeV]', y=r'$\text{MET}\phi_\text{Gen}$'),
         'METDeltaPhivsGenMETTrue': HLTMETInputs(x=r'$\text{MET}\phi_\text{Reco} / \text{MET}\phi_\text{Gen}$', y=r'$\text{MET}_\text{Gen}$ [GeV]'),
-        'METDeltaPhivsGenMETPhi': HLTMETInputs(x=r'$\text{MET}\phi_\text{Reco} / \text{MET}\phi_\text{Gen}$', y=r'$\text{MET}\phi_\text{Gen}$ [GeV]'),
+        'METDeltaPhivsGenMETPhi': HLTMETInputs(x=r'$\text{MET}\phi_\text{Reco} / \text{MET}\phi_\text{Gen}$', y=r'$\text{MET}\phi_\text{Gen}$'),
     }
 
     return vars1D, vars2D

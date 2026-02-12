@@ -80,8 +80,8 @@ private:
   MonitorElement *mMETSignReal;
   MonitorElement *mGenMETTrue;
   MonitorElement *mGenMETCalo;
-  MonitorElement *mMET1;
-  MonitorElement *mMET2;
+  MonitorElement *mMET;
+  MonitorElement *mMHT;
   MonitorElement *mMET_Nvtx;
   MonitorElement *mMETPhi;
   MonitorElement *mSumET;
@@ -92,8 +92,8 @@ private:
   MonitorElement *mMETRatio_GenMETCalo;
   MonitorElement *mMETDeltaPhi_GenMETCalo;
 
-  MonitorElement *mMET1_vs_MET2;
-  MonitorElement *mGenMETTrue1_vs_GenMETTrue2;
+  MonitorElement *mMET_vs_MHT;
+  MonitorElement *mGenMETTrue_vs_GenMHT;
 
   MonitorElement *mGenMETTrue_vs_MET;
   MonitorElement *mGenMETPhi_vs_MET;

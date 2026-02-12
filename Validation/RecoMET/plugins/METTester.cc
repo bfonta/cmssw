@@ -70,9 +70,9 @@ METTester::METTester(const edm::ParameterSet &iConfig) {
   mMETSignReal = nullptr;
   mGenMETTrue = nullptr;
   mGenMETCalo = nullptr;
-  mMET1 = nullptr;
-  mMET2 = nullptr;
-  mMET1_vs_MET2 = nullptr;
+  mMET = nullptr;
+  mMHT = nullptr;
+  mMET_vs_MHT = nullptr;
   mMET_Nvtx = nullptr;
   mMETPhi = nullptr;
   mSumET = nullptr;
@@ -135,8 +135,8 @@ void METTester::bookHistograms(DQMStore::IBooker &ibooker, edm::Run const &iRun,
   mMETSignReal = ibooker.book1D("METSignReal", "METSignReal", 25, 0, 24.5);
   mGenMETTrue = ibooker.book1D("METGenTrue", "MET Gen True", 100, 0, metEdge);
   mGenMETCalo = ibooker.book1D("METGenTrue", "MET Gen True", 100, 0, metEdge);
-  mMET1 = ibooker.book1D("MET1", "MET1 (20 GeV binning)", 100, 0, metEdge);
-  mMET2 = ibooker.book1D("MET2", "MET2 (20 GeV binning)", 100, 0, metEdge);
+  mMET = ibooker.book1D("MET", "MET (20 GeV binning)", 100, 0, metEdge);
+  mMHT = ibooker.book1D("MHT", "MHT (20 GeV binning)", 100, 0, metEdge);
   mMET_Nvtx = ibooker.bookProfile("MET_Nvtx", "MET vs. nvtx", 450, 0., 450., 0., metEdge, "");
   mMETPhi = ibooker.book1D("METPhi", "METPhi", 100, -phiEdge, phiEdge);
   mSumET = ibooker.book1D("SumET", "SumET", 200, 0, 5000);  // 10GeV
@@ -144,8 +144,8 @@ void METTester::bookHistograms(DQMStore::IBooker &ibooker, edm::Run const &iRun,
   mMETRatio_GenMETTrue = ibooker.book1D("METRatio_GenMETTrue", "METRatio_GenMETTrue", metRatioEdge, -metRatioEdge, metRatioEdge);
   mMETDeltaPhi_GenMETTrue = ibooker.book1D("METDeltaPhi_GenMETTrue", "METDeltaPhi_GenMETTrue", phiNbins, 0, phiEdge);
 
-  mMET1_vs_MET2 = ibooker.book2D("METvsMHT", "MET vs MHT", 100, 0., metEdge, 100, 0., metEdge);
-  mGenMETTrue1_vs_GenMETTrue2 = ibooker.book2D("GenMETTrue1vsGenMETTrue2", "Gen MET True vs Gen MHT", 100, 0., metEdge, 100, 0., metEdge);
+  mMET_vs_MHT = ibooker.book2D("METvsMHT", "MET vs MHT", 100, 0., metEdge, 100, 0., metEdge);
+  mGenMETTrue_vs_GenMHT = ibooker.book2D("GenMETTruevsGenMHT", "Gen MET True vs Gen MHT", 100, 0., metEdge, 100, 0., metEdge);
   
   mGenMETTrue_vs_MET = ibooker.book2D("GenMETTruevsMET", "Gen MET True vs MET", 100, 0., metEdge, 100, 0., metEdge);
   mGenMETPhi_vs_MET = ibooker.book2D("GenMETPhivsMET", "Gen MET Phi vs MET", 100, -phiEdge, phiEdge, 100, 0., metEdge);
@@ -286,63 +286,71 @@ void METTester::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetup)
   }
 
   // Two METs needed for 2D comparisons, eg. MET vs MHT
-  reco::MET met1, met2;
+  reco::MET met, mht;
   bool fillMet2 = false;
   if (isCaloMET) {
-    met1 = caloMetHandle_->front();
+    met = caloMetHandle_->front();
 	if (inputMHTLabel_ != "") {
-	  met2 = recoMhtHandle_->front();
+	  mht = recoMhtHandle_->front();
 	  fillMet2 = true;
 	}
   }
   else if (isPFMET) {
-    met1 = pfMetHandle_->front();
+    met = pfMetHandle_->front();
   	if (inputMHTLabel_ != "") {
-	  met2 = recoMhtHandle_->front();
+	  mht = recoMhtHandle_->front();
 	  fillMet2 = true;
 	}
   }
   else if (isGenMET) {
-    met1 = genMetHandle_->front();
+    met = genMetHandle_->front();
 	if (inputMHTLabel_ != "") {
-	  met2 = genMhtHandle_->front();
+	  mht = genMhtHandle_->front();
 	  fillMet2 = true;
 	}
   }
   else if (isMiniAODMET) {
-    met1 = patMetHandle_->front();
+    met = patMetHandle_->front();
 	if (inputMHTLabel_ != "") {
-	  met2 = recoMhtHandle_->front();
+	  mht = recoMhtHandle_->front();
 	  fillMet2 = true;
 	}
   }
   else if (isMHT) {
-	met1 = recoMhtHandle_->front();
+	mht = recoMhtHandle_->front();
 	if (inputMETLabel_ != "") {
-	  met2 = pfMetHandle_->front();
+	  met = pfMetHandle_->front();
 	  fillMet2 = true;
 	}
   }
 
-  const double SumET = met1.sumEt();
-  const double METSignPseudo = met1.mEtSig();
-  const double METSignReal = met1.significance();  // covariance matrix to be fixed by JetMET
+  reco::MET& theMETobj = isMHT ? mht : met;
+  
+  const double SumET = theMETobj.sumEt();
+  const double METSignPseudo = theMETobj.mEtSig();
+  const double METSignReal = theMETobj.significance();  // covariance matrix to be fixed by JetMET
 
-  const double MET1 = met1.pt();
-  const double MET2 = met2.pt();
-  const double MEx = met1.px();
-  const double MEy = met1.py();
-  const double METPhi = met1.phi();
+  double MET=-1., MHT=-1.;
+  const double theMET = theMETobj.pt();
+  if (isMHT) {
+	MHT = mht.pt();
+  }
+  else {
+	MET = met.pt();
+  }
+  const double MEx = theMETobj.px();
+  const double MEy = theMETobj.py();
+  const double METPhi = theMETobj.phi();
 
   mSumET->Fill(SumET);
   mMETSignPseudo->Fill(METSignPseudo);
   mMETSignReal->Fill(METSignReal);
-  mMET1->Fill(MET1);
+  mMET->Fill(MET);
   if (fillMet2) {
-	mMET2->Fill(MET2);
-	mMET1_vs_MET2->Fill(MET1, MET2);
+	mMHT->Fill(MHT);
+	mMET_vs_MHT->Fill(MET, MHT);
   }
-  mMET_Nvtx->Fill((double)nvtx, MET1);
+  mMET_Nvtx->Fill((double)nvtx, MET);
   mMEx->Fill(MEx);
   mMEy->Fill(MEy);
   mMETPhi->Fill(METPhi);
@@ -373,20 +381,20 @@ void METTester::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetup)
   
   double genMET    = isMHT ? genMhtHandle_->at(0).pt()  : genMetTrue->pt();
   double genMETPhi = isMHT ? genMhtHandle_->at(0).phi() : genMetTrue->phi();
-  double metDiff = MET1 - genMET;
-  double metRatio = MET1 / genMET;
+  double metDiff = theMET - genMET;
+  double metRatio = theMET / genMET;
   double metDeltaPhi = TVector2::Phi_mpi_pi(METPhi - genMETPhi);
 
   mGenMETTrue->Fill(genMET);
   if (isMHT) {
-	mGenMETTrue1_vs_GenMETTrue2->Fill(genMetTrue->pt(), genMET);
+	mGenMETTrue_vs_GenMHT->Fill(genMetTrue->pt(), genMET);
   }
   mMETDiff_GenMETTrue->Fill(metDiff);
   mMETRatio_GenMETTrue->Fill(metRatio);
   mMETDeltaPhi_GenMETTrue->Fill(metDeltaPhi);
 
-  mGenMETTrue_vs_MET->Fill(genMET, MET1);
-  mGenMETPhi_vs_MET->Fill(genMETPhi, MET1);
+  mGenMETTrue_vs_MET->Fill(genMET, theMET);
+  mGenMETPhi_vs_MET->Fill(genMETPhi, theMET);
   mGenMETTrue_vs_mGenMETPhi->Fill(genMET, genMETPhi);
 
   // MET differences (Reco - Gen)
@@ -409,11 +417,11 @@ void METTester::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetup)
       const double genMETPhi = genMetCalo->phi();
 
 	  mGenMETCalo->Fill(genMET);
-      mMETDiff_GenMETCalo->Fill(MET1 - genMET);
-      mMETRatio_GenMETCalo->Fill(MET1 / genMET);
+      mMETDiff_GenMETCalo->Fill(theMET - genMET);
+      mMETRatio_GenMETCalo->Fill(theMET / genMET);
       mMETDeltaPhi_GenMETCalo->Fill(TVector2::Phi_mpi_pi(METPhi - genMETPhi));
 
-	  mGenMETCalo_vs_MET->Fill(genMET, MET1);
+	  mGenMETCalo_vs_MET->Fill(genMET, theMET);
 	  mGenMETCalo_vs_mGenMETPhi->Fill(genMET, genMETPhi);
     }
 	else {
@@ -491,20 +499,20 @@ void METTester::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetup)
   }
   if (isMiniAODMET) {
     const pat::MET *patmet = &(patMetHandle_->front());
-    mMETUnc_JetResUp->Fill(MET1 - patmet->shiftedPt(pat::MET::JetResUp));
-    mMETUnc_JetResDown->Fill(MET1 - patmet->shiftedPt(pat::MET::JetResDown));
-    mMETUnc_JetEnUp->Fill(MET1 - patmet->shiftedPt(pat::MET::JetEnUp));
-    mMETUnc_JetEnDown->Fill(MET1 - patmet->shiftedPt(pat::MET::JetEnDown));
-    mMETUnc_MuonEnUp->Fill(MET1 - patmet->shiftedPt(pat::MET::MuonEnUp));
-    mMETUnc_MuonEnDown->Fill(MET1 - patmet->shiftedPt(pat::MET::MuonEnDown));
-    mMETUnc_ElectronEnUp->Fill(MET1 - patmet->shiftedPt(pat::MET::ElectronEnUp));
-    mMETUnc_ElectronEnDown->Fill(MET1 - patmet->shiftedPt(pat::MET::ElectronEnDown));
-    mMETUnc_TauEnUp->Fill(MET1 - patmet->shiftedPt(pat::MET::TauEnUp));
-    mMETUnc_TauEnDown->Fill(MET1 - patmet->shiftedPt(pat::MET::TauEnDown));
-    mMETUnc_UnclusteredEnUp->Fill(MET1 - patmet->shiftedPt(pat::MET::UnclusteredEnUp));
-    mMETUnc_UnclusteredEnDown->Fill(MET1 - patmet->shiftedPt(pat::MET::UnclusteredEnDown));
-    mMETUnc_PhotonEnUp->Fill(MET1 - patmet->shiftedPt(pat::MET::PhotonEnUp));
-    mMETUnc_PhotonEnDown->Fill(MET1 - patmet->shiftedPt(pat::MET::PhotonEnDown));
+    mMETUnc_JetResUp->Fill(theMET - patmet->shiftedPt(pat::MET::JetResUp));
+    mMETUnc_JetResDown->Fill(theMET - patmet->shiftedPt(pat::MET::JetResDown));
+    mMETUnc_JetEnUp->Fill(theMET - patmet->shiftedPt(pat::MET::JetEnUp));
+    mMETUnc_JetEnDown->Fill(theMET - patmet->shiftedPt(pat::MET::JetEnDown));
+    mMETUnc_MuonEnUp->Fill(theMET - patmet->shiftedPt(pat::MET::MuonEnUp));
+    mMETUnc_MuonEnDown->Fill(theMET - patmet->shiftedPt(pat::MET::MuonEnDown));
+    mMETUnc_ElectronEnUp->Fill(theMET - patmet->shiftedPt(pat::MET::ElectronEnUp));
+    mMETUnc_ElectronEnDown->Fill(theMET - patmet->shiftedPt(pat::MET::ElectronEnDown));
+    mMETUnc_TauEnUp->Fill(theMET - patmet->shiftedPt(pat::MET::TauEnUp));
+    mMETUnc_TauEnDown->Fill(theMET - patmet->shiftedPt(pat::MET::TauEnDown));
+    mMETUnc_UnclusteredEnUp->Fill(theMET - patmet->shiftedPt(pat::MET::UnclusteredEnUp));
+    mMETUnc_UnclusteredEnDown->Fill(theMET - patmet->shiftedPt(pat::MET::UnclusteredEnDown));
+    mMETUnc_PhotonEnUp->Fill(theMET - patmet->shiftedPt(pat::MET::PhotonEnUp));
+    mMETUnc_PhotonEnDown->Fill(theMET - patmet->shiftedPt(pat::MET::PhotonEnDown));
 
     if (patmet->isPFMET()) {
       mPFphotonEtFraction->Fill(patmet->NeutralEMFraction());
