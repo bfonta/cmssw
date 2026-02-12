@@ -195,8 +195,10 @@ def plot2D(plotter, h, text, props):
     if props.drawdiag:
         diag = np.linspace(*plotter.ax.get_xlim(), 1000)
         plotter.ax.plot(diag, diag, label=r'$y=x$', c='black')
-
-    plotter.labels(x=props.x, y=props.y, legend_title='', legend_loc='best')
+        plotter.labels(x=props.x, y=props.y, legend_title='', legend_loc='best')
+    else:
+        plotter.labels(x=props.x, y=props.y)
+        
     plotter.fig.colorbar(pcm, ax=plotter.ax, label="# Events")
     return plotter
 
@@ -365,25 +367,18 @@ def varsToPlot(metColl):
             vars1D[k].x = vars1D[k].x.replace('MET', 'MHT')
             vars1D[k].y = vars1D[k].y.replace('MET', 'MHT')
 
-    # The binning should be synchronized with Validation/RecoMET/plugins/METTesterPostProcessor.h
-    bins = {'MET': (0., 20., 40., 60., 80., 100., 150., 200., 300., 400., 500., 1000.),
-            'Phi': (-3.15, -2., -1., 0., 1., 2., 3.15)}
-
-    # Differential distributions for debugging
-    for bt in ('Phi', 'MET'):
-        for left, right in zip(bins[bt][:-1],bins[bt][1:]):
-            if bt == 'MET':
-                edges = (str(int(left)) + 'to' + str(int(right))).replace('.','p')
-            elif bt == 'Phi':
-                edges = f"{left:.2f}to{right:.2f}".replace('.', 'p')
-            vars1D.update({'METDiff_GenMETTrue_' + bt + edges: HLTMETInputs(x=r'$\text{MET}_\text{Reco} - \text{MET}_\text{Gen}$ [GeV]',
-                                                                                y=nEvts, rebin=2, out='Differential')})
-            vars1D.update({'METRatio_GenMETTrue_' + bt + edges: HLTMETInputs(x=r'$\text{MET}_\text{Reco} / \text{MET}_\text{Gen}$',
-                                                                                y=nEvts, rebin=2, out='Differential')})
-            vars1D.update({'METDeltaPhi_GenMETTrue_' + bt + edges: HLTMETInputs(x=r'$\text{MET}\phi_\text{Reco} - \text{MET}\phi_\text{Gen}$',
-                                                                                y=nEvts, rebin=2, out='Differential')})
     vars2D = {
         'METvsMHT': HLTMETInputs(x=r'$MET_\text{Reco}$ [GeV]', y=r'$MHT_\text{Reco}$ [GeV]', logz=False, drawdiag=True),
+        'GenMETTrue1vsGenMETTrue2': HLTMETInputs(x=r'$MET_\text{Gen}$ [GeV]', y=r'$MHT_\text{Gen}$ [GeV]', drawdiag=True),
+        'GenMETTruevsMET': HLTMETInputs(x=r'$MET_\text{Gen}$ [GeV]', y=r'$MET_\text{Reco}$ [GeV]', drawdiag=True),
+        'GenMETPhivsMET': HLTMETInputs(x=r'$\text{MET}\phi_\text{Gen}$ [GeV]', y=r'$MET_\text{Reco}$ [GeV]'),
+        'GenMETTruevsGenMETPhi': HLTMETInputs(x=r'$MET_\text{Gen}$ [GeV]', y=r'$\text{MET}\phi_\text{Gen}$ [GeV]'),
+        'METDiffvsGenMETTrue': HLTMETInputs(x=r'$\text{MET}_\text{Reco} - \text{MET}_\text{Gen}$ [GeV]', y=r'$\text{MET}_\text{Gen}$ [GeV]'),
+        'METDiffvsGenMETPhi': HLTMETInputs(x=r'$\text{MET}_\text{Reco} - \text{MET}_\text{Gen}$ [GeV]', y=r'$\text{MET}\phi_\text{Gen}$'),
+        'METRatiovsGenMETTrue': HLTMETInputs(x=r'$\text{MET}_\text{Reco} / \text{MET}_\text{Gen}$ [GeV]', y=r'$\text{MET}_\text{Gen}$ [GeV]'),
+        'METRatiovsGenMETPhi': HLTMETInputs(x=r'$\text{MET}_\text{Reco} / \text{MET}_\text{Gen}$ [GeV]', y=r'$\text{MET}\phi_\text{Gen}$'),
+        'METDeltaPhivsGenMETTrue': HLTMETInputs(x=r'$\text{MET}\phi_\text{Reco} / \text{MET}\phi_\text{Gen}$', y=r'$\text{MET}_\text{Gen}$ [GeV]'),
+        'METDeltaPhivsGenMETPhi': HLTMETInputs(x=r'$\text{MET}\phi_\text{Reco} / \text{MET}\phi_\text{Gen}$', y=r'$\text{MET}\phi_\text{Gen}$ [GeV]'),
     }
 
     return vars1D, vars2D

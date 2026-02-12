@@ -129,8 +129,8 @@ void METTester::bookHistograms(DQMStore::IBooker &ibooker, edm::Run const &iRun,
   ibooker.setCurrentFolder(runDir + inputMETLabel_);
 
   mNvertex = ibooker.book1D("Nvertex", "Nvertex", 450, 0, 450);
-  mMEx = ibooker.book1D("MEx", "MEx", 160, -800, 800);
-  mMEy = ibooker.book1D("MEy", "MEy", 160, -800, 800);
+  mMEx = ibooker.book1D("MEx", "MEx", 160, -metDiffEdge, metDiffEdge);
+  mMEy = ibooker.book1D("MEy", "MEy", 160, -metDiffEdge, metDiffEdge);
   mMETSignPseudo = ibooker.book1D("METSignPseudo", "METSignPseudo", 25, 0, 24.5);
   mMETSignReal = ibooker.book1D("METSignReal", "METSignReal", 25, 0, 24.5);
   mGenMETTrue = ibooker.book1D("METGenTrue", "MET Gen True", 100, 0, metEdge);
@@ -140,8 +140,8 @@ void METTester::bookHistograms(DQMStore::IBooker &ibooker, edm::Run const &iRun,
   mMET_Nvtx = ibooker.bookProfile("MET_Nvtx", "MET vs. nvtx", 450, 0., 450., 0., metEdge, "");
   mMETPhi = ibooker.book1D("METPhi", "METPhi", 100, -phiEdge, phiEdge);
   mSumET = ibooker.book1D("SumET", "SumET", 200, 0, 5000);  // 10GeV
-  mMETDiff_GenMETTrue = ibooker.book1D("METDiff_GenMETTrue", "METDiff_GenMETTrue", 800, -800, 800);
-  mMETRatio_GenMETTrue = ibooker.book1D("METRatio_GenMETTrue", "METRatio_GenMETTrue", 800, -800, 800);
+  mMETDiff_GenMETTrue = ibooker.book1D("METDiff_GenMETTrue", "METDiff_GenMETTrue", metDiffEdge, -metDiffEdge, metDiffEdge);
+  mMETRatio_GenMETTrue = ibooker.book1D("METRatio_GenMETTrue", "METRatio_GenMETTrue", metRatioEdge, -metRatioEdge, metRatioEdge);
   mMETDeltaPhi_GenMETTrue = ibooker.book1D("METDeltaPhi_GenMETTrue", "METDeltaPhi_GenMETTrue", phiNbins, 0, phiEdge);
 
   mMET1_vs_MET2 = ibooker.book2D("METvsMHT", "MET vs MHT", 100, 0., metEdge, 100, 0., metEdge);
@@ -173,8 +173,8 @@ void METTester::bookHistograms(DQMStore::IBooker &ibooker, edm::Run const &iRun,
     mMETUnc_PhotonEnDown = ibooker.book1D("METUnc_PhotonEnDown", "METUnc_PhotonEnDown", 200, -10, 10);
   }
   if (!isMiniAODMET and !isMHT) {
-    mMETDiff_GenMETCalo = ibooker.book1D("METDiff_GenMETCalo", "METDiff_GenMETCalo", 600, -600, 600);
-    mMETRatio_GenMETCalo = ibooker.book1D("METRatio_GenMETCalo", "METRatio_GenMETCalo", 600, -600, 600);
+    mMETDiff_GenMETCalo = ibooker.book1D("METDiff_GenMETCalo", "METDiff_GenMETCalo", metDiffEdge, -metDiffEdge, metDiffEdge);
+    mMETRatio_GenMETCalo = ibooker.book1D("METRatio_GenMETCalo", "METRatio_GenMETCalo", metDiffEdge, -metDiffEdge, metDiffEdge);
     mMETDeltaPhi_GenMETCalo = ibooker.book1D("METDeltaPhi_GenMETCalo", "METDeltaPhi_GenMETCalo", 80, 0, phiEdge);
   }
   if (!isGenMET) {
