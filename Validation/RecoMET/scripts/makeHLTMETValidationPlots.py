@@ -326,17 +326,17 @@ def varsToPlot(metColl):
         'SumET'                   : HLTMETInputs(x=r'$\sum E_T$ [GeV]', y=nEvts, rebin=4),
         # MET post-processing
         'METDiffAggr_MET'      : HLTMETInputs(x=r'$\text{MET}_{\text{Gen}}$ [GeV]', y=r'$\langle\text{MET}_\text{Reco} - \text{MET}_\text{Gen}\rangle$ [GeV]'),
-        'METDiffAggr_Phi'      : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\langle\text{MET}_\text{Reco} - \text{MET}_\text{Gen}\rangle$ [GeV]'),
+        'METDiffAggr_Phi'      : HLTMETInputs(x=r'$\text{MET}\phi_{\text{Gen}}$', y=r'$\langle\text{MET}_\text{Reco} - \text{MET}_\text{Gen}\rangle$ [GeV]'),
         'METDeltaPhiAggr_MET'  : HLTMETInputs(x=r'$\text{MET}_{\text{Gen}}$ [GeV]', y=r'$\langle\text{MET}\phi_\text{Reco} - \text{MET}\phi_\text{Gen}\rangle$'),
-        'METDeltaPhiAggr_Phi'  : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\langle\text{MET}\phi_\text{Reco} - \text{MET}\phi_\text{Gen}\rangle$'),
+        'METDeltaPhiAggr_Phi'  : HLTMETInputs(x=r'$\text{MET}\phi_{\text{Gen}}$', y=r'$\langle\text{MET}\phi_\text{Reco} - \text{MET}\phi_\text{Gen}\rangle$'),
         'METRespAggr_MET'      : HLTMETInputs(x=r'$\text{MET}_{\text{Gen}}$ [GeV]', y=r'$\langle\text{MET}_\text{Reco} / \text{MET}_\text{Gen}\rangle$'),
-        'METRespAggr_Phi'      : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\langle\text{MET}_\text{Reco} / \text{MET}_\text{Gen}\rangle$'),
-        'METResolAggr_Phi'     : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\sigma(\text{MET}_\text{Reco})$ [GeV]'),
-        'METGenResolAggr_Phi'  : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\sigma(\text{MET}_\text{Gen})$ [GeV]'),
-        'METResolDiffAggr_Phi' : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\sigma(\text{MET}_\text{Reco}) - \sigma(\text{MET}_\text{Gen})$ [GeV]'),
-        'METSignAggr_Phi'      : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\langle\text{MET}_\text{Reco}\rangle / \sigma(\text{MET}_\text{Reco})$'),
-        'METGenSignAggr_Phi'   : HLTMETInputs(x=r'$\phi_{\text{Gen}}$', y=r'$\langle\text{MET}_\text{Gen}\rangle / \sigma(\text{MET}_\text{Gen})$'),
-        'METSignDiffAggr_Phi'  : HLTMETInputs(x=r'$\phi_{\text{Gen}}$',
+        'METRespAggr_Phi'      : HLTMETInputs(x=r'$\text{MET}\phi_{\text{Gen}}$', y=r'$\langle\text{MET}_\text{Reco} / \text{MET}_\text{Gen}\rangle$'),
+        'METResolAggr_Phi'     : HLTMETInputs(x=r'$\text{MET}\phi_{\text{Gen}}$', y=r'$\sigma(\text{MET}_\text{Reco})$ [GeV]'),
+        'METGenResolAggr_Phi'  : HLTMETInputs(x=r'$\text{MET}\phi_{\text{Gen}}$', y=r'$\sigma(\text{MET}_\text{Gen})$ [GeV]'),
+        'METResolDiffAggr_Phi' : HLTMETInputs(x=r'$\text{MET}\phi_{\text{Gen}}$', y=r'$\sigma(\text{MET}_\text{Reco}) - \sigma(\text{MET}_\text{Gen})$ [GeV]'),
+        'METSignAggr_Phi'      : HLTMETInputs(x=r'$\text{MET}\phi_{\text{Gen}}$', y=r'$\langle\text{MET}_\text{Reco}\rangle / \sigma(\text{MET}_\text{Reco})$'),
+        'METGenSignAggr_Phi'   : HLTMETInputs(x=r'$\text{MET}\phi_{\text{Gen}}$', y=r'$\langle\text{MET}_\text{Gen}\rangle / \sigma(\text{MET}_\text{Gen})$'),
+        'METSignDiffAggr_Phi'  : HLTMETInputs(x=r'$\text{MET}\phi_{\text{Gen}}$',
                                               y=r'$\langle\text{MET}_\text{Reco}\rangle / \sigma(\text{MET}_\text{Reco}) - \langle\text{MET}_\text{Gen}\rangle / \sigma(\text{MET}_\text{Gen})$'),
     }
 
@@ -365,7 +365,7 @@ def varsToPlot(metColl):
             vars1D[k].x = vars1D[k].x.replace('MET', 'MHT')
             vars1D[k].y = vars1D[k].y.replace('MET', 'MHT')
 
-    # The binning should be synchronized with Validation/RecoMET/plugins/METTester.h
+    # The binning should be synchronized with Validation/RecoMET/plugins/METTesterPostProcessor.h
     bins = {'MET': (0., 20., 40., 60., 80., 100., 150., 200., 300., 400., 500., 1000.),
             'Phi': (-3.15, -2., -1., 0., 1., 2., 3.15)}
 

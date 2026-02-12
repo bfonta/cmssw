@@ -41,14 +41,6 @@ public:
   void bookHistograms(DQMStore::IBooker &, edm::Run const &, edm::EventSetup const &) override;
   static void fillDescriptions(edm::ConfigurationDescriptions &);
 
-  static constexpr int mNMETBins = 11;
-  static constexpr std::array<float, mNMETBins + 1> mMETBins = {
-      {0., 20., 40., 60., 80., 100., 150., 200., 300., 400., 500., 1000.}};
-  static constexpr int mNPhiBins = 6;
-  static constexpr std::array<float, mNPhiBins + 1> mPhiBins = {{-3.15, -2., -1., 0., 1., 2., 3.15}};
-
-  static std::string binStr(float left, float right, bool roundInt = true);
-
 private:
   std::map<std::string, MonitorElement *> me;
 
@@ -90,7 +82,6 @@ private:
   MonitorElement *mGenMETCalo;
   MonitorElement *mMET1;
   MonitorElement *mMET2;
-  MonitorElement *mMET1_vs_MET2;
   MonitorElement *mMET_Nvtx;
   MonitorElement *mMETPhi;
   MonitorElement *mSumET;
@@ -100,6 +91,19 @@ private:
   MonitorElement *mMETDiff_GenMETCalo;
   MonitorElement *mMETRatio_GenMETCalo;
   MonitorElement *mMETDeltaPhi_GenMETCalo;
+
+  MonitorElement *mMET1_vs_MET2;
+  MonitorElement *mGenMETTrue1_vs_GenMETTrue2;
+
+  MonitorElement *mGenMETTrue_vs_MET;
+  MonitorElement *mGenMETPhi_vs_MET;
+  MonitorElement *mGenMETTrue_vs_mGenMETPhi;
+  MonitorElement *mMETDiff_vs_GenMETTrue;
+  MonitorElement *mMETDiff_vs_GenMETPhi;
+  MonitorElement *mMETRatio_vs_GenMETTrue;
+  MonitorElement *mMETRatio_vs_GenMETPhi;  
+  MonitorElement *mMETDeltaPhi_vs_GenMETTrue;
+  MonitorElement *mMETDeltaPhi_vs_GenMETPhi;  
 
   // MET Uncertainity Variables
   MonitorElement *mMETUnc_JetResUp;
@@ -134,6 +138,9 @@ private:
   MonitorElement *mCaloEmEtInEE;
   MonitorElement *mCaloEmEtInEB;
 
+  MonitorElement *mGenMETCalo_vs_MET;
+  MonitorElement *mGenMETCalo_vs_mGenMETPhi;
+
   // GenMET variables
   MonitorElement *mNeutralEMEtFraction;
   MonitorElement *mNeutralHadEtFraction;
@@ -161,16 +168,6 @@ private:
   template <size_t S>
   using ElemArr = std::array<MonitorElement *, S>;
 
-  ElemArr<mNMETBins> mMET_METBins, mGenMETTrue_METBins, mGenMETCalo_METBins;
-  ElemArr<mNPhiBins> mMET_PhiBins, mGenMETTrue_PhiBins, mGenMETCalo_PhiBins;
-  
-  ElemArr<mNMETBins> mMETDiff_GenMETTrue_METBins;
-  ElemArr<mNPhiBins> mMETDiff_GenMETTrue_PhiBins;
-  ElemArr<mNMETBins> mMETRatio_GenMETTrue_METBins;
-  ElemArr<mNPhiBins> mMETRatio_GenMETTrue_PhiBins;
-  ElemArr<mNMETBins> mMETDeltaPhi_GenMETTrue_METBins;
-  ElemArr<mNPhiBins> mMETDeltaPhi_GenMETTrue_PhiBins;
-
   bool isCaloMET;
   bool isPFMET;
   bool isMHT;
@@ -179,6 +176,14 @@ private:
   std::string runDir;
   std::string mGenMetTrueLabel;
   std::string mGenMetCaloLabel;
+
+  float phiEdge = 3.2;
+  float metEdge = 1600.;
+  float metDiffEdge = 600.;
+  float metRatioEdge = 600.;
+
+  int phiNbins = 100;
+  int metNbins = 1600;
 };
 
 #endif  // METTESTER_H
