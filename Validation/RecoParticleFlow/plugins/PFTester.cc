@@ -468,7 +468,7 @@ void PFTesterT<RecoClusterCollection>::bookHistograms(DQMStore::IBooker& ibook,
   ibook.setCurrentFolder(outFolder_ + "/PFCandidates");
 
   h_PFCandEt_ = ibook.book1D("PFCandEt", "PFCandEt", 1000, 0, 1000);
-  h_PFCandEta_ = ibook.book1D("PFCandEta", "PFCandEta", 200, -5, 5);
+  h_PFCandEta_ = ibook.book1D("PFCandEta", "PFCandEta", 200, -6, 6);
   h_PFCandPhi_ = ibook.book1D("PFCandPhi", "PFCandPhi", 200, -M_PI, M_PI);
   h_PFCandCharge_ = ibook.book1D("PFCandCharge", "PFCandCharge", 5, -2, 2);
   h_PFCandPdgId_ = ibook.book1D("PFCandPdgId", "PFCandPdgId", 44, -22, 22);
@@ -507,8 +507,8 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
   // --------------------------------------------------------------------
   // ---------------- PF Clusters and associators -----------------------
   // --------------------------------------------------------------------
-  // std::cout << std::endl;
-  // std::cout << "--- Analyze ---" << std::endl;
+  std::cout << std::endl;
+  std::cout << "--- Analyze --- " << std::endl;
   edm::Handle<reco::PFRecHitCollection> Rechit;
   iEvent.getByToken(RechitToken_, Rechit);
   if (!Rechit.isValid()) {
@@ -671,14 +671,14 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
     h_SimTrackToSimHitsEnergyFraction_->Fill(energySumSimHits / simClusters[simId].energy());
 
     double energyFracSumSimHits = 0;
-    for (auto hit_energy : simClusters[simId].hits_and_fractions()) {
-      DetId id(hit_energy.first);
+    for (auto hit_fraction : simClusters[simId].hits_and_fractions()) {
+      DetId id(hit_fraction.first);
       auto rechitIt =
           std::find_if(pfRechit.begin(), pfRechit.end(), [id](const reco::PFRecHit& rh) { return rh.detId() == id; });
       if (rechitIt == pfRechit.end()) {
         continue;
       } else {
-        energyFracSumSimHits += rechitIt->energy() * hit_energy.second;
+        energyFracSumSimHits += rechitIt->energy() * hit_fraction.second;
       }
     }
 
@@ -973,8 +973,8 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
   // --------------------------------------------------------------------
   // ----- Cluster response computation ---------------------------------
   // --------------------------------------------------------------------
-  // std::cout << std::endl;
-  // std::cout << "--- Event " << iEvent.eventAuxiliary().event() << " ---" << std::endl;
+  std::cout << std::endl;
+  std::cout << "--- Event " << iEvent.eventAuxiliary().event() << " ---" << std::endl;
   for (unsigned int simId = 0; simId < simClusters.size(); ++simId) {
     double energySumSimHits = 0;
     for (auto hit_energy : simClusters[simId].hits_and_energies()) {
@@ -1028,21 +1028,31 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
           passMatch = shared_energy_frac > thresh;
         }
 
-		// std::cout << "===============================" << std::endl;
-		// std::cout << "matchByScore? " << doMatchByScore_ << std::endl;
-		// std::cout << "passMatch: " << passMatch << ", recoId: " << recoId << std::endl;
-		// std::cout << "sim en: " << energySumSimHits << ", reco en: " << recoClusters[recoId].energy() << std::endl;
-		// std::cout << "sim eta: " << simClusters[simId].eta() << ", reco eta: " << recoClusters[recoId].eta()  << ", sim track eta: " << simTrackEtaAtBoundary << std::endl;
-		// std::cout << "sim phi: " << simClusters[simId].phi() << ", reco phi: " << recoClusters[recoId].phi() << std::endl;
-		// std::cout << "score: " << recoPair.second.second << std::endl;
-		// std::cout << "shared en frac: " << recoPair.second.first / energySumSimHits << std::endl;
-		// std::cout << "n sim clusters: " << simClusters.size() << std::endl;
-		// std::cout << "n matched reco clusters: " << simToRecoMatchedSorted.size() << std::endl;
-		// for (const auto& recoPairDebug : simToRecoMatchedSorted) {
-		//   std::cout << "- score: " << recoPairDebug.second.second << ", share en frac: " << recoPairDebug.second.first / energySumSimHits << ", en: " << recoClusters[recoPairDebug.first.index()].energy() << std::endl;
+		std::cout << "===============================" << std::endl;
+		std::cout << "matchByScore? " << doMatchByScore_ << std::endl;
+		std::cout << "passMatch: " << passMatch << ", recoId: " << recoId << std::endl;
+		std::cout << "sim en: " << energySumSimHits << ", reco en: " << recoClusters[recoId].energy() << std::endl;
+		std::cout << "sim eta: " << simClusters[simId].eta() << ", reco eta: " << recoClusters[recoId].eta()  << ", sim track eta: " << simTrackEtaAtBoundary << std::endl;
+		std::cout << "sim phi: " << simClusters[simId].phi() << ", reco phi: " << recoClusters[recoId].phi() << std::endl;
+		std::cout << "score: " << recoPair.second.second << std::endl;
+		std::cout << "shared en frac: " << recoPair.second.first / energySumSimHits << std::endl;
+		std::cout << "n sim clusters: " << simClusters.size() << std::endl;
+		std::cout << "n matched reco clusters: " << simToRecoMatchedSorted.size() << std::endl;
+		for (const auto& recoPairDebug : simToRecoMatchedSorted) {
+		  std::cout << "- score: " << recoPairDebug.second.second << ", share en frac: " << recoPairDebug.second.first / energySumSimHits << ", en: " << recoClusters[recoPairDebug.first.index()].energy() << std::endl;
+		}
+		std::cout << "threshold: " << thresh << std::endl;
+		// for (auto hae : simClusters[simId].hits_and_energies()) {
+		//   DetId idid(hae.first);
+		//   if(idid.det() != DetId::Ecal) {
+		// 	std::cout << "ERROR 1!!!!!!!!!!!!" << std::endl;
+		//   }
+		//   if(idid.subdetId() != EcalBarrel) {
+		// 	std::cout << "ERROR 2!!!!!!!!!!!!" << std::endl;
+		//   }
 		// }
-		// std::cout << "threshold: " << thresh << std::endl;
-		// std::cout << "===============================" << std::endl;
+		
+		std::cout << "===============================" << std::endl;
 		
         if (passMatch) {
           // h2d_responsePt_[ithr]["En"]->Fill(energySumSimHits, 
@@ -1071,8 +1081,8 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
           h2d_responseE_[ithr]["Phi"]->Fill(simClusters[simId].phi(), recoClusters[recoId].energy() / energySumSimHits);
           h2d_responseE_[ithr]["Mult"]->Fill(simClusters[simId].numberOfRecHits(),
                                              recoClusters[recoId].energy() / energySumSimHits);
-		  // std::cout << "fill response: " << recoClusters[recoId].energy() / energySumSimHits << std::endl;
-		  // std::cout << "============== break =================" << std::endl;
+		  std::cout << "fill response: " << recoClusters[recoId].energy() / energySumSimHits << std::endl;
+		  std::cout << "============== break =================" << std::endl;
           break;
         }
       }

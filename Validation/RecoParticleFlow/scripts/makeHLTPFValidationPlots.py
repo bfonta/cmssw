@@ -412,6 +412,7 @@ def plotEffComp1D(cached_histos, title, vars1d, outdir, text, top_text=False, su
         errorsList.append(errors)
 
     plotter.limits_with_margin(valuesList, errorsList, logY=logy)
+    #plotter.limits(x=(-9,109), y=(10E-5, 10E4), logY=logy)
     plotter.labels(x=xlabel, y=ylabel, legend_title='')
 
     plotter.ax.text(0.03, 0.97, text, transform=plotter.ax.transAxes, fontsize=fontsize,
@@ -576,99 +577,86 @@ if __name__ == '__main__':
         utils.createIndexPHP(src=args.odir, dest=f'{args.odir}/{subdir}')
 
     for subdir in subdirs:       
-        for name, suf in zip(('', '_Reconstructable'), ('', 'Reconstructable')):
-            varsDict = {
-                # Cluster efficiency
-                f'{subdir}/Eff_vs_En{name}': InputArgs(
-                    ratio=f'{subdir}/Eff_vs_En{name}', 
-                    den=f'SimClusters{suf}En', legden='SimClusters',
-                    num=f'{subdir}/SimClustersMatchedRecoClustersEn', legnum='Matched SimClusters',
-                    xtitle='Energy from SimTrack [GeV]', ytitle=nSimClustersLabel, rebin=4
-                ),
-                f'{subdir}/Eff_vs_EnHits{name}': InputArgs(
-                    ratio=f'{subdir}/Eff_vs_EnHits{name}', 
-                    den=f'SimClusters{suf}EnHits', legden='SimClusters',
-                    num=f'{subdir}/SimClustersMatchedRecoClustersEnHits', legnum='Matched SimClusters', 
-                    xtitle='Energy from hits [GeV]', ytitle=nSimClustersLabel, rebin=4
-                ),
-                f'{subdir}/Eff_vs_EnFrac{name}': InputArgs(
-                    ratio=f'{subdir}/Eff_vs_EnFrac{name}', 
-                    den=f'SimClusters{suf}EnFrac', legden='SimClusters',
-                    num=f'{subdir}/SimClustersMatchedRecoClustersEnFrac', legnum='Matched SimClusters', 
-                    xtitle='Energy Fraction', ytitle=nSimClustersLabel, rebin=4
-                ),
-                f'{subdir}/Eff_vs_Pt{name}': InputArgs(
-                    ratio=f'{subdir}/Eff_vs_Pt{name}', 
-                    den=f'SimClusters{suf}Pt', legden='SimClusters',
-                    num=f'{subdir}/SimClustersMatchedRecoClustersPt', legnum='Matched SimClusters', 
-                    xtitle=r'$p_{T}$ [GeV]', ytitle=nSimClustersLabel, rebin=4
-                ),
-                f'{subdir}/Eff_vs_Eta{name}': InputArgs(
-                    ratio=f'{subdir}/Eff_vs_Eta{name}', 
-                    den=f'SimClusters{suf}Eta', legden='SimClusters',
-                    num=f'{subdir}/SimClustersMatchedRecoClustersEta', legnum='Matched SimClusters', 
-                    xtitle=r'$\eta$', ytitle=nSimClustersLabel
-                ),
-                f'{subdir}/Eff_vs_Phi{name}': InputArgs(
-                    ratio=f'{subdir}/Eff_vs_Phi{name}', 
-                    den=f'SimClusters{suf}Phi', legden='SimClusters',
-                    num=f'{subdir}/SimClustersMatchedRecoClustersPhi', legnum='Matched SimClusters', 
-                    xtitle=r'$\phi$', ytitle=nSimClustersLabel
-                ),
-                f'{subdir}/Eff_vs_Mult{name}': InputArgs(
-                    ratio=f'{subdir}/Eff_vs_Mult{name}', 
-                    den=f'SimClusters{suf}Mult', legden='SimClusters',
-                    num=f'{subdir}/SimClustersMatchedRecoClustersMult', legnum='Matched SimClusters', 
-                    xtitle='Multiplicity', ytitle=nSimClustersLabel, rebin=4
-                ),
-                # Cluster split rate
-                f'{subdir}/Split_vs_En{name}': InputArgs(
-                    ratio=f'{subdir}/Split_vs_En{name}', 
-                    den=f'SimClusters{suf}En', legden='SimClusters',
-                    num=f'{subdir}/SimClustersMultiMatchedRecoClustersEn', legnum='Multi Matched SimClusters',
-                    xtitle='Energy from SimTrack [GeV]', ytitle=nSimClustersLabel, rebin=4
-                ),
-                f'{subdir}/Split_vs_EnHits{name}': InputArgs(
-                    ratio=f'{subdir}/Split_vs_EnHits{name}', 
-                    den=f'SimClusters{suf}EnHits', legden='SimClusters',
-                    num=f'{subdir}/SimClustersMultiMatchedRecoClustersEnHits', legnum='Multi Matched SimClusters', 
-                    xtitle='Energy from hits [GeV]', ytitle=nSimClustersLabel, rebin=4
-                ),
-                f'{subdir}/Split_vs_EnFrac{name}': InputArgs(
-                    ratio=f'{subdir}/Split_vs_EnFrac{name}', 
-                    den=f'SimClusters{suf}EnFrac', legden='SimClusters',
-                    num=f'{subdir}/SimClustersMultiMatchedRecoClustersEnFrac', legnum='Multi Matched SimClusters', 
-                    xtitle='Energy Fraction', ytitle=nSimClustersLabel, rebin=4
-                ),
-                f'{subdir}/Split_vs_Pt{name}': InputArgs(
-                    ratio=f'{subdir}/Split_vs_Pt{name}', 
-                    den=f'SimClusters{suf}Pt', legden='SimClusters',
-                    num=f'{subdir}/SimClustersMultiMatchedRecoClustersPt', legnum='Multi Matched SimClusters', 
-                    xtitle=r'$p_{T}$ [GeV]', ytitle=nSimClustersLabel, rebin=4
-                ),
-                f'{subdir}/Split_vs_Eta{name}': InputArgs(
-                    ratio=f'{subdir}/Split_vs_Eta{name}', 
-                    den=f'SimClusters{suf}Eta', legden='SimClusters',
-                    num=f'{subdir}/SimClustersMultiMatchedRecoClustersEta', legnum='Multi Matched SimClusters', 
-                    xtitle=r'$\eta$', ytitle=nSimClustersLabel
-                ),
-                f'{subdir}/Split_vs_Phi{name}': InputArgs(
-                    ratio=f'{subdir}/Split_vs_Phi{name}', 
-                    den=f'SimClusters{suf}Phi', legden='SimClusters',
-                    num=f'{subdir}/SimClustersMultiMatchedRecoClustersPhi', legnum='Multi Matched SimClusters', 
-                    xtitle=r'$\phi$', ytitle=nSimClustersLabel
-                ),
-                f'{subdir}/Split_vs_Mult{name}': InputArgs(
-                    ratio=f'{subdir}/Split_vs_Mult{name}', 
-                    den=f'SimClusters{suf}Mult', legden='SimClusters',
-                    num=f'{subdir}/SimClustersMultiMatchedRecoClustersMult', legnum='Multi Matched SimClusters', 
-                    xtitle='Multiplicity', ytitle=nSimClustersLabel, rebin=4
-                ),
-            }
+        varsDict = {
+            # Cluster efficiency
+            f'{subdir}/Eff_vs_En': InputArgs(
+                ratio=f'{subdir}/Eff_vs_En', 
+                den=f'SimClustersEn', legden='SimClusters',
+                num=f'{subdir}/SimClustersMatchedRecoClustersEn', legnum='Matched SimClusters',
+                xtitle='Energy from SimTrack [GeV]', ytitle=nSimClustersLabel, rebin=4
+            ),
+            f'{subdir}/Eff_vs_EnFrac': InputArgs(
+                ratio=f'{subdir}/Eff_vs_EnFrac', 
+                den=f'SimClustersEnFrac', legden='SimClusters',
+                num=f'{subdir}/SimClustersMatchedRecoClustersEnFrac', legnum='Matched SimClusters', 
+                xtitle='Energy Fraction', ytitle=nSimClustersLabel, rebin=4
+            ),
+            f'{subdir}/Eff_vs_Pt': InputArgs(
+                ratio=f'{subdir}/Eff_vs_Pt', 
+                den=f'SimClustersPt', legden='SimClusters',
+                num=f'{subdir}/SimClustersMatchedRecoClustersPt', legnum='Matched SimClusters', 
+                xtitle=r'$p_{T}$ [GeV]', ytitle=nSimClustersLabel, rebin=4
+            ),
+            f'{subdir}/Eff_vs_Eta': InputArgs(
+                ratio=f'{subdir}/Eff_vs_Eta', 
+                den=f'SimClustersEta', legden='SimClusters',
+                num=f'{subdir}/SimClustersMatchedRecoClustersEta', legnum='Matched SimClusters', 
+                xtitle=r'$\eta$', ytitle=nSimClustersLabel
+            ),
+            f'{subdir}/Eff_vs_Phi': InputArgs(
+                ratio=f'{subdir}/Eff_vs_Phi', 
+                den=f'SimClustersPhi', legden='SimClusters',
+                num=f'{subdir}/SimClustersMatchedRecoClustersPhi', legnum='Matched SimClusters', 
+                xtitle=r'$\phi$', ytitle=nSimClustersLabel
+            ),
+            f'{subdir}/Eff_vs_Mult': InputArgs(
+                ratio=f'{subdir}/Eff_vs_Mult', 
+                den=f'SimClustersMult', legden='SimClusters',
+                num=f'{subdir}/SimClustersMatchedRecoClustersMult', legnum='Matched SimClusters', 
+                xtitle='Multiplicity', ytitle=nSimClustersLabel, rebin=4
+            ),
+            # Cluster split rate
+            f'{subdir}/Split_vs_En': InputArgs(
+                ratio=f'{subdir}/Split_vs_En', 
+                den=f'SimClustersEn', legden='SimClusters',
+                num=f'{subdir}/SimClustersMultiMatchedRecoClustersEn', legnum='Multi Matched SimClusters',
+                xtitle='Energy from SimTrack [GeV]', ytitle=nSimClustersLabel, rebin=4
+            ),
+            f'{subdir}/Split_vs_EnFrac': InputArgs(
+                ratio=f'{subdir}/Split_vs_EnFrac', 
+                den=f'SimClustersEnFrac', legden='SimClusters',
+                num=f'{subdir}/SimClustersMultiMatchedRecoClustersEnFrac', legnum='Multi Matched SimClusters', 
+                xtitle='Energy Fraction', ytitle=nSimClustersLabel, rebin=4
+            ),
+            f'{subdir}/Split_vs_Pt': InputArgs(
+                ratio=f'{subdir}/Split_vs_Pt', 
+                den=f'SimClustersPt', legden='SimClusters',
+                num=f'{subdir}/SimClustersMultiMatchedRecoClustersPt', legnum='Multi Matched SimClusters', 
+                xtitle=r'$p_{T}$ [GeV]', ytitle=nSimClustersLabel, rebin=4
+            ),
+            f'{subdir}/Split_vs_Eta': InputArgs(
+                ratio=f'{subdir}/Split_vs_Eta', 
+                den=f'SimClustersEta', legden='SimClusters',
+                num=f'{subdir}/SimClustersMultiMatchedRecoClustersEta', legnum='Multi Matched SimClusters', 
+                xtitle=r'$\eta$', ytitle=nSimClustersLabel
+            ),
+            f'{subdir}/Split_vs_Phi': InputArgs(
+                ratio=f'{subdir}/Split_vs_Phi', 
+                den=f'SimClustersPhi', legden='SimClusters',
+                num=f'{subdir}/SimClustersMultiMatchedRecoClustersPhi', legnum='Multi Matched SimClusters', 
+                xtitle=r'$\phi$', ytitle=nSimClustersLabel
+            ),
+            f'{subdir}/Split_vs_Mult': InputArgs(
+                ratio=f'{subdir}/Split_vs_Mult', 
+                den=f'SimClustersMult', legden='SimClusters',
+                num=f'{subdir}/SimClustersMultiMatchedRecoClustersMult', legnum='Multi Matched SimClusters', 
+                xtitle='Multiplicity', ytitle=nSimClustersLabel, rebin=4
+            ),
+        }
 
-            # Compare pairs of variables
-            for title, props in varsDict.items():
-                plotEffComp1D(cached_histos, title, vars1d=props, outdir=args.odir, text='', suffix=f'')
+        # Compare pairs of variables
+        for title, props in varsDict.items():
+            plotEffComp1D(cached_histos, title, vars1d=props, outdir=args.odir, text='', suffix=f'')
 
         varsDict = {
             # Cluster fake rate
@@ -676,31 +664,31 @@ if __name__ == '__main__':
                 ratio=f'{subdir}/Fake_vs_En', 
                 den=f'RecoClustersEn', legden='RecoClusters',
                 num=f'{subdir}/RecoClustersMatchedSimClustersEn', legnum='Matched RecoClusters', 
-                xtitle='Energy [GeV]', ytitle=nPFClustersLabel, rebin=4
+                xtitle='Energy [GeV]', ytitle=nPFClustersLabel, rebin=4, logy=True,
             ),
             f'{subdir}/Fake_vs_Pt': InputArgs(
                 ratio=f'{subdir}/Fake_vs_Pt', 
                 den=f'RecoClustersPt', legden='RecoClusters',
                 num=f'{subdir}/RecoClustersMatchedSimClustersPt', legnum='Matched RecoClusters', 
-                xtitle=r'$p_{T}$ [GeV]', ytitle=nPFClustersLabel, rebin=4
+                xtitle=r'$p_{T}$ [GeV]', ytitle=nPFClustersLabel, rebin=4,
             ),
             f'{subdir}/Fake_vs_Eta': InputArgs(
                 ratio=f'{subdir}/Fake_vs_Eta', 
                 den=f'RecoClustersEta', legden='RecoClusters',
                 num=f'{subdir}/RecoClustersMatchedSimClustersEta', legnum='Matched RecoClusters', 
-                xtitle=r'$\eta$', ytitle=nPFClustersLabel
+                xtitle=r'$\eta$', ytitle=nPFClustersLabel,
             ),
             f'{subdir}/Fake_vs_Phi': InputArgs(
                 ratio=f'{subdir}/Fake_vs_Phi', 
                 den=f'RecoClustersPhi', legden='RecoClusters',
                 num=f'{subdir}/RecoClustersMatchedSimClustersPhi', legnum='Matched RecoClusters', 
-                xtitle=r'$\phi$', ytitle=nPFClustersLabel
+                xtitle=r'$\phi$', ytitle=nPFClustersLabel,
             ),
             f'{subdir}/Fake_vs_Mult': InputArgs(
                 ratio=f'{subdir}/Fake_vs_Mult', 
                 den=f'RecoClustersMult', legden='RecoClusters',
                 num=f'{subdir}/RecoClustersMatchedSimClustersMult', legnum='Matched RecoClusters', 
-                xtitle='Multiplicity', ytitle=nPFClustersLabel, rebin=4
+                xtitle='Multiplicity', ytitle=nPFClustersLabel, rebin=4,
             ),
             # Cluster merge rate (WIP)
             f'{subdir}/Merge_vs_En': InputArgs(
@@ -741,8 +729,6 @@ if __name__ == '__main__':
     varsOverlay = {
         "ResponseE_En_Mean"             : InputArgs(ytitle=titles['response'], rebin=(0., 5., 10., 20., 40., 60., 100.),
                                                     xtitle='Energy from SimTrack [GeV]'),
-        "ResponseE_EnHits_Mean"         : InputArgs(ytitle=titles['response'], rebin=(0., 5., 10., 20., 40., 60., 100.),
-                                                    xtitle='Energy from hits [GeV]'),
         "ResponseE_EnFrac_Mean"         : InputArgs(ytitle=titles['response'], rebin=(0., 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.),
                                                     xtitle='Energy Fraction'),
         "ResponseE_Pt_Mean"             : InputArgs(ytitle=titles['response'], rebin=(0., 5., 10., 20., 40., 60., 100.), xtitle=r'$p_{T} [GeV]$'),
@@ -750,21 +736,12 @@ if __name__ == '__main__':
         "ResponseE_Phi_Mean"            : InputArgs(ytitle=titles['response'], xtitle=r'$\phi$'),
         "ResponseE_Mult_Mean"           : InputArgs(ytitle=titles['response'], rebin=4, xtitle='Multiplicity'),
         "Eff_vs_En"                     : InputArgs(ytitle=titles['eff'], rebin=4, xtitle='Energy from SimTrack [GeV]'),
-        "Eff_vs_En_Reconstructable"     : InputArgs(ytitle=titles['eff'], rebin=4, xtitle='Energy from SimTrack [GeV]'),
-        "Eff_vs_EnHits"                 : InputArgs(ytitle=titles['eff'], rebin=4, xtitle='Energy from hits [GeV]'),
-        "Eff_vs_EnHits_Reconstructable" : InputArgs(ytitle=titles['eff'], rebin=4, xtitle='Energy from hits [GeV]'),
         "Eff_vs_EnFrac"                 : InputArgs(ytitle=titles['eff'], rebin=6, xtitle='Energy Fraction'),
-        "Eff_vs_EnFrac_Reconstructable" : InputArgs(ytitle=titles['eff'], rebin=6, xtitle='Energy Fraction'),
         "Eff_vs_Pt"                     : InputArgs(ytitle=titles['eff'], rebin=4, xtitle='$p_{T} [GeV]$'),
-        "Eff_vs_Pt_Reconstructable"     : InputArgs(ytitle=titles['eff'], rebin=4, xtitle='$p_{T} [GeV]$'),
         "Eff_vs_Eta"                    : InputArgs(ytitle=titles['eff'], xtitle=r'$\eta$'),
-        "Eff_vs_Eta_Reconstructable"    : InputArgs(ytitle=titles['eff'], xtitle=r'$\eta$'),
         "Eff_vs_Phi"                    : InputArgs(ytitle=titles['eff'], xtitle=r'$\phi$'),
-        "Eff_vs_Phi_Reconstructable"    : InputArgs(ytitle=titles['eff'], xtitle=r'$\phi$'),
         "Eff_vs_Mult"                   : InputArgs(ytitle=titles['eff'], rebin=4, xtitle='Multiplicity'),
-        "Eff_vs_Mult_Reconstructable"   : InputArgs(ytitle=titles['eff'], rebin=4, xtitle='Multiplicity'),
         "Split_vs_En"                   : InputArgs(ytitle=titles['split'], rebin=4, xtitle='Energy from SimTrack [GeV]'),
-        "Split_vs_EnHits"               : InputArgs(ytitle=titles['split'], rebin=4, xtitle='Energy from hits [GeV]'),
         "Split_vs_EnFrac"               : InputArgs(ytitle=titles['split'], rebin=6, xtitle='Energy Fraction'),
         "Split_vs_Pt"                   : InputArgs(ytitle=titles['split'], rebin=4, xtitle='$p_{T} [GeV]$'),
         "Split_vs_Eta"                  : InputArgs(ytitle=titles['split'], xtitle=r'$\eta$'),
@@ -788,11 +765,6 @@ if __name__ == '__main__':
         ("ResponseE_En_Sigma", "ResponseE_En_Mean"):
         InputArgs(
             name='ResolutionEn', ytitle=titles['resolution'], xtitle=r'$E [GeV]$',
-            rebin=(0., 5., 10., 20., 40., 60., 100.)
-        ),
-        ("ResponseE_EnHits_Sigma", "ResponseE_EnHits_Mean"):
-        InputArgs(
-            name='ResolutionEnHits', ytitle=titles['resolution'], xtitle=r'$E_{hits} [GeV]$',
             rebin=(0., 5., 10., 20., 40., 60., 100.)
         ),
         ("ResponseE_EnFrac_Sigma", "ResponseE_EnFrac_Mean"):
@@ -824,12 +796,7 @@ if __name__ == '__main__':
     vars2DProjection = {
         **{f'{subdir}/ResponseE_En':
            InputArgs(
-               fit=True, xtitle=titles['response'], ytitle='# Clusters', var=r'E', unit='[GeV]',
-               rebin=(0., 20., 40., 60, 80., 100.)
-           ) for subdir in subdirs},
-        **{f'{subdir}/ResponseE_EnHits':
-           InputArgs(
-               xtitle=titles['response'], ytitle='# Clusters', var=r'$E_{hits}$', unit='[GeV]',
+               fit=False, xtitle=titles['response'], ytitle='# Clusters', var=r'E', unit='[GeV]',
                rebin=(0., 20., 40., 60, 80., 100.)
            ) for subdir in subdirs},
         **{f'{subdir}/ResponseE_EnFrac':
@@ -845,7 +812,8 @@ if __name__ == '__main__':
         **{f'{subdir}/ResponseE_Eta':
            InputArgs(
                xtitle=titles['response'], ytitle='# Clusters', var=r'$\eta$',
-               rebin=(-1.5, -1.3, -1., -0.75, -0.5, -0.25, 0., 0.25, 0.5, 0.75, 1., 1.3, 1.5)
+               # rebin=(-1.5, -1.3, -1., -0.75, -0.5, -0.25, 0., 0.25, 0.5, 0.75, 1., 1.3, 1.5)
+               rebin=(-1.5, -0.75, 0., 0.75, 1.5)
            ) for subdir in subdirs},
         **{f'{subdir}/ResponseE_Phi':
            InputArgs(
@@ -857,11 +825,6 @@ if __name__ == '__main__':
                xtitle=titles['response'], ytitle='# Clusters', var='Multiplicity',
                rebin=(0, 50, 100, 150, 200)
            ) for subdir in subdirs},
-        'SimClustersReconstructableEnFrac_Mult':
-        InputArgs(
-            xtitle='Multiplicity', ytitle='# Clusters', var='Energy Fraction',
-            logy=True, rebin=(0., 0.005, 0.01, 0.02, 0.03, 1.)
-        ),
     }
 
     for name, props in vars2DProjection.items():
@@ -893,7 +856,13 @@ if __name__ == '__main__':
             plotOverlay(subdirs, cached_histos, fitstr.format('Width'), props, outdir=args.odir)
 
     vars2D = {
-        'SimClustersEnFrac_Mult': dict(ytitle='Multiplicity', var='# Clusters', xtitle='Energy Fraction'),
+        'SimClustersEnFrac_Mult': dict(ytitle='Multiplicity', var='# Sim Clusters', xtitle='Energy Fraction'),
+        'SimClustersEn_Mult': dict(ytitle='Multiplicity', var='# Sim Clusters', xtitle='Energy [GeV]'),
+        'SimClustersEn_Eta': dict(ytitle=r'$\eta$', var='# Sim Clusters', xtitle='Energy [GeV]'),
+        'SimClustersEn_Phi': dict(ytitle=r'$\phi$', var='# Sim Clusters', xtitle='Energy [GeV]'),
+        'RecoClustersEn_Mult': dict(ytitle='Multiplicity', var='# Reco Clusters', xtitle='Energy [GeV]'),
+        'RecoClustersEn_Eta': dict(ytitle=r'$\eta$', var='# Reco Clusters', xtitle='Energy [GeV]', logz=True),
+        'RecoClustersEn_Phi': dict(ytitle=r'$\phi$', var='# Reco Clusters', xtitle='Energy [GeV]', logz=True),
         'simToRecoScore_En': dict(ytitle='SimCluster Energy [GeV]', var='# Clusters', xtitle='SimToReco Score'),
         'simToRecoScore_EnFrac': dict(ytitle='Energy Fraction', var='# Clusters', xtitle='SimToReco Score'),
         'simToRecoScore_EnSimTrack': dict(ytitle='SimTrack Energy [GeV]', var='# Clusters', xtitle='SimToReco Score'),
@@ -904,6 +873,11 @@ if __name__ == '__main__':
         'simToRecoShEnF_Mult': dict(ytitle='Multiplicity', var='# Clusters', xtitle='SimToReco Shared Energy Fraction'),
         'simToRecoShEnF_Score': dict(ytitle='SimToReco Score', var='# Clusters', xtitle='SimToReco Shared Energy Fraction', logz=True),
     }
+
+    vars2D.update({
+        **{f'{subdir}/ResponseE_Eta': dict(ytitle=titles['response'], var='# Clusters', xtitle=r'$\eta$') for subdir in subdirs},
+        **{f'{subdir}/ResponseE_Phi': dict(ytitle=titles['response'], var='# Clusters', xtitle=r'$\phi$') for subdir in subdirs},
+    })
 
     for name, props in vars2D.items():
         root_hist = cached_histos[f"{name}"]
