@@ -32,7 +32,9 @@ protected:
   void bookHistograms(DQMStore::IBooker&, edm::Run const&, edm::EventSetup const&) override;
   void analyze(const edm::Event&, const edm::EventSetup&) override;
   std::string doubleToString(double x) const;
-
+  double simClusterEnergy(const SimCluster& sc) const;
+  double recoClusterEnergyWeightedBySimFraction(const SimCluster& sc, const reco::PFRecHitCollection& pfrechits) const;
+  
   edm::ESGetToken<CaloGeometry, CaloGeometryRecord> geometry_token_;
   edm::EDGetTokenT<reco::PFCandidateCollection> PFCandToken_;
   edm::EDGetTokenT<reco::PFRecHitCollection> RechitToken_;
@@ -586,27 +588,15 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
     // Fill map: for each simCluster, the energy of the caloParticle computed as the sum of all simClusters arising from it
     double energySumSimClusters = 0;
     double energySumSimHits = 0;
-    double energyFracSumSimHits = 0;
-
+    double recoEnergySumWeightedBySimFrac = 0;
     for (const auto& scRef : caloParticles[cpId].simClusters()) {
       auto const& sc = *(scRef);
       // Compute energy of caloParticle as sum of simClusters energies (from SimTrack energy)
       energySumSimClusters += sc.energy();
       // Compute energy of caloParticle as sum of all hits from all simClusters
-      for (auto hit_energy : sc.hits_and_energies()) {
-        energySumSimHits += hit_energy.second;
-      }
+	  energySumSimHits += simClusterEnergy(sc);
       // Compute energy of caloParticle as sum of all rechits energy multiplied by sim fraction from all simClusters
-      for (auto hit_fraction : sc.hits_and_fractions()) {
-        DetId id(hit_fraction.first);
-        auto rechitIt =
-            std::find_if(pfRechit.begin(), pfRechit.end(), [id](const reco::PFRecHit& rh) { return rh.detId() == id; });
-        if (rechitIt == pfRechit.end()) {
-          continue;
-        } else {
-          energyFracSumSimHits += rechitIt->energy() * hit_fraction.second;
-        }
-      }
+	  recoEnergySumWeightedBySimFrac += recoClusterEnergyWeightedBySimFraction(sc, pfRechit);
     }
     for (const auto& scRef : caloParticles[cpId].simClusters()) {
       simClusterToCPEnergyMap[scRef.key()] = energySumSimHits;
@@ -615,7 +605,7 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
     edm::LogPrint("PFTester") << " caloParticle [" << cpId << "]: energy=" << caloParticles[cpId].energy()
                               << ", energySumSimClusters=" << energySumSimClusters
                               << ", energySumSimHits=" << energySumSimHits
-                              << ", energyFracSumSimHits=" << energyFracSumSimHits << std::endl;
+                              << ", recoEnergySumWeightedBySimFrac=" << recoEnergySumWeightedBySimFrac << std::endl;
 #endif
 
     h_CPToSCEnergyFraction_->Fill(energySumSimClusters / caloParticles[cpId].energy());
@@ -634,12 +624,12 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
 #ifdef debug
       edm::LogPrint("PFTester") << " caloParticle [" << cpId << "] matched to RecoCluster [" << recoPair.first.index()
                                 << "] with shared energy: " << recoPair.second.first
-                                << ", shared energy fraction: " << recoPair.second.first / energyFracSumSimHits
+                                << ", shared energy fraction: " << recoPair.second.first / recoEnergySumWeightedBySimFrac
                                 << ", score: " << recoPair.second.second << std::endl;
 #endif
       h_CP_simToRecoScore_->Fill(recoPair.second.second);
-      h_CP_simToRecoShEnF_->Fill(recoPair.second.first / energyFracSumSimHits);
-      h_CP_simToRecoShEnF_Score_->Fill(recoPair.second.first / energyFracSumSimHits, recoPair.second.second);
+      h_CP_simToRecoShEnF_->Fill(recoPair.second.first / recoEnergySumWeightedBySimFrac);
+      h_CP_simToRecoShEnF_Score_->Fill(recoPair.second.first / recoEnergySumWeightedBySimFrac, recoPair.second.second);
     }
   }
 
@@ -664,23 +654,10 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
   uint nSimClusters = 0;
   uint nSimClustersPrimary = 0;
   for (unsigned int simId = 0; simId < simClusters.size(); ++simId) {
-    double energySumSimHits = 0;
-    for (auto hit_energy : simClusters[simId].hits_and_energies()) {
-      energySumSimHits += hit_energy.second;
-    }
+	double energySumSimHits = simClusterEnergy(simClusters[simId]);
     h_SimTrackToSimHitsEnergyFraction_->Fill(energySumSimHits / simClusters[simId].energy());
 
-    double energyFracSumSimHits = 0;
-    for (auto hit_fraction : simClusters[simId].hits_and_fractions()) {
-      DetId id(hit_fraction.first);
-      auto rechitIt =
-          std::find_if(pfRechit.begin(), pfRechit.end(), [id](const reco::PFRecHit& rh) { return rh.detId() == id; });
-      if (rechitIt == pfRechit.end()) {
-        continue;
-      } else {
-        energyFracSumSimHits += rechitIt->energy() * hit_fraction.second;
-      }
-    }
+	double recoEnergySumWeightedBySimFrac = recoClusterEnergyWeightedBySimFraction(simClusters[simId], pfRechit);
 
     // apply cut on energy fraction (sim cluster energy wrt all sim clusters from same calo particle)
     double SimClusterToCPEnergyFraction = energySumSimHits / simClusterToCPEnergyMap[simId];
@@ -761,7 +738,7 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
         edm::LogPrint("PFTester") << "   Matched to RecoCluster[" << recoPair.first.index()
                                   << "], en=" << recoClusters[recoPair.first.index()].energy()
                                   << ", with shared energy: " << recoPair.second.first
-                                  << ", shared energy fraction: " << recoPair.second.first / energyFracSumSimHits
+                                  << ", shared energy fraction: " << recoPair.second.first / recoEnergySumWeightedBySimFrac
                                   << ", score: " << recoPair.second.second << ", hits=";
         for (auto const& hit_energy : recoClusters[recoPair.first.index()].recHitFractions()) {
           DetId id(hit_energy.recHitRef()->detId());
@@ -774,7 +751,7 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
 
         auto score = recoPair.second.second;
         auto shared_energy = recoPair.second.first;
-        auto shared_energy_frac = shared_energy / energyFracSumSimHits;
+        auto shared_energy_frac = shared_energy / recoEnergySumWeightedBySimFrac;
 
         h_simToRecoScore_->Fill(score);
         h_simToRecoShEnF_->Fill(shared_energy_frac);
@@ -901,10 +878,7 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
                                   << std::endl;
 #endif
 
-        double energySumSimHits = 0;
-        for (auto hit_energy : simClusters[simPairIdx].hits_and_energies()) {
-          energySumSimHits += hit_energy.second;
-        }
+		double energySumSimHits = simClusterEnergy(simClusters[simPairIdx]);
 
         // apply cut on energy fraction (sim cluster energy wrt all sim clusters from same calo particle)
         double SimClusterToCPEnergyFraction = energySumSimHits / simClusterToCPEnergyMap[simPairIdx];
@@ -976,10 +950,10 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
   std::cout << std::endl;
   std::cout << "--- Event " << iEvent.eventAuxiliary().event() << " ---" << std::endl;
   for (unsigned int simId = 0; simId < simClusters.size(); ++simId) {
-    double energySumSimHits = 0;
-    for (auto hit_energy : simClusters[simId].hits_and_energies()) {
-      energySumSimHits += hit_energy.second;
-    }
+	double energySumSimHits = simClusterEnergy(simClusters[simId]);
+
+	double recoEnergyWeightedBySimFrac = recoClusterEnergyWeightedBySimFraction(simClusters[simId], pfRechit);
+	
     // apply cut on energy fraction (sim cluster energy wrt all sim clusters from same calo particle)
     double SimClusterToCPEnergyFraction = energySumSimHits / simClusterToCPEnergyMap[simId];
     if (SimClusterToCPEnergyFraction < enFracCut_)
@@ -1024,7 +998,7 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
         } else {
           // cut on shared energy fraction
           double shared_energy = recoPair.second.first;
-          double shared_energy_frac = shared_energy / energySumSimHits;
+          double shared_energy_frac = shared_energy / recoEnergyWeightedBySimFrac;
           passMatch = shared_energy_frac > thresh;
         }
 
@@ -1032,6 +1006,7 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
 		std::cout << "matchByScore? " << doMatchByScore_ << std::endl;
 		std::cout << "passMatch: " << passMatch << ", recoId: " << recoId << std::endl;
 		std::cout << "sim en: " << energySumSimHits << ", reco en: " << recoClusters[recoId].energy() << std::endl;
+		std::cout << "sim en frac: " << recoEnergyWeightedBySimFrac << std::endl;
 		std::cout << "sim eta: " << simClusters[simId].eta() << ", reco eta: " << recoClusters[recoId].eta()  << ", sim track eta: " << simTrackEtaAtBoundary << std::endl;
 		std::cout << "sim phi: " << simClusters[simId].phi() << ", reco phi: " << recoClusters[recoId].phi() << std::endl;
 		std::cout << "score: " << recoPair.second.second << std::endl;
@@ -1221,6 +1196,34 @@ std::string PFTesterT<RecoClusterCollection>::doubleToString(double x) const {
     xnew += "p0";
 
   return xnew;
+}
+
+// compute the total energy of a simulated cluster
+template <typename RecoClusterCollection>
+double PFTesterT<RecoClusterCollection>::simClusterEnergy(const SimCluster& sc) const {
+  double energySumSimHits = 0;
+  for (auto hit_energy : sc.hits_and_energies()) {
+	energySumSimHits += hit_energy.second;
+  }
+  return energySumSimHits;
+}
+
+// compute the denominator of the shared energy fraction, i.e,
+// the total energy of a reconstructed cluster, weighted by the sim cluster energy fraction
+template <typename RecoClusterCollection>
+double PFTesterT<RecoClusterCollection>::recoClusterEnergyWeightedBySimFraction(const SimCluster& sc, const reco::PFRecHitCollection& pfrechits) const {
+  double recoEnergySumWeightedBySimFrac = 0;
+  for (auto hit_fraction : sc.hits_and_fractions()) {
+	DetId id(hit_fraction.first);
+	auto rechitIt =
+	  std::find_if(pfrechits.begin(), pfrechits.end(), [id](const reco::PFRecHit& rh) { return rh.detId() == id; });
+	if (rechitIt == pfrechits.end()) {
+	  continue;
+	} else {
+	  recoEnergySumWeightedBySimFrac += rechitIt->energy() * hit_fraction.second;
+	}
+  }
+  return recoEnergySumWeightedBySimFrac;
 }
 
 using PFClusterTester = PFTesterT<reco::PFClusterCollection>;
