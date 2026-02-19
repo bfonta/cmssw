@@ -27,6 +27,7 @@ template <typename RecoClusterCollection>
 class PFTesterT : public DQMEDAnalyzer {
 public:
   explicit PFTesterT(const edm::ParameterSet&);
+  static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
 protected:
   void bookHistograms(DQMStore::IBooker&, edm::Run const&, edm::EventSetup const&) override;
@@ -172,7 +173,7 @@ protected:
   VU2Map h2d_simClustersMatchedRecoClusters_;
   U2Map h2d_recoClusters_;
   VU2Map h2d_recoClustersMatchedSimClusters_;
-
+  
   VU2Map h2d_responsePt_;
   VU2Map h2d_responseE_;
 };
@@ -650,7 +651,6 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
   // --------------------------------------------------------------------
   // ----- Efficiency and split computation at cluster level ------------
   // --------------------------------------------------------------------
-
   uint nSimClusters = 0;
   uint nSimClustersPrimary = 0;
   for (unsigned int simId = 0; simId < simClusters.size(); ++simId) {
@@ -836,7 +836,6 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
   // --------------------------------------------------------------------
   // ----- Fakes and merge computation at cluster level -----------------
   // --------------------------------------------------------------------
-
   h_nPFClusters_->Fill(recoClusters.size());
   for (unsigned int recoId = 0; recoId < recoClusters.size(); ++recoId) {
     // fake and merge denominator
@@ -847,6 +846,18 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
     h_recoClusters_["Phi"]->Fill(recoClusters[recoId].phi());
     h_recoClusters_["Mult"]->Fill(recoClusters[recoId].size());
 
+	if (abs(recoClusters[recoId].eta()) > 1.35) {
+	  std::cout << "============== RECO CLUSTER ANOMALY ========= " << std::endl;
+	  std::cout << recoClusters[recoId].eta() << std::endl;
+	  std::cout << recoClusters[recoId].energy() << std::endl;
+	  for (const auto& haf : recoClusters[recoId].hitsAndFractions()) {
+		DetId idid = haf.first;
+		if(idid.det() != DetId::Ecal or idid.subdetId() != EcalBarrel) {
+		  std::cout << idid.det() << " < " << idid.subdetId() << std::endl;
+		}
+	  }
+	  std::cout << "============================================= " << std::endl;
+	}
     h2d_recoClusters_["En_Eta"]->Fill(recoClusters[recoId].energy(), recoClusters[recoId].eta());
     h2d_recoClusters_["En_Phi"]->Fill(recoClusters[recoId].energy(), recoClusters[recoId].phi());
     h2d_recoClusters_["En_Mult"]->Fill(recoClusters[recoId].energy(), recoClusters[recoId].size());
@@ -1017,34 +1028,36 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
 		  std::cout << "- score: " << recoPairDebug.second.second << ", share en frac: " << recoPairDebug.second.first / energySumSimHits << ", en: " << recoClusters[recoPairDebug.first.index()].energy() << std::endl;
 		}
 		std::cout << "threshold: " << thresh << std::endl;
-		// for (auto hae : simClusters[simId].hits_and_energies()) {
-		//   DetId idid(hae.first);
-		//   if(idid.det() != DetId::Ecal) {
-		// 	std::cout << "ERROR 1!!!!!!!!!!!!" << std::endl;
-		//   }
-		//   if(idid.subdetId() != EcalBarrel) {
-		// 	std::cout << "ERROR 2!!!!!!!!!!!!" << std::endl;
-		//   }
-		// }
-		
+		for (auto hae : simClusters[simId].hits_and_energies()) {
+		  DetId idid(hae.first);
+		  if(idid.det() != DetId::Ecal) {
+			std::cout << "sc ERROR 1!!!!!!!!!!!!" << std::endl;
+		  }
+		  if(idid.subdetId() != EcalBarrel) {
+			std::cout << "sc ERROR 2!!!!!!!!!!!!" << std::endl;
+		  }
+		}
+		for (auto pfrh : pfRechit) {
+		  DetId idid(pfrh.detId());
+		  if(idid.det() != DetId::Ecal) {
+			std::cout << "pfhit ERROR 1!!!!!!!!!!!!" << std::endl;
+		  }
+		  if(idid.subdetId() != EcalBarrel) {
+			std::cout << "pfhit ERROR 2!!!!!!!!!!!!" << std::endl;
+		  }
+		}
+		for (const auto& haf : recoClusters[recoId].hitsAndFractions()) {
+		  DetId idid = haf.first;
+		  if(idid.det() != DetId::Ecal) {
+			std::cout << "rc ERROR 1!!!!!!!!!!!!" << std::endl;
+		  }
+		  if(idid.subdetId() != EcalBarrel) {
+			std::cout << "rc ERROR 2!!!!!!!!!!!!" << std::endl;
+		  }
+		}
 		std::cout << "===============================" << std::endl;
 		
         if (passMatch) {
-          // h2d_responsePt_[ithr]["En"]->Fill(energySumSimHits, 
-          //                                   recoClusters[recoId].pt() / simClusters[simId].pt());
-          // h2d_responsePt_[ithr]["EnFrac"]->Fill(SimClusterToCPEnergyFraction,
-          //                                       recoClusters[recoId].pt() / simClusters[simId].pt());
-          // h2d_responsePt_[ithr]["EnSimTrack"]->Fill(simClusters[simId].energy(),
-          //                                   recoClusters[recoId].pt() / simClusters[simId].pt());
-          // h2d_responsePt_[ithr]["Pt"]->Fill(simClusters[simId].pt(),
-          //                                   recoClusters[recoId].pt() / simClusters[simId].pt());
-          // h2d_responsePt_[ithr]["Eta"]->Fill(simTrackEtaAtBoundary,
-          //                                    recoClusters[recoId].pt() / simClusters[simId].pt());
-          // h2d_responsePt_[ithr]["Phi"]->Fill(simClusters[simId].phi(),
-          //                                    recoClusters[recoId].pt() / simClusters[simId].pt());
-          // h2d_responsePt_[ithr]["Mult"]->Fill(simClusters[simId].numberOfRecHits(),
-          //                                     recoClusters[recoId].pt() / simClusters[simId].pt());
-
           h2d_responseE_[ithr]["En"]->Fill(energySumSimHits, 
                                            recoClusters[recoId].energy() / energySumSimHits);
           h2d_responseE_[ithr]["EnFrac"]->Fill(SimClusterToCPEnergyFraction,
@@ -1067,7 +1080,6 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
   // --------------------------------------------------------------------
   // ---------------- PF Candidates -------------------------------------
   // --------------------------------------------------------------------
-
   const reco::PFCandidateCollection* pf_candidates;
   edm::Handle<reco::PFCandidateCollection> PFCand;
   iEvent.getByToken(PFCandToken_, PFCand);
@@ -1085,7 +1097,6 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
   // --------------------------------------------------------------------
   // -------------------- PF Blocks and Elements ------------------------
   // --------------------------------------------------------------------
-
   // Loop Over Particle Flow Candidates
   for (size_t i = 0; i < pf_candidates->size(); ++i) {
     const auto& particle = (*pf_candidates)[i];
@@ -1224,6 +1235,25 @@ double PFTesterT<RecoClusterCollection>::recoClusterEnergyWeightedBySimFraction(
 	}
   }
   return recoEnergySumWeightedBySimFrac;
+}
+
+template <typename RecoClusterCollection>
+void PFTesterT<RecoClusterCollection>::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+  edm::ParameterSetDescription  desc;
+  desc.add<std::string>("outFolder", "HLT/ParticleFlow");
+  desc.add<edm::InputTag>("PFCand", edm::InputTag("hltParticleFlow"));
+  desc.add<edm::InputTag>("Rechit", edm::InputTag("hltParticleFlowRecHitECALUnseeded"));
+  desc.add<edm::InputTag>("RecoCluster", edm::InputTag("hltParticleFlowClusterECALUnseeded"));
+  desc.add<edm::InputTag>("SimCluster", edm::InputTag("mix", "MergedCaloTruth"));
+  desc.add<edm::InputTag>("CaloParticle", edm::InputTag("mix","MergedCaloTruth"));
+  desc.add<edm::InputTag>("ClusterSimClusterAssociator", edm::InputTag("hltPFClusterSimClusterAssociationProducerECAL"));
+  desc.add<edm::InputTag>("ClusterCaloParticleAssociator", edm::InputTag("hltPFClusterCaloParticleAssociationProducerECAL"));
+  desc.add<std::vector<double>>("assocScoreThresholds", {0.1});
+  desc.add<bool>("doMatchByScore", true);
+  desc.add<double>("enFracCut", 0.01);
+  desc.add<double>("ptCut", 0.1);
+  desc.add<double>("etaCut", 3.0);
+  descriptions.addWithDefaultLabel(desc);
 }
 
 using PFClusterTester = PFTesterT<reco::PFClusterCollection>;
