@@ -140,36 +140,47 @@ protected:
   std::vector<MonitorElement*> h_nSimMatchedToOneReco_;
   std::vector<MonitorElement*> h_nRecoMatchedToOneSim_;
 
-  std::unordered_map<std::string, std::tuple<unsigned, float, float, unsigned, float, float>> histo2dVarsReco = {
-      {"En_Eta", std::make_tuple(100, 0., 100., 50, -6.5, 6.5)},
-      {"En_Phi", std::make_tuple(100, 0., 100., 50, -3.5, 3.5)},
-      {"En_Mult", std::make_tuple(100, 0., 100., 200, 0., 200.)},
-      {"Pt_Eta", std::make_tuple(100, 0., 40., 50, -6.5, 6.5)},
-      {"Pt_Phi", std::make_tuple(100, 0., 40., 50, -3.5, 3.5)},
-      {"Pt_Mult", std::make_tuple(100, 0., 40., 200, 0., 200.)},
-      {"Mult_Eta", std::make_tuple(200, 0., 200., 50, -6.5, 6.5)},
-      {"Mult_Phi", std::make_tuple(200, 0., 200., 50, -3.5, 3.5)},
-	  {"En_Time", std::make_tuple(100, 0., 100., 200, -100., 100.)},
-	  {"Eta_Time", std::make_tuple(50, -6.5, 6.5, 200, -100., 100.)},
-	  {"Phi_Time", std::make_tuple(50, -3.5, 3.5, 200, -100., 100.)},
+  std::unordered_map<std::string, std::tuple<unsigned, float, float, unsigned, float, float>> h2dVarsRecoHits = {
+	{"En_Eta", std::make_tuple(100, 0., 100., 50, -6.5, 6.5)},
+	{"En_Phi", std::make_tuple(100, 0., 100., 50, -3.5, 3.5)},
+	{"Eta_Phi", std::make_tuple(50, -6.5, 6.5, 50, -3.5, 3.5)},
+	{"En_Time", std::make_tuple(100, 0., 100., 200, -100., 100.)},
+	{"Eta_Time", std::make_tuple(50, -6.5, 6.5, 200, -100., 100.)},
+	{"Phi_Time", std::make_tuple(50, -3.5, 3.5, 200, -100., 100.)},
+  };
+
+  std::unordered_map<std::string, std::tuple<unsigned, float, float, unsigned, float, float>> h2dVarsRecoClusters = {
+      {"En_Eta",    std::make_tuple(100, 0., 100., 50, -6.5, 6.5)},
+      {"En_Phi",    std::make_tuple(100, 0., 100., 50, -3.5, 3.5)},
+      {"En_Mult",   std::make_tuple(100, 0., 100., 200, 0., 200.)},
+	  {"Eta_Phi",   std::make_tuple(50, -6.5, 6.5, 50, -3.5, 3.5)},
+      {"Pt_Eta",    std::make_tuple(100, 0., 40., 50, -6.5, 6.5)},
+      {"Pt_Phi",    std::make_tuple(100, 0., 40., 50, -3.5, 3.5)},
+      {"Pt_Mult",   std::make_tuple(100, 0., 40., 200, 0., 200.)},
+      {"Mult_Eta",  std::make_tuple(200, 0., 200., 50, -6.5, 6.5)},
+      {"Mult_Phi",  std::make_tuple(200, 0., 200., 50, -3.5, 3.5)},
+	  {"En_Time",   std::make_tuple(100, 0., 100., 200, -100., 100.)},
+	  {"Eta_Time",  std::make_tuple(50, -6.5, 6.5, 200, -100., 100.)},
+	  {"Phi_Time",  std::make_tuple(50, -3.5, 3.5, 200, -100., 100.)},
 	  {"Mult_Time", std::make_tuple(200, 0., 200., 200, -100., 100.)},
   };
 
-  std::unordered_map<std::string, std::tuple<unsigned, float, float, unsigned, float, float>> histo2dVarsSim = {
-      {"En_Eta", std::make_tuple(100, 0., 100., 50, -6.5, 6.5)},
-      {"En_Phi", std::make_tuple(100, 0., 100., 50, -3.5, 3.5)},
-      {"En_Mult", std::make_tuple(100, 0., 100., 200, 0., 200.)},
-      {"EnFrac_Eta", std::make_tuple(220, 0., 1.1, 50, -6.5, 6.5)},
-      {"EnFrac_Phi", std::make_tuple(220, 0., 1.1, 50, -3.5, 3.5)},
-      {"EnFrac_Mult", std::make_tuple(220, 0., 1.1, 200, 0., 200.)},
-      {"EnSimTrack_Eta", std::make_tuple(100, 0., 100., 50, -6.5, 6.5)},
-      {"EnSimTrack_Phi", std::make_tuple(100, 0., 100., 50, -3.5, 3.5)},
+  std::unordered_map<std::string, std::tuple<unsigned, float, float, unsigned, float, float>> h2dVarsSim = {
+      {"En_Eta",          std::make_tuple(100, 0., 100., 50, -6.5, 6.5)},
+      {"En_Phi",          std::make_tuple(100, 0., 100., 50, -3.5, 3.5)},
+      {"En_Mult",         std::make_tuple(100, 0., 100., 200, 0., 200.)},
+	  {"Eta_Phi",         std::make_tuple(50, -6.5, 6.5, 50, -3.5, 3.5)},
+      {"EnFrac_Eta",      std::make_tuple(220, 0., 1.1, 50, -6.5, 6.5)},
+      {"EnFrac_Phi",      std::make_tuple(220, 0., 1.1, 50, -3.5, 3.5)},
+      {"EnFrac_Mult",     std::make_tuple(220, 0., 1.1, 200, 0., 200.)},
+      {"EnSimTrack_Eta",  std::make_tuple(100, 0., 100., 50, -6.5, 6.5)},
+      {"EnSimTrack_Phi",  std::make_tuple(100, 0., 100., 50, -3.5, 3.5)},
       {"EnSimTrack_Mult", std::make_tuple(100, 0., 100., 200, 0., 200.)},
-      {"Pt_Eta", std::make_tuple(100, 0., 40., 50, -6.5, 6.5)},
-      {"Pt_Phi", std::make_tuple(100, 0., 40., 50, -3.5, 3.5)},
-      {"Pt_Mult", std::make_tuple(100, 0., 40., 200, 0., 200.)},
-      {"Mult_Eta", std::make_tuple(200, 0., 200., 50, -6.5, 6.5)},
-      {"Mult_Phi", std::make_tuple(200, 0., 200., 50, -3.5, 3.5)},
+      {"Pt_Eta",          std::make_tuple(100, 0., 40., 50, -6.5, 6.5)},
+      {"Pt_Phi",          std::make_tuple(100, 0., 40., 50, -3.5, 3.5)},
+      {"Pt_Mult",         std::make_tuple(100, 0., 40., 200, 0., 200.)},
+      {"Mult_Eta",        std::make_tuple(200, 0., 200., 50, -6.5, 6.5)},
+      {"Mult_Phi",        std::make_tuple(200, 0., 200., 50, -3.5, 3.5)},
   };
 
   using U2Map = std::unordered_map<std::string, MonitorElement*>;
@@ -178,6 +189,8 @@ protected:
   VU2Map h2d_simClustersMatchedRecoClusters_;
   U2Map h2d_recoClusters_;
   VU2Map h2d_recoClustersMatchedSimClusters_;
+
+  U2Map h2d_recoHitsInClusters_;
   
   VU2Map h2d_responsePt_;
   VU2Map h2d_responseE_;
@@ -355,7 +368,7 @@ void PFTesterT<RecoClusterCollection>::bookHistograms(DQMStore::IBooker& ibook,
         ibook.book1D("RecoClusters" + hVar.first, "RecoClusters;" + hVar.first, nBins, hMin, hMax);
   }
 
-  for (auto& h2dVar : histo2dVarsSim) {
+  for (auto& h2dVar : h2dVarsSim) {
     auto [nBinsX, hMinX, hMaxX, nBinsY, hMinY, hMaxY] = h2dVar.second;
     auto x_title = h2dVar.first.substr(0, h2dVar.first.find("_"));
     auto y_title = h2dVar.first.substr(h2dVar.first.find("_") + 1);
@@ -368,18 +381,31 @@ void PFTesterT<RecoClusterCollection>::bookHistograms(DQMStore::IBooker& ibook,
                                                   hMinY,
                                                   hMaxY);
   }
-  for (auto& h2dVar : histo2dVarsReco) {
+  for (auto& h2dVar : h2dVarsRecoClusters) {
     auto [nBinsX, hMinX, hMaxX, nBinsY, hMinY, hMaxY] = h2dVar.second;
     auto x_title = h2dVar.first.substr(0, h2dVar.first.find("_"));
     auto y_title = h2dVar.first.substr(h2dVar.first.find("_") + 1);
     h2d_recoClusters_[h2dVar.first] = ibook.book2D("RecoClusters" + h2dVar.first,
-                                                   "RecoClusters;" + x_title + ";" + y_title,
+												   "RecoClusters;" + x_title + ";" + y_title,
                                                    nBinsX,
                                                    hMinX,
                                                    hMaxX,
                                                    nBinsY,
                                                    hMinY,
                                                    hMaxY);
+  }
+  for (auto& h2dVar : h2dVarsRecoHits) {
+	auto [nBinsX, hMinX, hMaxX, nBinsY, hMinY, hMaxY] = h2dVar.second;
+	auto x_title = h2dVar.first.substr(0, h2dVar.first.find("_"));
+    auto y_title = h2dVar.first.substr(h2dVar.first.find("_") + 1);
+    h2d_recoHitsInClusters_[h2dVar.first] = ibook.book2D("RecoHitsInClusters" + h2dVar.first,
+														 "RecoHitsInClusters;" + x_title + ";" + y_title,
+														 nBinsX,
+														 hMinX,
+														 hMaxX,
+														 nBinsY,
+														 hMinY,
+														 hMaxY);
   }
   
   for (unsigned ithr = 0; ithr < nAssocScoreThresholds_; ++ithr) {
@@ -431,7 +457,7 @@ void PFTesterT<RecoClusterCollection>::bookHistograms(DQMStore::IBooker& ibook,
                        hMin,
                        hMax);
     }
-    for (auto& h2dVar : histo2dVarsSim) {
+    for (auto& h2dVar : h2dVarsSim) {
       auto [nBinsX, hMinX, hMaxX, nBinsY, hMinY, hMaxY] = h2dVar.second;
       auto x_title = h2dVar.first.substr(0, h2dVar.first.find("_"));
       auto y_title = h2dVar.first.substr(h2dVar.first.find("_") + 1);
@@ -445,7 +471,7 @@ void PFTesterT<RecoClusterCollection>::bookHistograms(DQMStore::IBooker& ibook,
                        hMinY,
                        hMaxY);
     }
-    for (auto& h2dVar : histo2dVarsReco) {
+    for (auto& h2dVar : h2dVarsRecoClusters) {
       auto [nBinsX, hMinX, hMaxX, nBinsY, hMinY, hMaxY] = h2dVar.second;
       auto x_title = h2dVar.first.substr(0, h2dVar.first.find("_"));
       auto y_title = h2dVar.first.substr(h2dVar.first.find("_") + 1);
@@ -696,6 +722,7 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
 
     h2d_simClusters_["En_Eta"]->Fill(energySumSimHits, simTrackEtaAtBoundary);
     h2d_simClusters_["En_Phi"]->Fill(energySumSimHits, simClusters[simId].phi());
+	h2d_simClusters_["Eta_Phi"]->Fill(simTrackEtaAtBoundary, simClusters[simId].phi());
     h2d_simClusters_["En_Mult"]->Fill(energySumSimHits, simClusters[simId].numberOfRecHits());
     h2d_simClusters_["EnFrac_Eta"]->Fill(SimClusterToCPEnergyFraction, simTrackEtaAtBoundary);
     h2d_simClusters_["EnFrac_Phi"]->Fill(SimClusterToCPEnergyFraction, simClusters[simId].phi());
@@ -796,6 +823,7 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
 
         h2d_simClustersMatchedRecoClusters_[ithr]["En_Eta"]->Fill(energySumSimHits, simTrackEtaAtBoundary);
         h2d_simClustersMatchedRecoClusters_[ithr]["En_Phi"]->Fill(energySumSimHits, simClusters[simId].phi());
+		h2d_simClustersMatchedRecoClusters_[ithr]["Eta_Phi"]->Fill(simTrackEtaAtBoundary, simClusters[simId].phi());
         h2d_simClustersMatchedRecoClusters_[ithr]["En_Mult"]->Fill(energySumSimHits,
                                                                        simClusters[simId].numberOfRecHits());
         h2d_simClustersMatchedRecoClusters_[ithr]["EnFrac_Eta"]->Fill(SimClusterToCPEnergyFraction,
@@ -843,16 +871,8 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
   // --------------------------------------------------------------------
   h_nPFClusters_->Fill(recoClusters.size());
   for (unsigned int recoId = 0; recoId < recoClusters.size(); ++recoId) {
-    // fake and merge denominator
-    h_recoClusters_["En"]->Fill(recoClusters[recoId].energy());
-    h_recoClusters_["Eta"]->Fill(recoClusters[recoId].eta());
-    h_recoClusters_["Phi"]->Fill(recoClusters[recoId].phi());
-    h_recoClusters_["Mult"]->Fill(recoClusters[recoId].size());
-	if constexpr (std::is_same<RecoClusterCollection, reco::PFClusterCollection>::value) {
-	  h_recoClusters_["Time"]->Fill(recoClusters[recoId].time());
-	}
-	
-	if (abs(recoClusters[recoId].eta()) > 2.) {
+
+	if (abs(recoClusters[recoId].eta()) > 2. and recoClusters[recoId].energy() > 12.) {
 	  std::cout << "============== RECO CLUSTER ANOMALY ========= " << iEvent.eventAuxiliary().event() << std::endl;
 	  std::cout << recoClusters[recoId].eta() << std::endl;
 	  std::cout << recoClusters[recoId].energy() << std::endl;
@@ -864,8 +884,19 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
 	  }
 	  std::cout << "============================================= " << std::endl;
 	}
+
+    // fake and merge denominator
+    h_recoClusters_["En"]->Fill(recoClusters[recoId].energy());
+    h_recoClusters_["Eta"]->Fill(recoClusters[recoId].eta());
+    h_recoClusters_["Phi"]->Fill(recoClusters[recoId].phi());
+    h_recoClusters_["Mult"]->Fill(recoClusters[recoId].size());
+	if constexpr (std::is_same<RecoClusterCollection, reco::PFClusterCollection>::value) {
+	  h_recoClusters_["Time"]->Fill(recoClusters[recoId].time());
+	}
+	
     h2d_recoClusters_["En_Eta"]->Fill(recoClusters[recoId].energy(), recoClusters[recoId].eta());
     h2d_recoClusters_["En_Phi"]->Fill(recoClusters[recoId].energy(), recoClusters[recoId].phi());
+	h2d_recoClusters_["Eta_Phi"]->Fill(recoClusters[recoId].eta(), recoClusters[recoId].phi());
     h2d_recoClusters_["En_Mult"]->Fill(recoClusters[recoId].energy(), recoClusters[recoId].size());
     h2d_recoClusters_["Mult_Eta"]->Fill(recoClusters[recoId].size(), recoClusters[recoId].eta());
     h2d_recoClusters_["Mult_Phi"]->Fill(recoClusters[recoId].size(), recoClusters[recoId].phi());
@@ -876,6 +907,28 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
 	  h2d_recoClusters_["Mult_Time"]->Fill(recoClusters[recoId].size(), recoClusters[recoId].time());
 	}
 
+	// hits belonging to the clusters
+	const CaloGeometry& caloGeom = iSetup.getData(geometry_token_);
+	for (const auto& haf : recoClusters[recoId].hitsAndFractions()) {
+	  DetId id = haf.first;
+	  const GlobalPoint pos = caloGeom.getPosition(id);
+
+	  auto rechitIt =
+		std::find_if(pfRechit.begin(), pfRechit.end(), [id](const reco::PFRecHit& rh) { return rh.detId() == id; });
+	  if (rechitIt == pfRechit.end()) {
+		std::cout << " ############## Not found! ###############" << std::endl;
+		std::cout << ", eta=" << pos.eta() << ", phi=" << pos.phi() << std::endl;
+	  } else {
+		h2d_recoHitsInClusters_["En_Eta"]->Fill(rechitIt->energy(), pos.eta());
+		h2d_recoHitsInClusters_["En_Phi"]->Fill(rechitIt->energy(), pos.phi());
+		h2d_recoHitsInClusters_["Eta_Phi"]->Fill(pos.eta(), pos.phi());
+		h2d_recoHitsInClusters_["En_Time"]->Fill(rechitIt->energy(), rechitIt->time());
+		h2d_recoHitsInClusters_["Time_Eta"]->Fill(rechitIt->time(), pos.eta());
+		h2d_recoHitsInClusters_["Time_Phi"]->Fill(rechitIt->time(), pos.phi());
+	  }
+	}
+
+	// matching
     const edm::Ref<RecoClusterCollection> recoClusterRef(RecoCluster, recoId);
     const auto& recoToSimIt = recoToSimAssoc.find(recoClusterRef);
     if (recoToSimIt == recoToSimAssoc.end())
@@ -934,13 +987,14 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
                                                                   recoClusters[recoId].eta());
         h2d_recoClustersMatchedSimClusters_[ithr]["En_Phi"]->Fill(recoClusters[recoId].energy(),
                                                                   recoClusters[recoId].phi());
+		h2d_recoClustersMatchedSimClusters_[ithr]["Eta_Phi"]->Fill(recoClusters[recoId].eta(),
+																   recoClusters[recoId].phi());
         h2d_recoClustersMatchedSimClusters_[ithr]["En_Mult"]->Fill(recoClusters[recoId].energy(),
                                                                    recoClusters[recoId].size());
         h2d_recoClustersMatchedSimClusters_[ithr]["Mult_Eta"]->Fill(recoClusters[recoId].size(),
                                                                     recoClusters[recoId].eta());
         h2d_recoClustersMatchedSimClusters_[ithr]["Mult_Phi"]->Fill(recoClusters[recoId].size(),
                                                                     recoClusters[recoId].phi());
-
 		if constexpr (std::is_same<RecoClusterCollection, reco::PFClusterCollection>::value) {
 		  h_recoClustersMatchedSimClusters_[ithr]["Time"]->Fill(recoClusters[recoId].time());
 		  h2d_recoClustersMatchedSimClusters_[ithr]["En_Time"]->Fill(recoClusters[recoId].energy(),
@@ -1042,6 +1096,7 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
 		//   std::cout << "- score: " << recoPairDebug.second.second << ", share en frac: " << recoPairDebug.second.first / energySumSimHits << ", en: " << recoClusters[recoPairDebug.first.index()].energy() << std::endl;
 		// }
 		// std::cout << "threshold: " << thresh << std::endl;
+
 		for (auto hae : simClusters[simId].hits_and_energies()) {
 		  DetId idid(hae.first);
 		  if(idid.det() != DetId::Ecal) {
@@ -1085,7 +1140,7 @@ void PFTesterT<RecoClusterCollection>::analyze(const edm::Event& iEvent, const e
 		  std::cout << "fill response: " << recoClusters[recoId].energy() / energySumSimHits << std::endl;
 		  std::cout << "============== break =================" << std::endl;
           break;
-        }
+        }		
       }
     }
   }
