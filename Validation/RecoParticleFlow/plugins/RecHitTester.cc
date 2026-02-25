@@ -31,15 +31,13 @@ private:
   using RecHitsT = EcalRecHitCollection;
   using PFRecHitsT = reco::PFRecHitCollection;
   using UncalibRecHitsT = EcalUncalibratedRecHitCollection;
-
-  GlobalPoint getCellPosition(DetId did, const CaloSubdetectorGeometry* barrelGeom);
 	
   edm::ESGetToken<CaloGeometry, CaloGeometryRecord> caloGeomToken_;
   
   const edm::EDGetTokenT<SimHitsT> ebSimHitToken_, eeSimHitToken_;
+  const edm::EDGetTokenT<UncalibRecHitsT> ebUncalibRecHitToken_, eeUncalibRecHitToken_;
   const edm::EDGetTokenT<RecHitsT> ebRecHitToken_, eeRecHitToken_;
   const edm::EDGetTokenT<PFRecHitsT> PFRecHitToken_;
-  const edm::EDGetTokenT<UncalibRecHitsT> ebUncalibRecHitToken_, eeUncalibRecHitToken_;
 
   std::string outFolder_;
 
@@ -60,11 +58,11 @@ RecHitTester::RecHitTester(const edm::ParameterSet& iConfig)
   : caloGeomToken_(esConsumes<CaloGeometry, CaloGeometryRecord>()),
 	ebSimHitToken_(consumes<SimHitsT>(iConfig.getParameter<edm::InputTag>("ebSimHits"))),
 	eeSimHitToken_(consumes<SimHitsT>(iConfig.getParameter<edm::InputTag>("eeSimHits"))),
+	ebUncalibRecHitToken_(consumes<UncalibRecHitsT>(iConfig.getParameter<edm::InputTag>("ebUncalibRecHits"))),
+	eeUncalibRecHitToken_(consumes<UncalibRecHitsT>(iConfig.getParameter<edm::InputTag>("eeUncalibRecHits"))),
 	ebRecHitToken_(consumes<RecHitsT>(iConfig.getParameter<edm::InputTag>("ebRecHits"))),
 	eeRecHitToken_(consumes<RecHitsT>(iConfig.getParameter<edm::InputTag>("eeRecHits"))),
 	PFRecHitToken_(consumes<PFRecHitsT>(iConfig.getParameter<edm::InputTag>("pfRecHits"))),
-	ebUncalibRecHitToken_(consumes<UncalibRecHitsT>(iConfig.getParameter<edm::InputTag>("ebUncalibRecHits"))),
-	eeUncalibRecHitToken_(consumes<UncalibRecHitsT>(iConfig.getParameter<edm::InputTag>("eeUncalibRecHits"))),
 	outFolder_(iConfig.getParameter<std::string>("outFolder")) {}
 	
 void RecHitTester::bookHistograms(DQMStore::IBooker& ibook,
@@ -81,6 +79,10 @@ void RecHitTester::bookHistograms(DQMStore::IBooker& ibook,
 												"EBSimHits;" + x_title + ";" + y_title,
 												nBinsX, hMinX, hMaxX,
 												nBinsY, hMinY, hMaxY);
+	h2d_eesimHits_[h2dVar.first] = ibook.book2D("EESimHits" + h2dVar.first,
+												"EESimHits;" + x_title + ";" + y_title,
+												nBinsX, hMinX, hMaxX,
+												nBinsY, hMinY, hMaxY);
 	h2d_ebuncalibRecHits_[h2dVar.first] = ibook.book2D("EBUncalibRecHits" + h2dVar.first,
 													   "EBUncalibRecHits;" + x_title + ";" + y_title,
 													   nBinsX, hMinX, hMaxX,
@@ -89,10 +91,6 @@ void RecHitTester::bookHistograms(DQMStore::IBooker& ibook,
 													   "EEUncalibRecHits;" + x_title + ";" + y_title,
 													   nBinsX, hMinX, hMaxX,
 													   nBinsY, hMinY, hMaxY);
-	h2d_eesimHits_[h2dVar.first] = ibook.book2D("EESimHits" + h2dVar.first,
-												"EESimHits;" + x_title + ";" + y_title,
-												nBinsX, hMinX, hMaxX,
-												nBinsY, hMinY, hMaxY);
 	h2d_ebrecHits_[h2dVar.first] = ibook.book2D("EBRecHits" + h2dVar.first,
 											  "EBRecHits;" + x_title + ";" + y_title,
 											  nBinsX, hMinX, hMaxX,
@@ -110,7 +108,6 @@ void RecHitTester::bookHistograms(DQMStore::IBooker& ibook,
 
 void RecHitTester::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   const auto& caloGeom = iSetup.getData(caloGeomToken_);
-  const auto& barrelGeom = caloGeom.getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
 
   edm::Handle<SimHitsT> ebsimhitHandle;
   iEvent.getByToken(ebSimHitToken_, ebsimhitHandle);
@@ -159,26 +156,24 @@ void RecHitTester::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   }
 
   auto ebsimhits = *ebsimhitHandle;
+  auto eesimhits = *eesimhitHandle;
   auto ebuncalibrechits = *ebuncalibrechitHandle;
   auto eeuncalibrechits = *eeuncalibrechitHandle;
-  auto eesimhits = *eesimhitHandle;
   auto ebrechits = *ebrechitHandle;
   auto eerechits = *eerechitHandle;
   auto pfrechits = *pfrechitHandle;
 
   for (auto h : ebsimhits) {
-	GlobalPoint p = getCellPosition(h.id(), barrelGeom);
-	float eta = p.eta();
-	float phi = p.phi();
+	float eta = caloGeom.getPosition(h.id()).eta();
+	float phi = caloGeom.getPosition(h.id()).phi();
 
 	h2d_ebsimHits_["En_Eta"]->Fill(h.energy(), eta);
 	h2d_ebsimHits_["En_Phi"]->Fill(h.energy(), phi);
 	h2d_ebsimHits_["Eta_Phi"]->Fill(eta, phi);
   }
   for (auto h : eesimhits) {
-	GlobalPoint p = getCellPosition(h.id(), barrelGeom);
-	float eta = p.eta();
-	float phi = p.phi();
+	float eta = caloGeom.getPosition(h.id()).eta();
+	float phi = caloGeom.getPosition(h.id()).phi();
 
 	h2d_eesimHits_["En_Eta"]->Fill(h.energy(), eta);
 	h2d_eesimHits_["En_Phi"]->Fill(h.energy(), phi);
@@ -186,18 +181,16 @@ void RecHitTester::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   }
 
   for (auto h : ebuncalibrechits) {
-	GlobalPoint p = getCellPosition(h.id(), barrelGeom);
-	float eta = p.eta();
-	float phi = p.phi();
+	float eta = caloGeom.getPosition(h.id()).eta();
+	float phi = caloGeom.getPosition(h.id()).phi();
 
 	h2d_ebuncalibRecHits_["En_Eta"]->Fill(h.amplitude(), eta);
 	h2d_ebuncalibRecHits_["En_Phi"]->Fill(h.amplitude(), phi);
 	h2d_ebuncalibRecHits_["Eta_Phi"]->Fill(eta, phi);
   }
   for (auto h : eeuncalibrechits) {
-	GlobalPoint p = getCellPosition(h.id(), barrelGeom);
-	float eta = p.eta();
-	float phi = p.phi();
+	float eta = caloGeom.getPosition(h.id()).eta();
+	float phi = caloGeom.getPosition(h.id()).phi();
 
 	h2d_eeuncalibRecHits_["En_Eta"]->Fill(h.amplitude(), eta);
 	h2d_eeuncalibRecHits_["En_Phi"]->Fill(h.amplitude(), phi);
@@ -205,18 +198,16 @@ void RecHitTester::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   }
   
   for (auto h : ebrechits) {
-	GlobalPoint p = getCellPosition(h.id(), barrelGeom);
-	float eta = p.eta();
-	float phi = p.phi();
+	float eta = caloGeom.getPosition(h.id()).eta();
+	float phi = caloGeom.getPosition(h.id()).phi();
 
 	h2d_ebrecHits_["En_Eta"]->Fill(h.energy(), eta);
 	h2d_ebrecHits_["En_Phi"]->Fill(h.energy(), phi);
 	h2d_ebrecHits_["Eta_Phi"]->Fill(eta, phi);
   }
   for (auto h : eerechits) {
-	GlobalPoint p = getCellPosition(h.id(), barrelGeom);
-	float eta = p.eta();
-	float phi = p.phi();
+	float eta = caloGeom.getPosition(h.id()).eta();
+	float phi = caloGeom.getPosition(h.id()).phi();
 
 	h2d_eerecHits_["En_Eta"]->Fill(h.energy(), eta);
 	h2d_eerecHits_["En_Phi"]->Fill(h.energy(), phi);
@@ -224,9 +215,8 @@ void RecHitTester::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   }
 
   for (auto h : pfrechits) {
-	GlobalPoint p = getCellPosition(h.detId(), barrelGeom);
-	float eta = p.eta();
-	float phi = p.phi();
+	float eta = caloGeom.getPosition(h.detId()).eta();
+	float phi = caloGeom.getPosition(h.detId()).phi();
 
 	h2d_pfRecHits_["En_Eta"]->Fill(h.energy(), eta);
 	h2d_pfRecHits_["En_Phi"]->Fill(h.energy(), phi);
@@ -234,21 +224,15 @@ void RecHitTester::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   }
 }
 
-GlobalPoint RecHitTester::getCellPosition(DetId did, const CaloSubdetectorGeometry* barrelGeom) {
-  const CaloCellGeometry* cellGeom = barrelGeom->getGeometry(did);
-  return cellGeom->getPosition();
-}
-
-
 void RecHitTester::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription  desc;
   desc.add<std::string>("outFolder", "HLT/ParticleFlow");
   desc.add<edm::InputTag>("ebSimHits", edm::InputTag("g4SimHits", "EcalHitsEB"));
   desc.add<edm::InputTag>("eeSimHits", edm::InputTag("g4SimHits", "EcalHitsEE"));
-  desc.add<edm::InputTag>("ebRecHits", edm::InputTag("hltEcalRecHit", "EcalRecHitsEB"));
-  desc.add<edm::InputTag>("eeRecHits", edm::InputTag("hltEcalRecHit", "EcalRecHitsEE"));
   desc.add<edm::InputTag>("ebUncalibRecHits", edm::InputTag("hltEcalUncalibRecHit", "EcalUncalibRecHitsEE"));
   desc.add<edm::InputTag>("eeUncalibRecHits", edm::InputTag("hltEcalUncalibRecHit", "EcalUncalibRecHitsEE"));
+  desc.add<edm::InputTag>("ebRecHits", edm::InputTag("hltEcalRecHit", "EcalRecHitsEB"));
+  desc.add<edm::InputTag>("eeRecHits", edm::InputTag("hltEcalRecHit", "EcalRecHitsEE"));
   desc.add<edm::InputTag>("pfRecHits", edm::InputTag("hltParticleFlowRecHitECALUnseeded"));
   descriptions.addWithDefaultLabel(desc);
 }
