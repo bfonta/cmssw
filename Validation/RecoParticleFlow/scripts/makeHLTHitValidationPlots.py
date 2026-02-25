@@ -107,9 +107,9 @@ if __name__ == '__main__':
         }
     else:
         vars2D = {
-            **{f'{det}UncalibRecHitsEn_Eta': dict(ytitle=r'$\eta$', var=f'# Uncalibrated {det} Reconstructed Hits', xtitle='Energy [GeV]', logz=True)
+            **{f'{det}UncalibRecHitsEn_Eta': dict(ytitle=r'$\eta$', var=f'# Uncalibrated {det} Reconstructed Hits', xtitle='Amplitude [ADC Counts]', logz=True)
                for det in ('EE', 'EB')},
-            **{f'{det}UncalibRecHitsEn_Phi': dict(ytitle=r'$\phi$', var=f'# Uncalibrated {det} Reconstructed Hits', xtitle='Energy [GeV]', logz=True)
+            **{f'{det}UncalibRecHitsEn_Phi': dict(ytitle=r'$\phi$', var=f'# Uncalibrated {det} Reconstructed Hits', xtitle='Amplitude [ADC Counts]', logz=True)
                for det in ('EE', 'EB')},
             **{f'{det}UncalibRecHitsEta_Phi': dict(ytitle=r'$\phi$', var=f'# Uncalibrated {det} Reconstructed Hits', xtitle=r'$\eta$', logz=True)
            for det in ('EE', 'EB')},
