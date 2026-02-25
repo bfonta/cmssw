@@ -87,9 +87,9 @@ void DigisTester::bookHistograms(DQMStore::IBooker& ibook,
 }
 
 void DigisTester::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
-  const auto& caloGeom = iSetup.getData(geometry_token_);
-  const auto& barrelGeom = caloGeom.getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
-  const auto& endcapGeom = caloGeom.getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
+  const CaloGeometry& caloGeom = iSetup.getData(geometry_token_);
+  // const auto& barrelGeom = caloGeom.getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
+  // const auto& endcapGeom = caloGeom.getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
   
   edm::Handle<EBDigiCollection> ebDigisHandle;
   iEvent.getByToken(ecalEBDigisToken_, ebDigisHandle);
@@ -106,9 +106,8 @@ void DigisTester::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   }
 
   for (const edm::DataFrame& digi : *ebDigisHandle) {
-	const CaloCellGeometry* cellGeom = barrelGeom->getGeometry(digi.id());
-	float eta = cellGeom->getPosition().eta();
-	float phi = cellGeom->getPosition().phi();
+	float eta = caloGeom.getPosition(digi.id()).eta();
+	float phi = caloGeom.getPosition(digi.id()).phi();
 	
     // Get the number of ADC samples (usually 10)
     int nADCSamples = digi.size();
@@ -126,9 +125,8 @@ void DigisTester::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   }
 
   for (const edm::DataFrame& digi : *eeDigisHandle) {
-	const CaloCellGeometry* cellGeom = endcapGeom->getGeometry(digi.id());
-	float eta = cellGeom->getPosition().eta();
-	float phi = cellGeom->getPosition().phi();
+	float eta = caloGeom.getPosition(digi.id()).eta();
+	float phi = caloGeom.getPosition(digi.id()).phi();
 
 	// Get the number of ADC samples (usually 10)
     int nADCSamples = digi.size();
