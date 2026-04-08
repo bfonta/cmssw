@@ -136,10 +136,10 @@ class DQMPlotter:
                 ax.set_yscale("log")
 
         # Automatic log scale for specific variable types
-        if "p_{\mathrm{T}}" in xlabel and "pull" not in xlabel.lower():
+        if r"p_{\mathrm{T}}" in xlabel and "pull" not in xlabel.lower():
             ax.set_xscale("log")
 
-        if ("p_{\mathrm{T}}" in ylabel and "pull" not in ylabel.lower()) or "Sigma" in title:
+        if (r"p_{\mathrm{T}}" in ylabel and "pull" not in ylabel.lower()) or "Sigma" in title:
             if not has_negative_values:
                 ax.set_yscale("log")
         
@@ -1238,26 +1238,50 @@ def process_histogram_task(task):
         raise
 
 if __name__ == "__main__":
+
+    class UniqueListOneArg(argparse.Action):
+        """Custom action to detect duplicate elements in a user option list."""
+        def __call__(self, parser, namespace, values, option_string=None):
+            if len(values) != len(set(values)):
+                parser.error(f"[UniqueListOneArg] Duplicate args are not allowed (option = {self.dest}).")
+            setattr(namespace, self.dest, values)
+
+    class UniqueListMultiArg(argparse.Action):
+        """Custom action to remove duplicate elements in a user option list added via 'append'."""
+        def __call__(self, parser, namespace, values, option_string=None):
+            current = getattr(namespace, self.dest) or []
+            current.extend(values)
+
+            if len(current) != len(set(current)):
+                parser.error(f"[UniqueListMultiArg] Duplicate args are not allowed (option = {self.dest}).")
+                
+            setattr(namespace, self.dest, current)
+            
     """Command line interface for DQM plotter."""
     parser = argparse.ArgumentParser(
         description="Compare DQM histograms with CMS styling"
     )
-    parser.add_argument("files", nargs="+", help="ROOT files to compare")
+    parser.add_argument(
+        "files",
+        nargs="+", 
+        action=UniqueListOneArg,
+        help="ROOT files to compare"
+    )
     parser.add_argument(
         "-s",
         "--source",
         required=True,
         nargs="+",
-        action="append",
+        action=UniqueListMultiArg,
         help="Regex pattern(s) to match. "
-             "Use multiple -s or space-separated values to provide several patterns."
-             "Can be accelerated with `--require_full_sources.`",
+        "Use multiple -s or space-separated values to provide several patterns."
+        "Can be accelerated with `--use-regex.`",
     )
     parser.add_argument(
         "-l", "--legend", help="Comma-separated list of legend entries for each file. Use \\n for explicit line breaks."
     )
     parser.add_argument(
-        "--legend_title", default=None,
+        "--legend-title", default=None,
         help="Title of the legend. If not present it uses the legend labels."
     )
     parser.add_argument("-o", "--output-dir", default="plots", help="Output directory")
@@ -1318,8 +1342,8 @@ if __name__ == "__main__":
         "--overlay",
         action="append",
         help="Overlay histograms from different collections. Specify colon-separated patterns "
-             "(e.g., 'hltPhase2PixelTracks:hltPhase2PixelTracksCAExtension'). "
-             "Can be used multiple times for different overlay groups.",
+        "(e.g., 'hltPhase2PixelTracks:hltPhase2PixelTracksCAExtension'). "
+        "Can be used multiple times for different overlay groups.",
     )
     parser.add_argument(
         "--no-overlay-individual",
