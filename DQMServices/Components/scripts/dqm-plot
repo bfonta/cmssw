@@ -31,7 +31,6 @@ plt.style.use(hep.style.CMS)
 # Use matplotlib's mathtext
 plt.rcParams["mathtext.default"] = "regular"
 
-
 class DQMPlotter:
     def __init__(self, figsize=(12, 9), ratio_height=0.3, processors=None):
         """
@@ -150,7 +149,7 @@ class DQMPlotter:
         return xlabel, ylabel
 
     def _plot_histogram_data(self, ax, bin_centers, bin_contents, bin_errors, bin_edges, 
-                           label, color_idx, plot_histograms):
+                             label, color_idx, plot_histograms):
         """Plot histogram data either as histogram or error bars."""
         if plot_histograms:
             hep.histplot(
@@ -550,8 +549,25 @@ class DQMPlotter:
         result = pattern.sub(_token_repl, result)
 
         return result
+    
+    def contains_regex_markers(self, pattern):
+        # Return True if the pattern contains regex metacharacters
+        return re.search(r'[.*+?|()\\[\]{}$^]', pattern)
 
-    def find_histograms_in_file(self, root_file, pattern, full_pattern=False):
+    def get_path_up_to_regex(self, path):
+        # Find the first occurrence of any regex character
+        rxmatch = self.contains_regex_markers(path) ### <- ISSUE!
+        if rxmatch:
+            # Get the path up to the first regex character
+            base_path = path[:rxmatch.start()]
+            # Get the directory part of that path
+            dir_path = os.path.dirname(base_path)
+            return dir_path
+        else:
+            # If no regex character, return the directory part of the full path
+            return os.path.dirname(path)
+    
+    def find_histograms_in_file(self, root_file, pattern, use_regex=False):
         """
         Find all histogram paths matching a regex pattern in a ROOT file.
         
@@ -559,30 +575,51 @@ class DQMPlotter:
             root_file: opened ROOT file
             pattern: regex pattern to match histogram paths
             full_pattern: boolean specifying whether the provided pattern contains the full directory structure (faster)
+            skip: whether to skip part of the tree traversal for speed-up, jumping direclty to a given subdirectory
 
         Returns:
             list: List of histogram paths that match the pattern
         """
         regex = re.compile(pattern)
-
-        def traverse_directory(directory, current_path=""):
+        def traverse_directory(directory, current_path="", pattern=None, skip=False):
             """Recursively traverse ROOT file directory structure."""
             hist_paths = []
+
+            # skip a part of the traversal for speed-up
+            if skip and current_path != "":
+                if current_path.endswith('/'):
+                    current_path = current_path[:-1]
+                directory = directory.Get(current_path)
+                # the user directly provided an object to plot
+                if pattern is None and not directory.InheritsFrom("TDirectory"):
+                    # Skip 2D histograms
+                    if directory.InheritsFrom("TH1") and not directory.InheritsFrom("TH2"):
+                        hist_paths.append(current_path)
+                    return hist_paths
+
+            # directory traversal
             for key in directory.GetListOfKeys():
                 obj_name = key.GetName()
                 obj_path = f"{current_path}/{obj_name}" if current_path else obj_name
-
+                if pattern and not self.contains_regex_markers(pattern) and obj_name not in pattern:
+                    continue
                 obj = key.ReadObj()
-                if (obj_path in pattern or not full_pattern) and obj.InheritsFrom("TDirectory"):
-                    hist_paths.extend(traverse_directory(obj, obj_path))
+                if obj.InheritsFrom("TDirectory"):
+                    hist_paths.extend(traverse_directory(directory=obj, current_path=obj_path))
                 # Skip 2D histograms
                 elif obj.InheritsFrom("TH1") and not obj.InheritsFrom("TH2"):
                     if regex.search(obj_path):
+                        print('PATH: ', obj_path)
                         hist_paths.append(obj_path)
             return hist_paths
-
-        return traverse_directory(root_file)
-
+        
+        if use_regex: # FULL-REGEX IS NOT CURRENTLY SUPPORTED
+            return traverse_directory(root_file)
+        else:
+            if self.contains_regex_markers(pattern):
+                return traverse_directory(directory=root_file, current_path=self.get_path_up_to_regex(pattern), pattern=pattern, skip=True)
+            return traverse_directory(directory=root_file, current_path=pattern, pattern=None, skip=True) 
+    
     def _parse_overlay_groups(self, overlay_specs):
         """
         Parse overlay specifications into groups.
@@ -790,7 +827,7 @@ class DQMPlotter:
                 ref_centers, ref_contents, ref_errors = bin_centers, bin_contents, bin_errors
 
             self._plot_histogram_data(ax_main, bin_centers, bin_contents, bin_errors, 
-                                    bin_edges, label, i, plot_histograms)
+                                      bin_edges, label, i, plot_histograms)
 
             if i > 0:
                 valid_ratios = self._calculate_and_plot_ratio(
@@ -880,6 +917,7 @@ class DQMPlotter:
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         plt.savefig(output_path, dpi=300, bbox_inches="tight")
+        # breakpoint()
 
         if save_as_pdf:
             pdf_path = output_path.rsplit(".", 1)[0] + ".pdf"
@@ -896,7 +934,7 @@ class DQMPlotter:
         create_web_index=False,
         overlay_groups=None,
         overlay_individual=True,
-        require_full_pattern=False,
+        use_regex=False,
         **plot_kwargs,
     ):
         """
@@ -957,7 +995,7 @@ class DQMPlotter:
 
                 total_for_file = 0
                 for pat in patterns:
-                    file_hists = self.find_histograms_in_file(root_file, pat, require_full_pattern)
+                    file_hists = self.find_histograms_in_file(root_file, pat, use_regex)
                     total_for_file += len(file_hists)
                     all_matching_hists.update(file_hists)
                     for hp in file_hists:
@@ -1099,7 +1137,7 @@ class DQMPlotter:
             remaining_path = hist_path[match_end:].lstrip("/")
             if remaining_path:
                 path_parts = remaining_path.split("/")
-                
+                print(len(path_parts), path_parts)
                 if len(path_parts) > 1:
                     # Create subdirectories and filename
                     subdirs = "/".join(path_parts[:-1])
@@ -1117,7 +1155,7 @@ class DQMPlotter:
         else:
             hist_name = hist_path.replace("/", "_").replace("\\", "_")
             output_path = os.path.join(output_dir, f"{hist_name}")
-
+        #breakpoint()
         return output_path
 
     def _create_web_index_files(self, output_dir):
@@ -1134,7 +1172,7 @@ class DQMPlotter:
 
         n_index = 0
 
-        # Walk up the directory tree (only of "/www/" is present)
+        # Walk up the directory tree (only if "/www/" is present)
         current_dir = output_dir
         while True:
             parent_dir = os.path.dirname(current_dir)
@@ -1154,39 +1192,46 @@ class DQMPlotter:
         """Process plotting tasks using multiprocessing."""
         print(f"Using {self.processors} parallel processes")
 
-        with multiprocessing.Pool(self.processors) as pool:
-            results = []
-            for i, task in enumerate(plot_tasks):
-                task_copy = task.copy()
-                task_copy.pop("progress_counter", None)
-                task_copy.pop("total_tasks", None)
-                result = pool.apply_async(process_histogram_task, (task_copy,))
-                results.append((i, result))
+        # with multiprocessing.Pool(self.processors) as pool:
+        #     results = []
+        #     for i, task in enumerate(plot_tasks):
+        #         task_copy = task.copy()
+        #         task_copy.pop("progress_counter", None)
+        #         task_copy.pop("total_tasks", None)
+        #         result = pool.apply_async(process_histogram_task, (task_copy,))
+        #         results.append((i, result))
 
-            completed = 0
-            failed = 0
-            for i, result in results:
-                try:
-                    result.get(timeout=300)
-                    completed += 1
-                    if completed % 10 == 0 or completed == len(plot_tasks):
-                        print(
-                            f"\rProgress: {completed}/{len(plot_tasks)} plots completed",
-                            end="",
-                            flush=True,
-                        )
-                except multiprocessing.TimeoutError:
-                    print(f"\nTask {i} timed out")
-                    failed += 1
-                except Exception as e:
-                    print(f"\nError in task {i}: {e}")
-                    failed += 1
+        #     completed = 0
+        #     failed = 0
+        #     for i, result in results:
+        #         try:
+        #             result.get(timeout=300)
+        #             completed += 1
+        #             if completed % 10 == 0 or completed == len(plot_tasks):
+        #                 print(
+        #                     f"\rProgress: {completed}/{len(plot_tasks)} plots completed",
+        #                     end="",
+        #                     flush=True,
+        #                 )
+        #         except multiprocessing.TimeoutError:
+        #             print(f"\nTask {i} timed out")
+        #             failed += 1
+        #         except Exception as e:
+        #             print(f"\nError in task {i}: {e}")
+        #             failed += 1
 
-            pool.close()
-            pool.join()
+        #     pool.close()
+        #     pool.join()
 
-            if failed > 0:
-                print(f"\n{failed} tasks failed out of {len(plot_tasks)} total")
+        #     if failed > 0:
+        #         print(f"\n{failed} tasks failed out of {len(plot_tasks)} total")
+        
+        for i, task in enumerate(plot_tasks):
+            task_copy = task.copy()
+            task_copy.pop("progress_counter", None)
+            task_copy.pop("total_tasks", None)
+            process_histogram_task(task_copy)
+
         print()
 
     def _write_php_index(self, content, path):
@@ -1229,7 +1274,6 @@ def process_histogram_task(task):
             histograms, valid_labels = plotter._load_histograms(
                 file_paths, hist_path, labels
             )
-
         if len(histograms) > 0:
             plotter.plot_comparison(histograms, valid_labels, output_path, **plot_kwargs)
 
@@ -1351,24 +1395,21 @@ if __name__ == "__main__":
         help="Disable creation of individual plots for collections that are overlaid (default: create both overlay and individual plots)",
     )
     parser.add_argument(
-        "--require_full_sources",
+        "--use-regex",
         action="store_true",
-        help="Requires source containing the full directory structure of the DQM file. Example: `-s DQMData/Run 1/HLT/Run summary/ParticleFlow/MatchByScore/PFClusterValidation/SimClustersEn` works, but `-s PFClusterValidation/SimClustersEn` does not, assuming the base diretory is `DQMData`. If the sources are provided in full, this options accelerates the script by scanning only the directories appearing in the sources.",
+        help="FUTURE FEATURE. DO NOT USE. Uses the full source as a regex to search across the entire DQM file. When this option is *not* specified, the source is interpreted as a directory path up to the first regex symbol, avoiding the need to scan the entire file.",
     )
 
     args = parser.parse_args()
 
     plotter = DQMPlotter(processors=args.nProcessors)
 
-    # Flatten list of patterns
-    source_patterns = [p for group in args.source for p in group] if isinstance(args.source, list) else [args.source]
-
     # Parse overlay groups
     overlay_groups = plotter._parse_overlay_groups(args.overlay) if args.overlay else None
 
     plotter.compare_files(
         file_paths=args.files,
-        hist_pattern=source_patterns,
+        hist_pattern=args.source,
         labels=args.legend,
         output_dir=args.output_dir,
         logy=args.logy,
@@ -1388,5 +1429,5 @@ if __name__ == "__main__":
         legend_outside=args.legend_outside,
         overlay_groups=overlay_groups,
         overlay_individual=not args.no_overlay_individual,
-        require_full_pattern=args.require_full_sources,
+        use_regex=args.use_regex,
     )
