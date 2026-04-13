@@ -11,7 +11,7 @@ for labelts in _hltTiclIterLabels:
         hltAssociatorInstances.append(labelsts+'To'+labelts)
 
 hltHgcalValidator = _hgcalValidator.clone(
-    LayerClustersInputMask = cms.VInputTag("hltTiclTrackstersCLUE3DHigh", "hltTiclSimTracksters:fromCPs", "hltTiclSimTracksters"),
+    LayerClustersInputMask = ['hltTiclTrackstersCLUE3DHigh', 'hltTiclSimTracksters:fromCPs', 'hltTiclSimTracksters'],
     label_tst = [label for label in _hltTiclIterLabels] + ['hltTiclSimTracksters:fromCPs', 'hltTiclSimTracksters'],
     allTracksterTracksterAssociatorsLabels = ['hltAllTrackstersToSimTrackstersAssociationsByLCs:'+associator for associator in hltAssociatorInstances],
     allTracksterTracksterByHitsAssociatorsLabels = ['hltAllTrackstersToSimTrackstersAssociationsByHits:'+associator for associator in hltAssociatorInstances],
@@ -40,10 +40,10 @@ lcInputMask_v5  = ["hltTiclTrackstersCLUE3DHigh"]
 lcInputMask_v5.extend([cms.InputTag("hltTiclSimTracksters", "fromCPs"), cms.InputTag("hltTiclSimTracksters")])
 
 ticl_v5.toModify(hltHgcalValidator,
-                 LayerClustersInputMask = cms.VInputTag(lcInputMask_v5),
-                 ticlTrackstersMerge = cms.InputTag("hltTiclCandidate"),
+                 LayerClustersInputMask = lcInputMask_v5,
+                 ticlTrackstersMerge = 'hltTiclCandidate',
                  isticlv5 = cms.untracked.bool(True),
-                 mergeSimToRecoAssociator = cms.InputTag("hltAllTrackstersToSimTrackstersAssociationsByLCs:hltTiclSimTrackstersfromCPsTohltTiclCandidate"),
-                 mergeRecoToSimAssociator = cms.InputTag("hltAllTrackstersToSimTrackstersAssociationsByLCs:hltTiclCandidateTohltTiclSimTrackstersfromCPs"),
+                 mergeSimToRecoAssociator = 'hltAllTrackstersToSimTrackstersAssociationsByLCs:hltTiclSimTrackstersfromCPsTohltTiclCandidate',
+                 mergeRecoToSimAssociator = 'hltAllTrackstersToSimTrackstersAssociationsByLCs:hltTiclCandidateTohltTiclSimTrackstersfromCPs',
                  )
 
