@@ -17,6 +17,7 @@
 #include <unordered_map>
 #include <functional>
 
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "DataFormats/DetId/interface/DetId.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/Math/interface/LorentzVector.h"
@@ -441,9 +442,8 @@ private:
 
   void assertFractions_() const {
     if (hits_.size() != fractions_.size()) {
-      std::cerr << "SimCluster: fractions (" + std::to_string(fractions_.size()) + ") and hits (" +
-                       std::to_string(hits_.size()) + ") must have the same size."
-                << std::endl;
+	  edm::LogWarning("SimCluster") << "fractions (" + std::to_string(fractions_.size()) + ") and hits (" +
+		std::to_string(hits_.size()) + ") must have the same size.";
       std::abort();
     }
   }

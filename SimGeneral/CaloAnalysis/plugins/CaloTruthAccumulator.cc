@@ -16,6 +16,7 @@
 #include <string>
 #include <tuple>
 #include <ranges>
+#include <type_traits>
 
 #include "FWCore/Framework/interface/ConsumesCollector.h"
 #include "FWCore/Framework/interface/ESWatcher.h"
@@ -315,7 +316,7 @@ namespace {
     // to check if SimTrack has simHits : use DecayGraph EdgeProperty
 
     /** Given a track G4 ID, give map DetId->accumulated SimHit energy  */
-    std::map<int, float> const &hits_and_energies(unsigned int trackIdx) const {
+    std::map<int, float> const &hits_and_energies_map(unsigned int trackIdx) const {
       return simTrackDetIdEnergyMap_.at(trackIdx);
     }
 
@@ -345,7 +346,7 @@ namespace {
         return;  // Should not happen
       auto trackIdx = edge_simTrack->trackId();
       if (edge_property.simHits != 0) {
-        for (auto const &hit_and_energy : helper_.hits_and_energies(trackIdx)) {
+        for (auto const &hit_and_energy : helper_.hits_and_energies_map(trackIdx)) {
           acc_energy[hit_and_energy.first] += hit_and_energy.second;
         }
       }
@@ -697,9 +698,9 @@ namespace {
   void normalizeCollection(SimCaloCollection &simClusters,
                            std::unordered_map<Index_t, float> const &detIdToTotalSimEnergy) {
     for (auto &sc : simClusters) {
-      auto hitsAndEnergies = sc.hits_and_fractions();
+	  auto hitsAndEnergies = sc.hits_and_energies_view();
       sc.clearFractions();
-      for (auto &hAndE : hitsAndEnergies) {
+      for (auto hAndE : hitsAndEnergies) {
         const float totalenergy = detIdToTotalSimEnergy.at(hAndE.first);
         float fraction = 0.;
         if (totalenergy > 0)
