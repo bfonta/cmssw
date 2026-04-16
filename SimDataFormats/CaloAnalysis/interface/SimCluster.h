@@ -387,7 +387,7 @@ public:
   }
 
   HitsAndEnergiesView hits_and_energies_view() const {
-    assertFinalized_();
+    assert(hits_.size() == energies_.size());
     return HitsAndEnergiesView{{hits_, energies_}};
   }
 
