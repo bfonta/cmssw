@@ -39,6 +39,27 @@ from Configuration.ProcessModifiers.ticl_barrel_cff import ticl_barrel
                                        doPFHits = True,
                                        )
 
+
+hltLcAssocByEnergyScoreProducer = _lcAssocByEnergyScoreProducer.clone(
+    hits = 'hltRecHitMapProducer:RefProdVectorHGCRecHitCollection',
+    hitMapTag = 'hltRecHitMapProducer:hgcalRecHitMap',
+)
+
+hltScAssocByEnergyScoreProducer = _scAssocByEnergyScoreProducer.clone(
+    hits = 'hltRecHitMapProducer:RefProdVectorHGCRecHitCollection',
+    hitMapTag = 'hltRecHitMapProducer:hgcalRecHitMap',
+)
+
+hltLayerClusterCaloParticleAssociationProducer = _layerClusterCaloParticleAssociationProducer.clone(
+    associator = 'hltLcAssocByEnergyScoreProducer',
+    label_lc = 'hltMergeLayerClusters'
+)
+
+hltLayerClusterSimClusterAssociationProducer = _layerClusterSimClusterAssociationProducer.clone(
+    associator = 'hltScAssocByEnergyScoreProducer',
+    label_lcl = 'hltMergeLayerClusters',
+)
+
 hltHgcalLayerClustersAssociatorsTask = cms.Task(
     hltLcAssocByEnergyScoreProducer,
     hltScAssocByEnergyScoreProducer,
@@ -49,24 +70,24 @@ hltHgcalLayerClustersAssociatorsTask = cms.Task(
 # LC to CP and LC to SC associators TICL-based for barrel region (ticl_barrel)
 
 hltBarrelLcAssocByEnergyScoreProducer = _barrelLcAssocByEnergyScoreProducer.clone(
-    hits = cms.InputTag("hltRecHitMapProducer", "RefProdVectorPFRecHitCollection"),
-    hitMapTag = cms.InputTag("hltRecHitMapProducer","pfRecHitMap"),
+    hits = 'hltRecHitMapProducer:RefProdVectorPFRecHitCollection',
+    hitMapTag = 'hltRecHitMapProducer:pfRecHitMap',
 )
 
 hltBarrelScAssocByEnergyScoreProducer = _barrelScAssocByEnergyScoreProducer.clone(
-    hits = cms.InputTag("hltRecHitMapProducer", "RefProdVectorPFRecHitCollection"),
-    hitMapTag = cms.InputTag("hltRecHitMapProducer","pfRecHitMap"),
+    hits = 'hltRecHitMapProducer:RefProdVectorPFRecHitCollection',
+    hitMapTag = 'hltRecHitMapProducer:pfRecHitMap',
 )
 
 hltBarrelLayerClusterCaloParticleAssociationProducer = _barrelLayerClusterCaloParticleAssociation.clone(
-    associator = cms.InputTag("hltBarrelLcAssocByEnergyScoreProducer"),
-    label_lc = cms.InputTag("hltBarrelLayerClustersEB"),
+    associator = 'hltBarrelLcAssocByEnergyScoreProducer',
+    label_lc = 'hltBarrelLayerClustersEB',
     filter_sim_hits = cms.vstring("Ecal",)
 )
 
 hltBarrelLayerClusterSimClusterAssociationProducer = _barrelLayerClusterSimClusterAssociation.clone(
-    associator = cms.InputTag("hltBarrelScAssocByEnergyScoreProducer"),
-    label_lcl = cms.InputTag("hltBarrelLayerClustersEB"),
+    associator = 'hltBarrelScAssocByEnergyScoreProducer',
+    label_lcl = 'hltBarrelLayerClustersEB',
     filter_sim_hits = cms.vstring("Ecal",)
 )
 
