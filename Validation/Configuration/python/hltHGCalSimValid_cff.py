@@ -26,6 +26,7 @@ hltRecHitMapProducer = _hltBarrelRecHitMapProducer.clone()
 hltHGCalRecHitMapProducer = _hltBarrelRecHitMapProducer.clone(
     hits = hgcal_hits,
     doHgcalHits = True,
+    doPFHits = False,
 )
 
 from Configuration.Eras.Modifier_phase2_common_cff import phase2_common
@@ -34,8 +35,8 @@ from Configuration.ProcessModifiers.ticl_barrel_cff import ticl_barrel
 
 (phase2_common & ticl_barrel).toModify(hltRecHitMapProducer,
                                        hits = [*hgcal_hits, *barrel_hits],
-                                       doHgcalHits=True,
-                                       doPFHits=True,
+                                       doHgcalHits = True,
+                                       doPFHits = True,
                                        )
 
 # LC to CP and LC to SC associators TICL-based for HGCal region

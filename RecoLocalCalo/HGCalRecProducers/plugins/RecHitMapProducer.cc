@@ -32,6 +32,7 @@ private:
 
   bool doHgcalHits_;
   bool doPFHits_;
+  std::string errMsg_;
 };
 
 DEFINE_FWK_MODULE(RecHitMapProducer);
@@ -50,6 +51,12 @@ RecHitMapProducer::RecHitMapProducer(const edm::ParameterSet& ps)
       pf_hits_token_.push_back(consumes<reco::PFRecHitCollection>(tag));
     }
   }
+
+  std::ostringstream oss;
+  oss << "There were " << pf_hits_token_.size() << " PF tokens and "
+      << hgcal_hits_token_.size() << " HGCAL tokens.";
+  errMsg_ = oss.str();
+
   produces<edm::RefProdVector<HGCRecHitCollection>>("RefProdVectorHGCRecHitCollection");
   produces<DetIdRecHitMap>("hgcalRecHitMap");
   produces<edm::RefProdVector<reco::PFRecHitCollection>>("RefProdVectorPFRecHitCollection");
@@ -71,8 +78,12 @@ void RecHitMapProducer::produce(edm::StreamID, edm::Event& evt, const edm::Event
   if (doHgcalHits_) {
     auto hitMapHGCal = std::make_unique<DetIdRecHitMap>();
 
-    // Retrieve collections
-    assert(hgcal_hits_token_.size() == 3);
+    if (hgcal_hits_token_.size() != 3) {
+	  std::cout << errMsg_ << std::endl;
+	  std::abort();
+	}
+
+	// Retrieve collections
     const auto& ee_hits = evt.getHandle(hgcal_hits_token_[0]);
     const auto& fh_hits = evt.getHandle(hgcal_hits_token_[1]);
     const auto& bh_hits = evt.getHandle(hgcal_hits_token_[2]);
@@ -112,7 +123,11 @@ void RecHitMapProducer::produce(edm::StreamID, edm::Event& evt, const edm::Event
   if (doPFHits_) {
     auto hitMapPF = std::make_unique<DetIdRecHitMap>();
 
-    assert(pf_hits_token_.size() == 2);
+    if (pf_hits_token_.size() != 2) {
+	  std::cout << errMsg_ << std::endl;
+	  std::abort();
+	}
+	
     const auto& ecal_hits = evt.getHandle(pf_hits_token_[0]);
     const auto& hbhe_hits = evt.getHandle(pf_hits_token_[1]);
 

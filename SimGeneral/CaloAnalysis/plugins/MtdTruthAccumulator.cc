@@ -419,6 +419,14 @@ void MtdTruthAccumulator::finalizeEvent(edm::Event &event, edm::EventSetup const
     auto const &hAndT = sc.hits_and_times();
     auto const &hAndP = sc.hits_and_positions();
     auto const &hAndR = sc.detIds_and_rows();
+
+	if (hAndF.empty() || hAndE.empty() || hAndT.empty() || hAndR.empty()) {
+	  edm::LogWarning(messageCategory_) << "Skipping empty/invalid MtdSimCluster trackId="
+										<< sc.g4Tracks()[0].trackId()
+										<< " trackIdOffset=" << sc.trackIdOffset();
+	  continue;
+	}
+	
     // create a vector with the indices of the hits in the simCluster
     std::vector<int> indices(hAndF.size());
     std::iota(indices.begin(), indices.end(), 0);
@@ -464,6 +472,11 @@ void MtdTruthAccumulator::finalizeEvent(edm::Event &event, edm::EventSetup const
 
     auto push_back_clu = [&](const uint32_t &SC_index, uint32_t &LC_index) {
       tmpLC.addCluEnergy(SimLCenergy);
+
+	  if (SimLCenergy <= 0.f) {
+		edm::LogWarning(messageCategory_) << "Sim LayerCluster energy must be positive!";
+	  }
+
       LocalPoint SimLCpos(SimLCx / SimLCenergy, SimLCy / SimLCenergy, SimLCz / SimLCenergy);
       tmpLC.addCluLocalPos(SimLCpos);
       SimLCenergy = 0.;
