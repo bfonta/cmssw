@@ -708,6 +708,7 @@ class DQMPlotter:
         do_ratio=True,
         save_as_pdf=False,
         legend_outside=False,
+        legend_title=None,
         overlay_groups=None,
     ):
         """
@@ -733,18 +734,18 @@ class DQMPlotter:
 
         title, xlabel, ylabel = self.extract_labels_from_hist(histograms[0])
 
-        legend_title = None
-        if hasattr(self, "_current_output_path"):
-            output_parts = self._current_output_path.replace("\\", "/").split("/")
-            if len(output_parts) > 1:
-                # Get the parent directory name (second to last part)
-                legend_title = output_parts[-2] if len(output_parts) >= 2 else None
-                # Ignore legend name for summary plots
-                if "global" in output_parts[-1].lower() or "coll" in output_parts[-1].lower():
-                    legend_title = None
-                # Split long overlay titles at + marker
-                elif legend_title and "+" in legend_title and len(legend_title) > 30:
-                    legend_title = legend_title.replace("+", "\n+")
+        if legend_title is None: # otherwise use the user's choice
+            if hasattr(self, "_current_output_path"):
+                output_parts = self._current_output_path.replace("\\", "/").split("/")
+                if len(output_parts) > 1:
+                    # Get the parent directory name (second to last part)
+                    legend_title = output_parts[-2] if len(output_parts) >= 2 else None
+                    # Ignore legend name for summary plots
+                    if "global" in output_parts[-1].lower() or "coll" in output_parts[-1].lower():
+                        legend_title = None
+                    # Split long overlay titles at + marker
+                    elif legend_title and "+" in legend_title and len(legend_title) > 30:
+                        legend_title = legend_title.replace("+", "\n+")
 
         fig = plt.figure(figsize=self.figsize)
         gs = gridspec.GridSpec(
@@ -937,8 +938,6 @@ class DQMPlotter:
                 if legend_label.startswith("DQM_"):
                     legend_label = legend_label.replace("DQM_", "")
                 labels.append(legend_label)
-        elif isinstance(labels, str):
-            labels = [label.strip() for label in labels.split(",")]
 
         if len(labels) != len(file_paths):
             raise ValueError(
@@ -1256,43 +1255,44 @@ if __name__ == "__main__":
              "Use multiple -s or space-separated values to provide several patterns.",
     )
     parser.add_argument(
-        "-l", "--legend", help="Comma-separated list of legend entries for each file. Use \\n for explicit line breaks."
+        '-l', '--legend', nargs='+',
+        help="List of legend entries for each file. "
     )
-    parser.add_argument("-o", "--output-dir", default="plots", help="Output directory")
-    parser.add_argument("--logy", action="store_true", help="Use log scale for y-axis")
-    parser.add_argument("--normalize", action="store_true", help="Normalize histograms")
+    parser.add_argument("-o", "--output-dir", default="plots", help="Output directory.")
+    parser.add_argument("--logy", action="store_true", help="Use log scale for y-axis.")
+    parser.add_argument("--normalize", action="store_true", help="Normalize histograms.")
     parser.add_argument(
         "--cms-text",
         default="Preliminary",
-        help="CMS label text (e.g. Preliminary, Work in progress)",
+        help="CMS label text (e.g. Preliminary, Work in progress).",
     )
     parser.add_argument(
         "--energy-text",
         default=None,
-        help="Custom energy text in the top right corner (e.g., '14 TeV', 'Run 3')",
+        help="Custom energy text in the top right corner (e.g., '14 TeV', 'Run 3').",
     )
     parser.add_argument(
-        "--data", action="store_true", help="Use CMS datastyle for plots"
+        "--data", action="store_true", help="Use CMS datastyle for plots."
     )
     parser.add_argument(
-        "--no-energy", action="store_true", help="Don't show energy text"
+        "--no-energy", action="store_true", help="Don't show energy text."
     )
-    parser.add_argument("--no-ratio", action="store_true", help="Disable ratio plots")
+    parser.add_argument("--no-ratio", action="store_true", help="Disable ratio plots.")
     parser.add_argument(
-        "--no-grid", action="store_true", help="Remove grid from all plots"
+        "--no-grid", action="store_true", help="Remove grid from all plots."
     )
     parser.add_argument(
         "--histograms",
         action="store_true",
-        help="Plot histograms instead of points (default: points with error bars)",
+        help="Plot histograms instead of points (default: points with error bars).",
     )
     parser.add_argument(
-        "--pdf", action="store_true", help="Also save plots in PDF format"
+        "--pdf", action="store_true", help="Also save plots in PDF format."
     )
     parser.add_argument(
         "--more-files",
         action="store_true",
-        help="Allow more than 10 input files (legend might overlap with the plots, color palette only supports 10 files)",
+        help="Allow more than 10 input files (legend might overlap with the plots, color palette only supports 10 files).",
     )
     parser.add_argument(
         "-n",
@@ -1304,7 +1304,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--web",
         action="store_true",
-        help="Create index.php files for web viewing (downloads from CernBox)",
+        help="Create index.php files for web viewing (downloads from CernBox).",
     )
     parser.add_argument(
         "--legend-outside",
@@ -1312,16 +1312,20 @@ if __name__ == "__main__":
         help="Force legend to be placed outside the plot area",
     )
     parser.add_argument(
+        "--legend-title",
+        help="Legend title.",
+    )
+    parser.add_argument(
         "--overlay",
         action="append",
-        help="Overlay histograms from different collections. Specify colon-separated patterns "
-             "(e.g., 'hltPhase2PixelTracks:hltPhase2PixelTracksCAExtension'). "
+        help="Overlay histograms from different collections. Specify colon-separated patterns."
+             "(e.g., 'hltPhase2PixelTracks:hltPhase2PixelTracksCAExtension')."
              "Can be used multiple times for different overlay groups.",
     )
     parser.add_argument(
         "--no-overlay-individual",
         action="store_true",
-        help="Disable creation of individual plots for collections that are overlaid (default: create both overlay and individual plots)",
+        help="Disable creation of individual plots for collections that are overlaid (default: create both overlay and individual plots).",
     )
 
     args = parser.parse_args()
@@ -1355,6 +1359,7 @@ if __name__ == "__main__":
         more_files=args.more_files,
         create_web_index=args.web,
         legend_outside=args.legend_outside,
+        legend_title=args.legend_title,
         overlay_groups=overlay_groups,
         overlay_individual=not args.no_overlay_individual,
     )
