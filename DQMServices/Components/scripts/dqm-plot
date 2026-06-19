@@ -123,7 +123,7 @@ class DQMPlotter:
         """Clean up bin label for better readability."""
         return label.replace("TrackSelectionHighPurity", "HP")
 
-    def _apply_axis_scaling(self, ax, xlabel, ylabel, title, logy=False, has_negative_values=False):
+    def _apply_axis_scaling(self, ax, xlabel, ylabel, title, logy=False, xlim=None, has_negative_values=False):
         """Apply log scaling to axes based on content and user settings."""
         if logy:
             if has_negative_values:
@@ -132,15 +132,18 @@ class DQMPlotter:
             else:
                 ax.set_yscale("log")
 
+        # Skip auto x-log-scale if the user gave an explicit xlim that includes non-positive values
+        xlim_blocks_log = xlim is not None and xlim[0] <= 0
+        
         # Automatic log scale for specific variable types
-        if "p_{\mathrm{T}}" in xlabel and "pull" not in xlabel.lower():
+        if "p_{\mathrm{T}}" in xlabel and "pull" not in xlabel.lower() and not xlim_blocks_log:
             ax.set_xscale("log")
 
         if ("p_{\mathrm{T}}" in ylabel and "pull" not in ylabel.lower()) or "Sigma" in title:
             if not has_negative_values:
                 ax.set_yscale("log")
 
-        if "vertpos" in xlabel:
+        if "vertpos" in xlabel and not xlim_blocks_log:
             ax.set_xscale("log")
             xlabel = "vert r [cm]"
 
@@ -710,6 +713,9 @@ class DQMPlotter:
         legend_outside=False,
         legend_title=None,
         overlay_groups=None,
+        xlim=None,
+        ylim=None,
+        ylim_ratio=None,
     ):
         """
         Create comparison plot with ratio panel.
@@ -810,7 +816,7 @@ class DQMPlotter:
         if title:
             ax_main.set_title(title, pad=50)
         has_negative_values = np.any(bin_contents < 0)
-        xlabel, ylabel = self._apply_axis_scaling(ax_main, xlabel, ylabel, title, logy, has_negative_values)
+        xlabel, ylabel = self._apply_axis_scaling(ax_main, xlabel, ylabel, title, logy, xlim, has_negative_values)
 
         # Set custom labels if available
         if has_labels:
@@ -831,7 +837,12 @@ class DQMPlotter:
         self._configure_legend(ax_main, labels, legend_title, logy, force_outside=legend_outside)
 
         if grid:
-            ax_main.grid(True, alpha=0.75, linestyle="dashdot", linewidth=0.75)
+            ax_main.grid(True, alpha=0.75, linestyle="dashdot", linewidth=0.75)           
+        if xlim:
+            ax_main.set_xlim(*xlim)
+        if ylim:
+            ax_main.set_ylim(*ylim)
+ 
 
         self._apply_custom_formatter(ax_main)
 
@@ -842,7 +853,9 @@ class DQMPlotter:
             ax_main.tick_params(axis="x", labelbottom=False)
 
             # Set ratio plot limits
-            if len(all_ratios) > 0:
+            if ylim_ratio:
+                ax_ratio.set_ylim(*ylim_ratio)
+            elif len(all_ratios) > 0:
                 # Use percentiles to avoid extreme outliers
                 ratio_min = np.percentile(all_ratios, 5)
                 ratio_max = np.percentile(all_ratios, 95)
@@ -1283,6 +1296,18 @@ if __name__ == "__main__":
         "--no-grid", action="store_true", help="Remove grid from all plots."
     )
     parser.add_argument(
+        '--xlim', nargs=2, type=float, required=False,
+        help="Numerical limits of the x axis of the main and ratio histograms."
+    )
+    parser.add_argument(
+        '--ylim', nargs=2, type=float, required=False,
+        help="Numerical limits of the y axis of the main histogram."
+    )
+    parser.add_argument(
+        '--ylim-ratio', nargs=2, type=float, required=False,
+        help="Numerical limits of the y axis of the ratio histogram."
+    )
+    parser.add_argument(
         "--histograms",
         action="store_true",
         help="Plot histograms instead of points (default: points with error bars).",
@@ -1336,6 +1361,14 @@ if __name__ == "__main__":
 
     plotter = DQMPlotter(processors=args.nProcessors)
 
+    # Ensure the first axis limit lies below the second
+    if args.xlim is not None and args.xlim[0] >= args.xlim[1]:
+        parser.error(f"--xlim: lower bound ({args.xlim[0]}) must be <= upper bound ({args.xlim[1]})")
+    if args.ylim is not None and args.ylim[0] >= args.ylim[1]:
+        parser.error(f"--ylim: lower bound ({args.ylim[0]}) must be <= upper bound ({args.ylim[1]})")
+    if args.ylim_ratio is not None and args.ylim_ratio[0] >= args.ylim_ratio[1]:
+        parser.error(f"--ylim_ratio: lower bound ({args.ylim_ratio[0]}) must be <= upper bound ({args.ylim_ratio[1]})")
+        
     # Flatten list of patterns
     source_patterns = [p for group in args.source for p in group] if isinstance(args.source, list) else [args.source]
 
@@ -1355,6 +1388,9 @@ if __name__ == "__main__":
         data=args.data,
         do_ratio=not args.no_ratio,
         grid=not args.no_grid,
+        xlim=args.xlim,
+        ylim=args.ylim,
+        ylim_ratio=args.ylim_ratio,
         plot_histograms=args.histograms,
         save_as_pdf=args.pdf,
         more_files=args.more_files,
