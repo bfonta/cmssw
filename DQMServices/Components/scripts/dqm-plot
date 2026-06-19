@@ -123,6 +123,9 @@ class DQMPlotter:
         """Clean up bin label for better readability."""
         return label.replace("TrackSelectionHighPurity", "HP")
 
+    def _tex_math_or_not(self, label):
+        return fr'${label}$' if any(x in label for x in ('\\','~')) else label
+        
     def _apply_axis_scaling(self, ax, xlabel, ylabel, title, logy=False, xlim=None, has_negative_values=False):
         """Apply log scaling to axes based on content and user settings."""
         if logy:
@@ -409,10 +412,10 @@ class DQMPlotter:
 
         return histograms, valid_labels
 
-    def extract_labels_from_hist(self, hist):
+    def extract_labels_from_hist(self, hist, xtitle=None, ytitle=None):
         """
         Extract title and axis labels from ROOT histogram.
-
+        Overwrite result with user optional arguments.
         Args:
             hist: ROOT histogram
 
@@ -477,10 +480,12 @@ class DQMPlotter:
             elif "turn-on" in title.lower():
                 ylabel = "Turn-On"
 
+        xtitle = xlabel if xtitle is None else self._tex_math_or_not(xtitle)
+        ytitle = ylabel if ytitle is None else self._tex_math_or_not(ytitle)
         return (
             self.convert_root_to_latex(title),
-            self.convert_root_to_latex(xlabel),
-            self.convert_root_to_latex(ylabel),
+            self.convert_root_to_latex(xtitle),
+            self.convert_root_to_latex(ytitle),
         )
 
     def convert_root_to_latex(self, text):
@@ -713,6 +718,8 @@ class DQMPlotter:
         legend_outside=False,
         legend_title=None,
         overlay_groups=None,
+        xtitle=None,
+        ytitle=None,
         xlim=None,
         ylim=None,
         ylim_ratio=None,
@@ -738,7 +745,7 @@ class DQMPlotter:
         if len(histograms) != len(labels):
             raise ValueError("Number of histograms must match number of labels")
 
-        title, xlabel, ylabel = self.extract_labels_from_hist(histograms[0])
+        title, xlabel, ylabel = self.extract_labels_from_hist(histograms[0], xtitle, ytitle)
 
         if legend_title is None: # otherwise use the user's choice
             if hasattr(self, "_current_output_path"):
@@ -767,7 +774,7 @@ class DQMPlotter:
                 hep.cms.label(cms_text, data=data, ax=ax_main)
             else:
                 hep.cms.label(cms_text, data=data, ax=ax_main,
-                              rlabel=fr'${energy_text}$' if any(x in energy_text for x in ('\\','~')) else energy_text)
+                              rlabel=self._tex_math_or_not(energy_text))
         else:
             hep.cms.label(cms_text, data=data, ax=ax_main, rlabel="")
 
@@ -818,8 +825,10 @@ class DQMPlotter:
         has_negative_values = np.any(bin_contents < 0)
         xlabel, ylabel = self._apply_axis_scaling(ax_main, xlabel, ylabel, title, logy, xlim, has_negative_values)
 
-        # Set custom labels if available
-        if has_labels:
+        ax_main.set_xlabel(xlabel, fontsize=label_size)
+        ax_main.set_ylabel(ylabel, fontsize=label_size)
+        
+        if has_labels: # Set custom labels if available
             ax_main.set_xticks(
                 ref_centers,
                 bin_labels,
@@ -829,10 +838,6 @@ class DQMPlotter:
                 va="top",
             )
             ax_main.tick_params(axis="x", which="minor", bottom=False)
-        else:
-            ax_main.set_xlabel(xlabel)
-
-        ax_main.set_ylabel(ylabel, fontsize=label_size)
 
         self._configure_legend(ax_main, labels, legend_title, logy, force_outside=legend_outside)
 
@@ -1296,6 +1301,14 @@ if __name__ == "__main__":
         "--no-grid", action="store_true", help="Remove grid from all plots."
     )
     parser.add_argument(
+        '--xtitle', required=False, default=None,
+        help="Label of the x axis."
+    )
+    parser.add_argument(
+        '--ytitle', required=False, default=None,
+        help="Label of the y axis."
+    )
+    parser.add_argument(
         '--xlim', nargs=2, type=float, required=False,
         help="Numerical limits of the x axis of the main and ratio histograms."
     )
@@ -1388,6 +1401,8 @@ if __name__ == "__main__":
         data=args.data,
         do_ratio=not args.no_ratio,
         grid=not args.no_grid,
+        xtitle=args.xtitle,
+        ytitle=args.ytitle,
         xlim=args.xlim,
         ylim=args.ylim,
         ylim_ratio=args.ylim_ratio,
