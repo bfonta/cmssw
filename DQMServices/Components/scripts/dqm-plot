@@ -1115,7 +1115,7 @@ class DQMPlotter:
                     output_path = os.path.join(output_dir, subdirs, f"{filename}")
                 else:
                     # Single file, no subdirectories
-                    filename = path_parts[0]
+                    filename = os.path.basename(hist_path)
                     output_path = os.path.join(output_dir, f"{filename}")
             else:
                 # If no remaining path, use the last part of the matched path
