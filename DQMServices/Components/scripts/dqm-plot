@@ -730,6 +730,7 @@ class DQMPlotter:
         legend_title_fontsize=None,
         legend_fontsize=None,
         overlay_groups=None,
+        title=None,
         xtitle=None,
         ytitle=None,
         xlim=None,
@@ -757,8 +758,11 @@ class DQMPlotter:
         if len(histograms) != len(labels):
             raise ValueError("Number of histograms must match number of labels")
 
-        title, xlabel, ylabel = self.extract_labels_from_hist(histograms[0], xtitle, ytitle)
-
+        if title is None:
+            title, xlabel, ylabel = self.extract_labels_from_hist(histograms[0], xtitle, ytitle)
+        else:
+            _, xlabel, ylabel = self.extract_labels_from_hist(histograms[0], xtitle, ytitle)
+            
         if legend_title is None: # otherwise use the user's choice
             if hasattr(self, "_current_output_path"):
                 output_parts = self._current_output_path.replace("\\", "/").split("/")
@@ -1342,6 +1346,10 @@ if __name__ == "__main__":
         "--no-grid", action="store_true", help="Remove grid from all plots."
     )
     parser.add_argument(
+        '--title', required=False, default=None,
+        help="Plot title."
+    )
+    parser.add_argument(
         '--xtitle', required=False, default=None,
         help="Label of the x axis."
     )
@@ -1463,6 +1471,7 @@ if __name__ == "__main__":
         data=args.data,
         do_ratio=not args.no_ratio,
         grid=not args.no_grid,
+        title=args.title,
         xtitle=args.xtitle,
         ytitle=args.ytitle,
         xlim=args.xlim,
