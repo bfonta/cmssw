@@ -1580,7 +1580,7 @@ if __name__ == "__main__":
         parser.error("Either --source or --operation must be specified")
         
     if len(args.legend) != len(args.files) and args.source is not None:
-        raise ValueError(f"Number of legend entries ({len(labels)}) must match number of files ({len(file_paths)})")
+        raise ValueError(f"Number of legend entries ({len(args.legend)}) must match number of files ({len(args.files)})")
 
     if args.nProcessors < 1:
         args.nProcessors = len(os.sched_getaffinity(0))
