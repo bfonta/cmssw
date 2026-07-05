@@ -875,6 +875,7 @@ class DQMPlotter:
         xlim=None,
         ylim=None,
         ylim_ratio=None,
+        ytitle_ratio_fontsize=None,
         complement=False,
         rebin=None,
     ):
@@ -1059,7 +1060,7 @@ class DQMPlotter:
             else:
                 ax_ratio.set_xlabel(xlabel, fontsize=label_size if xtitle_fontsize is None else xtitle_fontsize)
 
-            ax_ratio.set_ylabel("Ratio", fontsize=label_size if ytitle_fontsize is None else ytitle_fontsize)
+            ax_ratio.set_ylabel(f"Ratio wrt to {labels[0]}", fontsize=label_size if ytitle_ratio_fontsize is None else ytitle_ratio_fontsize)
             ax_ratio.axhline(y=1, color="black", linestyle="--", alpha=0.7)
 
             if grid:
@@ -1569,6 +1570,10 @@ if __name__ == "__main__":
         help="Numerical limits of the y axis of the ratio histogram."
     )
     parser.add_argument(
+        '--ytitle-ratio-fontsize', type=int, required=False, default=None,
+        help="Bottom ratio plot Y axis label font size."
+    )
+    parser.add_argument(
         "--histograms",
         action="store_true",
         help="Plot histograms instead of points (default: points with error bars).",
@@ -1730,6 +1735,7 @@ if __name__ == "__main__":
         xlim=args.xlim,
         ylim=args.ylim,
         ylim_ratio=args.ylim_ratio,
+        ytitle_ratio_fontsize=args.ytitle_ratio_fontsize,
         plot_histograms=args.histograms,
         save_as_pdf=args.pdf,
         more_files=args.more_files,
