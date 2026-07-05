@@ -578,22 +578,23 @@ class DQMPlotter:
 
             if "#sigma(" in title.lower():
                 core = left[left.find("(") + 1 : left.rfind(")")]
-                ylabel = r"$\delta$" + core + "/" + core
+                ylabel = r"\delta " + core + "/" + core
                 right_clean = right
                 if "Mean" in title:
                     ylabel = "<" + ylabel + ">"
                     right_clean = right_clean.replace("Mean", "")
                 elif "Sigma" in title:
-                    ylabel = r"$\sigma$(" + ylabel + ")"
+                    ylabel = r"\sigma\,(" + ylabel + ")"
                     right_clean = right_clean.replace("Sigma", "")
                 xlabel = right_clean.strip()
+
             elif "Mean" in title:
                 right_clean = right.replace("Mean", "").strip()
                 ylabel = "<" + left + ">"
                 xlabel = right_clean
             elif "Sigma" in title:
                 right_clean = right.replace("Sigma", "").strip()
-                ylabel = r"$\sigma$<" + left + ">"
+                ylabel = r"\sigma\,<" + left + ">"
                 xlabel = right_clean
             else:
                 # Default: "ylabel vs xlabel"
@@ -605,13 +606,13 @@ class DQMPlotter:
             # Pull plots
             if "pull" not in title.lower():
                 if "eta" in title.lower():
-                    xlabel = r"$\eta$"
+                    xlabel = r"\eta"
                 elif "pt2" in title.lower():
-                    xlabel = r"$p_{\text{T}}^2$"
+                    xlabel = r"p_{\text{T}}^2"
                 elif "pt" in title.lower():
-                    xlabel = r"$p_{\text{T}}$"
+                    xlabel = r"p_{\text{T}}"
                 elif "phi" in title.lower():
-                    xlabel = r"$\phi$"
+                    xlabel = r"\phi"
             # Efficiency and turn-on plots
             if "eff" in title.lower():
                 ylabel = "Efficiency"
