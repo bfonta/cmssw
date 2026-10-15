@@ -16,6 +16,8 @@ from ..modules.hltParticleFlowRecHitECALUnseeded_cfi import *
 from ..modules.hltParticleFlowRecHitHBHE_cfi import *
 from ..modules.hltBarrelLayerClustersEB_cfi import *
 from ..modules.hltBarrelLayerClustersHB_cfi import *
+from ..modules.hltBarrelSoARecHitsEBProducer_cfi import *
+from ..modules.hltBarrelSoARecHitsHBProducer_cfi import *
 from ..sequences.HLTPfRecHitUnseededSequence_cfi import *
 
 from Configuration.ProcessModifiers.alpaka_cff import alpaka
@@ -86,6 +88,8 @@ _HLTTICLLocalRecoSequence_heterogeneous_withBarrel = cms.Sequence(
         hltHgcalLayerClustersHSci+
         hltHgcalLayerClustersHSi+
         HLTPfRecHitUnseededSequence+
+        hltBarrelSoARecHitsEBProducer+
+        hltBarrelSoARecHitsHBProducer+
         hltBarrelLayerClustersEB+
         hltBarrelLayerClustersHB+
         hltMergeLayerClusters
