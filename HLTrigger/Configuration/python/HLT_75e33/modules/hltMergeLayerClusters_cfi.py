@@ -32,3 +32,13 @@ ticl_barrel.toModify(hltMergeLayerClusters,
     layerClusters = [*hgcal_layerClusters, *barrel_layerClusters],
     time_layerclusters = [*hgcal_time_layerClusters, *barrel_time_layerClusters]
 )
+
+# The barrel has 'SerialSync' layer clusters only with its alpaka chain
+barrel_layerClustersSerialSync = [x + "SerialSync" for x in barrel_layerClusters]
+barrel_time_layerClustersSerialSync = [x + "SerialSync:timeLayerCluster" for x in barrel_layerClusters]
+
+from Configuration.ProcessModifiers.alpaka_cff import alpaka
+(ticl_barrel & alpaka).toModify(hltMergeLayerClustersSerialSync,
+    layerClusters = [*hgcal_layerClustersSerialSync, *barrel_layerClustersSerialSync],
+    time_layerclusters = [*hgcal_time_layerClustersSerialSync, *barrel_time_layerClustersSerialSync]
+)

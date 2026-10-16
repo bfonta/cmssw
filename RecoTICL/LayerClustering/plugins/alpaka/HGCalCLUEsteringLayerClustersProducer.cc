@@ -13,7 +13,7 @@
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/stream/EDProducer.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-#include "HGCalCLUEsteringAlgoWrapper.h"
+#include "CLUEsteringAlgoWrapper.h"
 
 namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
@@ -44,7 +44,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                 recHits->metadata().size(),
                 deltac_,
                 kappa_,
-                outlierDeltaFactor_,
+                deltac_ * outlierDeltaFactor_,
                 isScintillator_,
                 std::span<const uint32_t>(layerSizes),
                 recHits.view(),
@@ -71,7 +71,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     float const kappa_;
     float const outlierDeltaFactor_;
     bool const isScintillator_;
-    HGCalCLUEsteringAlgoWrapper const algo_{};
+    CLUEsteringAlgoWrapper const algo_{};
   };
 
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE

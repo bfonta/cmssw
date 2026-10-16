@@ -8,7 +8,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
-#include "HGCalCLUEsteringAlgoWrapper.h"
+#include "CLUEsteringAlgoWrapper.h"
 
 #include "CLUEstering/core/detail/defines.hpp"
 #include "CLUEstering/core/Clusterer.hpp"
@@ -38,15 +38,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   }  // namespace
 
-  void HGCalCLUEsteringAlgoWrapper::run(Queue& queue,
-                                        uint32_t nRecHits,
-                                        float dc,
-                                        float kappa,
-                                        float outlierDeltaFactor,
-                                        bool isScintillator,
-                                        std::span<const uint32_t> batchItemSizes,
-                                        HGCalSoARecHitsDeviceCollection::ConstView recHits,
-                                        HGCalSoARecHitsExtraDeviceCollection::View recHitsClustering) const {
+  void CLUEsteringAlgoWrapper::run(Queue& queue,
+                                   uint32_t nRecHits,
+                                   float dc,
+                                   float kappa,
+                                   float outlierDelta,
+                                   bool etaPhi,
+                                   std::span<const uint32_t> batchItemSizes,
+                                   HGCalSoARecHitsDeviceCollection::ConstView recHits,
+                                   HGCalSoARecHitsExtraDeviceCollection::View recHitsClustering) const {
     auto nClusters = make_device_view<unsigned int>(queue, recHitsClustering.numberOfClustersScalar());
     alpaka::memset(queue, nClusters, 0x0);
     if (nRecHits == 0) {
@@ -62,9 +62,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     d_points.set_density_uncertainty(recHits.sigmaNoise());
     d_points.set_tags(recHits.detid());
 
-    clue::Clusterer<2> algo(queue, dc, kappa, dc * outlierDeltaFactor);
-    if (isScintillator) {
-      // Scintillator (BH) cells cluster in (eta, phi)
+    clue::Clusterer<2> algo(queue, dc, kappa, outlierDelta);
+    if (etaPhi) {
+      // Scintillator (BH) and barrel cells cluster in (eta, phi)
       constexpr float kTwoPi = 2.f * static_cast<float>(M_PI);
       algo.setWrappedCoordinates(0, 1);
       algo.make_clusters(queue,

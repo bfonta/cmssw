@@ -12,3 +12,24 @@ hltBarrelLayerClustersEB = cms.EDProducer('BarrelLayerClusterProducer',
     type = cms.string('EBCLUE')
   )
 )
+
+# With the alpaka modifier, the layer clusters converted from the SoA of the alpaka chain
+# (hltBarrelSoARecHitsEB, hltBarrelCLUEsteringEB, hltBarrelSoALayerClustersEB) replace the CPU ones
+_hltBarrelLayerClustersEBFromSoA = cms.EDProducer("BarrelLayerClustersFromSoAProducer",
+    detector = cms.string('EB'),
+    barrelRecHitsLayerClustersSoA = cms.InputTag("hltBarrelCLUEsteringEB"),
+    barrelRecHitsSoA = cms.InputTag("hltBarrelSoARecHitsEB"),
+    src = cms.InputTag("hltBarrelSoALayerClustersEB"),
+    timeClname = cms.string('timeLayerCluster')
+)
+
+# Dedicated CPU ('SerialSync') instance, used by the alpakaValidationHLT GPU-vs-CPU comparison
+hltBarrelLayerClustersEBSerialSync = _hltBarrelLayerClustersEBFromSoA.clone(
+    barrelRecHitsLayerClustersSoA = "hltBarrelCLUEsteringEBSerialSync",
+    barrelRecHitsSoA = "hltBarrelSoARecHitsEBSerialSync",
+    src = "hltBarrelSoALayerClustersEBSerialSync"
+)
+
+from Configuration.ProcessModifiers.alpaka_cff import alpaka
+from Configuration.ProcessModifiers.ticl_barrel_cff import ticl_barrel
+(ticl_barrel & alpaka).toReplaceWith(hltBarrelLayerClustersEB, _hltBarrelLayerClustersEBFromSoA)

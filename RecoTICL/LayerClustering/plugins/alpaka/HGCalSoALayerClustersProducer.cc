@@ -13,7 +13,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
 
-#include "HGCalLayerClustersSoAAlgoWrapper.h"
+#include "LayerClustersSoAAlgoWrapper.h"
 
 namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
@@ -28,7 +28,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           layerClustersToken_{produces()},
           thresholdW0_(config.getParameter<float>("thresholdW0")),
           positionDeltaRho2_(config.getParameter<float>("positionDeltaRho2")),
-          isScintillator_(config.getParameter<std::string>("detector") == "BH"),
+          geometry_(config.getParameter<std::string>("detector") == "BH" ? LayerClustersGeometry::kScintillator
+                                                                         : LayerClustersGeometry::kSilicon),
           nHitsTime_(config.getParameter<unsigned int>("nHitsTime")) {}
 
     // The number of layer clusters is on the device, and the host needs it to allocate them
@@ -47,8 +48,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                 nLayerClusters_,
                 thresholdW0_,
                 positionDeltaRho2_,
-                isScintillator_,
+                geometry_,
                 nHitsTime_,
+                ::reco::CaloCluster::undefined,
                 iEvent.get(recHitsToken_).view(),
                 iEvent.get(recHitsClusteringToken_).view(),
                 layerClusters.view());
@@ -74,9 +76,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     device::EDPutToken<reco::CaloClusterDeviceCollection> const layerClustersToken_;
     float const thresholdW0_;
     float const positionDeltaRho2_;
-    bool const isScintillator_;
+    LayerClustersGeometry const geometry_;
     unsigned int const nHitsTime_;
-    HGCalLayerClustersSoAAlgoWrapper const algo_{};
+    LayerClustersSoAAlgoWrapper const algo_{};
     // copied from the device in acquire, used in produce
     unsigned int nLayerClusters_ = 0;
   };

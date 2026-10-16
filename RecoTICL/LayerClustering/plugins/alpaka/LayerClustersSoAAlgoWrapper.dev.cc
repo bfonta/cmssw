@@ -10,7 +10,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/prefixScan.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
-#include "HGCalLayerClustersSoAAlgoWrapper.h"
+#include "LayerClustersSoAAlgoWrapper.h"
 #include "ConstantsForClusters.h"
 
 namespace ALPAKA_ACCELERATOR_NAMESPACE {
@@ -36,11 +36,22 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       return (static_cast<uint64_t>(std::bit_cast<uint32_t>(energy)) << 32) | ~hit;
     }
 
+    // Barrel rechits store (eta, phi, r) in (dim1, dim2, dim3), r being the distance from the origin. Recover the
+    // cartesian position from them, as GlobalPoint::Polar in BarrelCLUEAlgoT::calculatePosition.
+    ALPAKA_FN_ACC ALPAKA_FN_INLINE void etaPhiRToXYZ(
+        const float eta, const float phi, const float r, float& x, float& y, float& z) {
+      const float theta = 2.f * std::atan(std::exp(-eta));
+      const float rho = r * std::sin(theta);
+      x = rho * std::cos(phi);
+      y = rho * std::sin(phi);
+      z = r * std::cos(theta);
+    }
+
     ALPAKA_FN_ACC ALPAKA_FN_INLINE uint32_t hitOfEnergyKey(const uint64_t key) { return ~static_cast<uint32_t>(key); }
 
     // Rechits without a time have a negative time error, and scintillator layer clusters have no time
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE bool hasTime(const bool isScintillator, const float timeError) {
-      return not(isScintillator or timeError < 0.f);
+    ALPAKA_FN_ACC ALPAKA_FN_INLINE bool hasTime(const LayerClustersGeometry geometry, const float timeError) {
+      return not(geometry == LayerClustersGeometry::kScintillator or timeError < 0.f);
     }
 
     // The time of a layer cluster and its error, in ns
@@ -133,7 +144,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // the most energetic rechit and the number of rechits with a time
     struct KernelLayerClusterEnergy {
       ALPAKA_FN_ACC void operator()(Acc1D const& acc,
-                                    bool isScintillator,
+                                    LayerClustersGeometry geometry,
                                     HGCalSoARecHitsDeviceCollection::ConstView recHits,
                                     HGCalSoARecHitsExtraDeviceCollection::ConstView recHitsClustering,
                                     reco::CaloClusterDeviceCollection::View layerClusters,
@@ -150,23 +161,24 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           if (recHitsClustering[i].isSeed() == 1) {
             layerClusters.indexes()[c].seedID() = recHits[i].detid();
           }
-          if (hasTime(isScintillator, recHits[i].timeError())) {
+          if (hasTime(geometry, recHits[i].timeError())) {
             alpaka::atomicAdd(acc, &timedHits[c], 1u);
           }
         }
       }
     };
 
-    // Per rechit -> per layer cluster: the weighted sums of the transverse positions and the sum of the weights.
-    // The scintillator rechits are weighted by their energy, the silicon rechits within 1.3 cm (1+6 cells, for all
-    // thicknesses) of the most energetic one by max(thresholdW0 + log(energy / cluster energy), 0).
+    // Per rechit -> per layer cluster: the weighted sums of the transverse positions (and of z for the barrel) and the
+    // sum of the weights. The scintillator and barrel rechits are weighted by their energy, the silicon rechits within
+    // 1.3 cm (1+6 cells, for all thicknesses) of the most energetic one by max(thresholdW0 + log(energy / cluster
+    // energy), 0).
     // Also copies the time and the time weight (1 / timeError^2) of each rechit with a time to the segment of its layer
     // cluster in times and weights, which starts at timedOffsets[c].
     struct KernelLayerClusterPositionSums {
       ALPAKA_FN_ACC void operator()(Acc1D const& acc,
                                     float thresholdW0,
                                     float positionDeltaRho2,
-                                    bool isScintillator,
+                                    LayerClustersGeometry geometry,
                                     HGCalSoARecHitsDeviceCollection::ConstView recHits,
                                     HGCalSoARecHitsExtraDeviceCollection::ConstView recHitsClustering,
                                     reco::CaloClusterDeviceCollection::View layerClusters,
@@ -184,13 +196,26 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
           // every rechit with a time takes part in the time, also the ones outside of the position window below
           const float timeError = recHits[i].timeError();
-          if (hasTime(isScintillator, timeError)) {
+          if (hasTime(geometry, timeError)) {
             const uint32_t slot = timedOffsets[c] + alpaka::atomicAdd(acc, &timedFilled[c], 1u);
             times[slot] = recHits[i].time();
             weights[slot] = 1.f / (timeError * timeError);
           }
 
-          if (isScintillator) {
+          if (geometry == LayerClustersGeometry::kBarrel) {
+            const float energy = recHits[i].energy();
+            float x;
+            float y;
+            float z;
+            etaPhiRToXYZ(recHits[i].dim1(), recHits[i].dim2(), recHits[i].dim3(), x, y, z);
+            alpaka::atomicAdd(acc, &layerClusters.position()[c].x(), x * energy);
+            alpaka::atomicAdd(acc, &layerClusters.position()[c].y(), y * energy);
+            alpaka::atomicAdd(acc, &layerClusters.position()[c].z(), z * energy);
+            alpaka::atomicAdd(acc, &positionWeightSum[c], energy);
+            continue;
+          }
+
+          if (geometry == LayerClustersGeometry::kScintillator) {
             const float energy = recHits[i].energy();
             float x;
             float y;
@@ -218,11 +243,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     // Per layer cluster: the transverse position from the weighted sums, or the one of its most energetic rechit if
     // no rechit has a weight, z and the layer of its most energetic rechit, and the time from the times of its rechits.
-    // Also sets the columns not computed yet to the defaults of reco::CaloCluster.
+    // For the barrel, x, y and z all come from the weighted sums, and are 0 if no rechit has a weight, like in
+    // BarrelCLUEAlgoT. Also sets the algorithm and the columns not computed yet to the defaults of reco::CaloCluster.
     struct KernelLayerClusterPositionAndTime {
       ALPAKA_FN_ACC void operator()(Acc1D const& acc,
-                                    bool isScintillator,
+                                    LayerClustersGeometry geometry,
                                     uint32_t nHitsTime,
+                                    ::reco::CaloCluster::AlgoId algoId,
                                     HGCalSoARecHitsDeviceCollection::ConstView recHits,
                                     reco::CaloClusterDeviceCollection::View layerClusters,
                                     const float* positionWeightSum,
@@ -233,11 +260,22 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         for (auto c : uniform_elements(acc, layerClusters.position().metadata().size())) {
           const uint32_t maxHit = hitOfEnergyKey(maxEnergyKey[c]);
           auto position = layerClusters.position()[c];
-          if (positionWeightSum[c] > 0.f) {
+          if (geometry == LayerClustersGeometry::kBarrel) {
+            if (positionWeightSum[c] != 0.f) {
+              const float invWeightSum = 1.f / positionWeightSum[c];
+              position.x() *= invWeightSum;
+              position.y() *= invWeightSum;
+              position.z() *= invWeightSum;
+            } else {
+              position.x() = 0.f;
+              position.y() = 0.f;
+              position.z() = 0.f;
+            }
+          } else if (positionWeightSum[c] > 0.f) {
             const float invWeightSum = 1.f / positionWeightSum[c];
             position.x() *= invWeightSum;
             position.y() *= invWeightSum;
-          } else if (isScintillator) {
+          } else if (geometry == LayerClustersGeometry::kScintillator) {
             float x;
             float y;
             etaPhiZToXY(recHits[maxHit].dim1(), recHits[maxHit].dim2(), recHits[maxHit].dim3(), x, y);
@@ -247,7 +285,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             position.x() = recHits[maxHit].dim1();
             position.y() = recHits[maxHit].dim2();
           }
-          position.z() = recHits[maxHit].dim3();
+          if (geometry != LayerClustersGeometry::kBarrel) {
+            position.z() = recHits[maxHit].dim3();
+          }
           position.layer() = recHits[maxHit].layer();
 
           const uint32_t first = timedOffsets[c];
@@ -258,7 +298,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
           layerClusters.energy()[c].correctedEnergy() = -1.f;
           layerClusters.energy()[c].correctedEnergyUncertainty() = -1.f;
-          layerClusters.indexes()[c].algoID() = ::reco::CaloCluster::undefined;
+          layerClusters.indexes()[c].algoID() = algoId;
           layerClusters.indexes()[c].flags() = 0;
         }
       }
@@ -266,15 +306,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   }  // namespace
 
-  void HGCalLayerClustersSoAAlgoWrapper::run(Queue& queue,
-                                             uint32_t nLayerClusters,
-                                             float thresholdW0,
-                                             float positionDeltaRho2,
-                                             bool isScintillator,
-                                             uint32_t nHitsTime,
-                                             HGCalSoARecHitsDeviceCollection::ConstView recHits,
-                                             HGCalSoARecHitsExtraDeviceCollection::ConstView recHitsClustering,
-                                             reco::CaloClusterDeviceCollection::View layerClusters) const {
+  void LayerClustersSoAAlgoWrapper::run(Queue& queue,
+                                        uint32_t nLayerClusters,
+                                        float thresholdW0,
+                                        float positionDeltaRho2,
+                                        LayerClustersGeometry geometry,
+                                        uint32_t nHitsTime,
+                                        ::reco::CaloCluster::AlgoId algoId,
+                                        HGCalSoARecHitsDeviceCollection::ConstView recHits,
+                                        HGCalSoARecHitsExtraDeviceCollection::ConstView recHitsClustering,
+                                        reco::CaloClusterDeviceCollection::View layerClusters) const {
     if (nLayerClusters == 0) {
       return;
     }
@@ -284,6 +325,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     alpaka::memset(queue, x, 0x0);
     auto y = make_device_view<float>(queue, layerClusters.position().y());
     alpaka::memset(queue, y, 0x0);
+    // only summed for the barrel, otherwise taken from the most energetic rechit
+    auto z = make_device_view<float>(queue, layerClusters.position().z());
+    alpaka::memset(queue, z, 0x0);
     auto cells = make_device_view<int>(queue, layerClusters.position().cells());
     alpaka::memset(queue, cells, 0x0);
     auto energy = make_device_view<float>(queue, layerClusters.energy().energy());
@@ -316,7 +360,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     alpaka::exec<Acc1D>(queue,
                         workDivRecHits,
                         KernelLayerClusterEnergy{},
-                        isScintillator,
+                        geometry,
                         recHits,
                         recHitsClustering,
                         layerClusters,
@@ -329,7 +373,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                         KernelLayerClusterPositionSums{},
                         thresholdW0,
                         positionDeltaRho2,
-                        isScintillator,
+                        geometry,
                         recHits,
                         recHitsClustering,
                         layerClusters,
@@ -342,8 +386,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     alpaka::exec<Acc1D>(queue,
                         workDivLayerClusters,
                         KernelLayerClusterPositionAndTime{},
-                        isScintillator,
+                        geometry,
                         nHitsTime,
+                        algoId,
                         recHits,
                         layerClusters,
                         positionWeightSum.data(),

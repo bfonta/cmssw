@@ -12,3 +12,17 @@ hltBarrelLayerClustersEBL1Seeded = cms.EDProducer('BarrelLayerClusterProducer',
     type = cms.string('EBCLUE')
   )
 )
+
+# With the alpaka modifier, the layer clusters converted from the SoA of the alpaka chain
+# (hltBarrelSoARecHitsEBL1Seeded, hltBarrelCLUEsteringEBL1Seeded, hltBarrelSoALayerClustersEBL1Seeded) replace the CPU ones
+_hltBarrelLayerClustersEBL1SeededFromSoA = cms.EDProducer("BarrelLayerClustersFromSoAProducer",
+    detector = cms.string('EB'),
+    barrelRecHitsLayerClustersSoA = cms.InputTag("hltBarrelCLUEsteringEBL1Seeded"),
+    barrelRecHitsSoA = cms.InputTag("hltBarrelSoARecHitsEBL1Seeded"),
+    src = cms.InputTag("hltBarrelSoALayerClustersEBL1Seeded"),
+    timeClname = cms.string('timeLayerCluster')
+)
+
+from Configuration.ProcessModifiers.alpaka_cff import alpaka
+from Configuration.ProcessModifiers.ticl_barrel_cff import ticl_barrel
+(ticl_barrel & alpaka).toReplaceWith(hltBarrelLayerClustersEBL1Seeded, _hltBarrelLayerClustersEBL1SeededFromSoA)

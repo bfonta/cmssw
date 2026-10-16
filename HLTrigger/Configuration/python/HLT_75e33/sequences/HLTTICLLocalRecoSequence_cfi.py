@@ -7,8 +7,7 @@ from ..sequences.HLTHgcalLayerClustersSequence_cfi import *
 # Barrel layer clusters
 from ..modules.hltParticleFlowRecHitECALUnseeded_cfi import *
 from ..modules.hltParticleFlowRecHitHBHE_cfi import *
-from ..modules.hltBarrelLayerClustersEB_cfi import *
-from ..modules.hltBarrelLayerClustersHB_cfi import *
+from ..sequences.HLTBarrelLayerClustersSequence_cfi import *
 from ..sequences.HLTPfRecHitUnseededSequence_cfi import *
 
 from Configuration.ProcessModifiers.alpakaValidationHLT_cff import alpakaValidationHLT
@@ -37,8 +36,22 @@ _HLTTICLLocalRecoSequence_withBarrel = cms.Sequence(
         hltHGCalRecHit+
         HLTHgcalLayerClustersSequence+
         HLTPfRecHitUnseededSequence+
-        hltBarrelLayerClustersEB+
-        hltBarrelLayerClustersHB+
+        HLTBarrelLayerClustersSequence+
         hltMergeLayerClusters
 )
 ticl_barrel.toReplaceWith(HLTTICLLocalRecoSequence, _HLTTICLLocalRecoSequence_withBarrel)
+
+#GPU+CPU instance with the barrel alpaka chain, to be triggered by 'alpakaValidationHLT' with 'ticl_barrel' and 'alpaka'
+_HLTTICLLocalRecoSequence_withBarrel_heterogeneousGPUCPU = cms.Sequence(
+        hltHGCalUncalibRecHit+
+        hltHGCalRecHit+
+        HLTHgcalLayerClustersSequence+
+        HLTPfRecHitUnseededSequence+
+        HLTBarrelLayerClustersSequence+
+        hltMergeLayerClusters+
+        #CPU part: runs dedicated 'SerialSync' modules on CPU
+        HLTHgcalLayerClustersSequenceSerialSync+
+        HLTBarrelLayerClustersSequenceSerialSync+
+        hltMergeLayerClustersSerialSync)
+from Configuration.ProcessModifiers.alpaka_cff import alpaka
+(ticl_barrel & alpaka & alpakaValidationHLT).toReplaceWith(HLTTICLLocalRecoSequence, _HLTTICLLocalRecoSequence_withBarrel_heterogeneousGPUCPU)

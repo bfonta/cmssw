@@ -193,6 +193,11 @@ alpaka.toReplaceWith(pfClusteringHBHEHFTask, _alpaka_pfClusteringHBHEHFTask)
 alpaka.toReplaceWith(pfClusteringHBHEHFOnlyTask, _alpaka_pfClusteringHBHEHFOnlyTask)
 
 from RecoTICL.LayerClustering.barrelLayerClusters_cff import barrelLayerClustersEB, barrelLayerClustersHB
+from RecoTICL.LayerClustering.barrelLayerClusters_cff import barrelLayerClustersEBAlpakaTask, barrelLayerClustersHBAlpakaTask
+from RecoTICL.LayerClustering.barrelLayerClusters_cff import (
+    barrelSoARecHitsEB, barrelCLUEsteringEB, barrelSoALayerClustersEB,
+    barrelSoARecHitsHB, barrelCLUEsteringHB, barrelSoALayerClustersHB,
+)
 _pfClusteringECALTask = pfClusteringECALTask.copy()
 _pfClusteringECALTask.add(barrelLayerClustersEB)
 
@@ -200,6 +205,9 @@ _pfClusteringHBHEHFTask = pfClusteringHBHEHFTask.copy()
 _pfClusteringHBHEHFTask.add(barrelLayerClustersHB)
 
 from Configuration.ProcessModifiers.ticl_barrel_cff import ticl_barrel
+# with alpaka, barrelLayerClusters{EB,HB} are converted from the SoA produced by the alpaka chains
+(ticl_barrel & alpaka).toModify(_pfClusteringECALTask, func = lambda t: t.add(barrelLayerClustersEBAlpakaTask))
+(ticl_barrel & alpaka).toModify(_pfClusteringHBHEHFTask, func = lambda t: t.add(barrelLayerClustersHBAlpakaTask))
 ticl_barrel.toReplaceWith(pfClusteringECALTask, _pfClusteringECALTask)
 ticl_barrel.toReplaceWith(pfClusteringHBHEHFTask, _pfClusteringHBHEHFTask)
 
