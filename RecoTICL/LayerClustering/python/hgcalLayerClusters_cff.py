@@ -27,6 +27,7 @@ from RecoTICL.LayerClustering.hgCalCLUEsteringLayerClustersProducer_cfi import h
 from RecoTICL.LayerClustering.hgCalSoALayerClustersProducer_cfi import hgCalSoALayerClustersProducer
 from RecoTICL.LayerClustering.hgCalLayerClustersFromSoAProducer_cfi import hgCalLayerClustersFromSoAProducer
 from RecoTICL.LayerClustering.hgCalMergedLayerClustersFromSoAProducer_cfi import hgCalMergedLayerClustersFromSoAProducer
+from RecoTICL.LayerClustering.hgCalSoAMergeLayerClustersProducer_cfi import hgCalSoAMergeLayerClustersProducer
 
 # EE/FH/BH share the same silicon energy-threshold constants. The scintillator
 # (BH) rechits have no silicon thickness: the producer gives them the last
@@ -111,11 +112,6 @@ _v19SiSoAParams = dict(
 for _soa in (hgcalSoARecHitsEE, hgcalSoARecHitsHSi, hgcalSoARecHitsHSci):
     phase2_hgcalV19.toModify(_soa, **_v19SiSoAParams)
 
-hgcalLayerClustersAlpakaTask = cms.Task(
-    hgcalSoARecHitsEE,   hgcalCLUEsteringEE,   hgcalSoALayerClustersEE,
-    hgcalSoARecHitsHSi,  hgcalCLUEsteringHSi,  hgcalSoALayerClustersHSi,
-    hgcalSoARecHitsHSci, hgcalCLUEsteringHSci, hgcalSoALayerClustersHSci,
-)
 hgcalLayerClustersHFNoseAlpakaTask = cms.Task(
     hgcalSoARecHitsHFNose, hgcalCLUEsteringHFNose, hgcalSoALayerClustersHFNose,
 )
@@ -134,3 +130,16 @@ from Configuration.ProcessModifiers.ticl_barrel_cff import ticl_barrel
 ticl_barrel.toModify(hgcalMergeLayerClusters,
     extraLayerClusters = ['barrelLayerClustersEB', 'barrelLayerClustersHB'],
     extraTimeLayerClusters = ['barrelLayerClustersEB:timeLayerCluster', 'barrelLayerClustersHB:timeLayerCluster'])
+
+# The layer clusters of the HGCAL components merged on the device. They are merged in the same components and in the
+# same order as in hgcalMergeLayerClusters (the legacy merge), so that both merged collections index the same
+# HGCAL layer clusters
+hgcalSoAMergeLayerClusters = hgCalSoAMergeLayerClustersProducer.clone(
+    hgcalLayerClustersSoA = hgcalMergeLayerClusters.layerClustersSoA.value())
+
+hgcalLayerClustersAlpakaTask = cms.Task(
+    hgcalSoARecHitsEE,   hgcalCLUEsteringEE,   hgcalSoALayerClustersEE,
+    hgcalSoARecHitsHSi,  hgcalCLUEsteringHSi,  hgcalSoALayerClustersHSi,
+    hgcalSoARecHitsHSci, hgcalCLUEsteringHSci, hgcalSoALayerClustersHSci,
+    hgcalSoAMergeLayerClusters,
+)
