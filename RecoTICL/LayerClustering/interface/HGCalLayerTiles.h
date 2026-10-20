@@ -71,9 +71,12 @@ public:
     }
     return std::fmaf(d1, d1, d2 * d2);
   }
-  int getGlobalBin(float dim1, float dim2) const { return getDim1Bin(dim1) + getDim2Bin(dim2) * T::nColumns; }
 
   int getGlobalBinByBin(int dim1Bin, int dim2Bin) const { return dim1Bin + dim2Bin * T::nColumns; }
+  
+  int getGlobalBin(float dim1, float dim2) const {
+	return getGlobalBinByBin(getDim1Bin(dim1), getDim2Bin(dim2));
+  }
 
   std::array<int, 4> searchBox(float dim1Min, float dim1Max, float dim2Min, float dim2Max) const {
     if constexpr (std::is_same_v<WRAPPER, PhiWrapper>) {
