@@ -40,7 +40,6 @@ void HGCalCLUEAlgoT<T, STRATEGY>::populate(const HGCRecHitCollection& hits) {
   for (unsigned int i = 0; i < hits.size(); ++i) {
     const HGCRecHit& hgrh = hits[i];
     DetId detid = hgrh.detid();
-    auto cellType = rhtools_.getSensorGroup(detid);
     unsigned int layerOnSide = (rhtools_.getLayerWithOffset(detid) - 1);
 
     // set sigmaNoise default value 1 to use kappa value directly in case of
@@ -55,17 +54,18 @@ void HGCalCLUEAlgoT<T, STRATEGY>::populate(const HGCRecHitCollection& hits) {
       if (detid.det() == DetId::HGCalHSi || detid.subdetId() == HGCHEF) {
         storedThreshold = thresholds_[layerOnSide][thickness_index + deltasi_index_regemfac_];
       }
-      sigmaNoise = v_sigmaNoise_[layerOnSide][thickness_index];
-
       if (hgrh.energy() < storedThreshold)
         continue;  // this sets the ZS threshold at ecut times the sigma noise
                    // for the sensor
+
+	  sigmaNoise = v_sigmaNoise_[layerOnSide][thickness_index];
     }
     if (!dependSensor_ && hgrh.energy() < ecut_)
       continue;
     const GlobalPoint position(rhtools_.getPosition(detid));
     int offset = ((rhtools_.zside(detid) + 1) >> 1) * maxlayer_;
     int layer = layerOnSide + offset;
+	auto cellType = rhtools_.getSensorGroup(detid);
     cells_[layer].cellType.emplace_back(cellType);
     // setting the layer position only once per layer
     if (cells_[layer].layerDim3 == std::numeric_limits<float>::infinity())
