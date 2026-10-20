@@ -37,32 +37,24 @@ public:
   /**
     * @brief compute bin for dim1 (x or eta)
     *
-    * @param[in] dim for bining
+    * @param[in] dim for binning
     * @return computed bin
     */
   int getDim1Bin(float dim) const {
-    constexpr float dimRange = T::maxDim1 - T::minDim1;
-    static_assert(dimRange >= 0.);
-    constexpr float r = T::nColumns / dimRange;
-    int dimBin = (dim - T::minDim1) * r;
-    dimBin = std::clamp(dimBin, 0, T::nColumns - 1);
-    return dimBin;
+    int dimBin = (dim - T::minDim1) * T::invDim1BinSize;
+    return std::clamp(dimBin, 0, T::nColumns - 1);
   }
 
   /**
     * @brief compute bin for dim2 (y or phi)
     *
-    * @param[in] dim for bining
+    * @param[in] dim for binning
     * @return computed bin
     */
   int getDim2Bin(float dim2) const {
     if constexpr (std::is_same_v<WRAPPER, NoPhiWrapper>) {
-      constexpr float dimRange = T::maxDim2 - T::minDim2;
-      static_assert(dimRange >= 0.);
-      constexpr float r = T::nRows / dimRange;
-      int dimBin = (dim2 - T::minDim2) * r;
-      dimBin = std::clamp(dimBin, 0, T::nRows - 1);
-      return dimBin;
+      int dimBin = (dim2 - T::minDim2) * T::invDim2BinSize;
+      return std::clamp(dimBin, 0, T::nRows - 1);
     } else {
       auto normPhi = normalizedPhi(dim2);
       constexpr float r = T::nRows * M_1_PI * 0.5f;
@@ -95,7 +87,7 @@ public:
     int dim2BinMax = getDim2Bin(dim2Max);
     if constexpr (std::is_same_v<WRAPPER, PhiWrapper>) {
       // If the search window cross the phi-bin boundary, add T::nPhiBins to the
-      // MAx value. This guarantees that the caller can perform a valid doule
+      // max value. This guarantees that the caller can perform a valid doule
       // loop on eta and phi. It is the caller responsibility to perform a module
       // operation on the phiBin values returned by this function, to explore the
       // correct bins.
