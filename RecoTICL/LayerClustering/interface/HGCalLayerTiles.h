@@ -71,9 +71,6 @@ public:
     }
   }
 
-  int mPiPhiBin = getDim2Bin(-M_PI);
-  int pPiPhiBin = getDim2Bin(M_PI);
-
   inline float distance2(float dim1Cell1, float dim2Cell1, float dim1Cell2, float dim2Cell2) const {  // distance squared
     float d1 = dim1Cell1 - dim1Cell2;
     float d2 = dim2Cell1 - dim2Cell2;
