@@ -291,13 +291,19 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateLocalDensity(const T& lt,
                                                         HGCalScintillatorStrategy) {
   auto& cellsOnLayer = cells_[layerId];
   unsigned int numberOfCells = cellsOnLayer.detid.size();
-  std::vector<int> iPhiOf(numberOfCells), iEtaOf(numberOfCells);
-  for (unsigned int i = 0; i < numberOfCells; ++i) {
-    const HGCScintillatorDetId id(cellsOnLayer.detid[i]);
-    iPhiOf[i] = id.iphi();
-    iEtaOf[i] = id.ieta();
+  std::vector<int> iPhiOf, iEtaOf;
+  int nPhi;
+  if (use2x2_) {
+	nPhi = rhtools_.getScintMaxIphi(cellsOnLayer.detid[0]);  
+	iPhiOf.resize(numberOfCells);
+	iEtaOf.resize(numberOfCells);
+    for (unsigned int i = 0; i < numberOfCells; ++i) {
+	  const HGCScintillatorDetId id(cellsOnLayer.detid[i]);
+	  iPhiOf[i] = id.iphi();
+	  iEtaOf[i] = id.ieta();
+	}
   }
-  
+
   for (unsigned int i = 0; i < numberOfCells; i++) {
 	cellsOnLayer.rho[i] += cellsOnLayer.weight[i];
     const float delta = deltas_c[cellsOnLayer.cellType[i]];
@@ -321,9 +327,11 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateLocalDensity(const T& lt,
 
 			if (use2x2_) {
 			  int dIPhi = iPhiOf[otherId] - iPhiOf[i];
-			  dIPhi += abs(dIPhi) < 2 ? 0
-				: dIPhi < 0    ? scintMaxIphi_
-				: -scintMaxIphi_;  // cells with iPhi=288 and iPhi=1 should be neighboring cells
+			  if (dIPhi > nPhi / 2)
+				dIPhi -= nPhi;
+			  else if (dIPhi < -nPhi / 2)
+				dIPhi += nPhi;
+			  
 			  int dIEta = iEtaOf[otherId] - iEtaOf[i];
 			  LogDebug("HGCalCLUEAlgo") << "  Debugging calculateLocalDensity for Scintillator: \n"
 										<< "    cell: " << otherId << " energy: " << cellsOnLayer.weight[otherId]
