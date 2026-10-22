@@ -94,7 +94,6 @@ void HGCalCLUEAlgoT<T, STRATEGY>::prepareDataStructures(unsigned int l) {
   cells_[l].clusterIndex.resize(cellsSize, -1);
   cells_[l].followers.resize(cellsSize);
   cells_[l].isSeed.resize(cellsSize, false);
-  cells_[l].cellType.resize(cellsSize, -1);
 }
 
 // Create a vector of Hexels associated to one cluster from a collection of
