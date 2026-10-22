@@ -316,19 +316,20 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateLocalDensity(const T& lt,
 		  if (otherId == i)
 			continue;
           if (distance(lt, i, otherId, layerId) < delta) {
-            int dIPhi = iPhiOf[otherId] - iPhiOf[i];
-            dIPhi += abs(dIPhi) < 2 ? 0
-                     : dIPhi < 0    ? scintMaxIphi_
-                                    : -scintMaxIphi_;  // cells with iPhi=288 and iPhi=1 should be neighboring cells
-            int dIEta = iEtaOf[otherId] - iEtaOf[i];
-            LogDebug("HGCalCLUEAlgo") << "  Debugging calculateLocalDensity for Scintillator: \n"
-                                      << "    cell: " << otherId << " energy: " << cellsOnLayer.weight[otherId]
-                                      << " otherIPhi: " << iPhiOf[otherId] << " iPhi: " << iPhiOf[i] << " otherIEta: " << iEtaOf[otherId]
-                                      << " iEta: " << iEtaOf[i] << "\n";
-
 			auto neighborCellContribution = 0.5f * cellsOnLayer.weight[otherId];
 			all += neighborCellContribution;
+
 			if (use2x2_) {
+			  int dIPhi = iPhiOf[otherId] - iPhiOf[i];
+			  dIPhi += abs(dIPhi) < 2 ? 0
+				: dIPhi < 0    ? scintMaxIphi_
+				: -scintMaxIphi_;  // cells with iPhi=288 and iPhi=1 should be neighboring cells
+			  int dIEta = iEtaOf[otherId] - iEtaOf[i];
+			  LogDebug("HGCalCLUEAlgo") << "  Debugging calculateLocalDensity for Scintillator: \n"
+										<< "    cell: " << otherId << " energy: " << cellsOnLayer.weight[otherId]
+										<< " otherIPhi: " << iPhiOf[otherId] << " iPhi: " << iPhiOf[i] << " otherIEta: " << iEtaOf[otherId]
+										<< " iEta: " << iEtaOf[i] << "\n";
+
 			  if (dIPhi >= 0 && dIEta >= 0)
 				northeast += neighborCellContribution;
 			  if (dIPhi <= 0 && dIEta >= 0)
