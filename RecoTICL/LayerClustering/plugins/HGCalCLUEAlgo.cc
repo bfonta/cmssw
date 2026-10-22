@@ -256,7 +256,7 @@ template <typename T, typename STRATEGY>
 void HGCalCLUEAlgoT<T, STRATEGY>::calculateLocalDensity(const T& lt,
                                                         const unsigned int layerId,
                                                         const std::vector<float>& deltas_c,
-                                                        HGCalSiliconStrategy strategy) {
+                                                        HGCalSiliconStrategy) {
   auto& cellsOnLayer = cells_[layerId];
   unsigned int numberOfCells = cellsOnLayer.detid.size();
   for (unsigned int i = 0; i < numberOfCells; i++) {
@@ -280,7 +280,7 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateLocalDensity(const T& lt,
       }
     }
     LogDebug("HGCalCLUEAlgo") << "Debugging calculateLocalDensity: \n"
-                              << "  cell: " << i << " eta: " << cellsOnLayer.dim1[i] << " phi: " << cellsOnLayer.dim2[i]
+                              << "  cell: " << i << " x: " << cellsOnLayer.dim1[i] << " y: " << cellsOnLayer.dim2[i]
                               << " energy: " << cellsOnLayer.weight[i] << " density: " << cellsOnLayer.rho[i] << "\n";
   }
 }
@@ -288,16 +288,16 @@ template <typename T, typename STRATEGY>
 void HGCalCLUEAlgoT<T, STRATEGY>::calculateLocalDensity(const T& lt,
                                                         const unsigned int layerId,
                                                         const std::vector<float>& deltas_c,
-                                                        HGCalScintillatorStrategy strategy) {
+                                                        HGCalScintillatorStrategy) {
   auto& cellsOnLayer = cells_[layerId];
   unsigned int numberOfCells = cellsOnLayer.detid.size();
   for (unsigned int i = 0; i < numberOfCells; i++) {
+	cellsOnLayer.rho[i] += cellsOnLayer.weight[i];
     const float delta = deltas_c[cellsOnLayer.cellType[i]];
     std::array<int, 4> search_box = lt.searchBox(cellsOnLayer.dim1[i] - delta,
                                                  cellsOnLayer.dim1[i] + delta,
                                                  cellsOnLayer.dim2[i] - delta,
                                                  cellsOnLayer.dim2[i] + delta);
-    cellsOnLayer.rho[i] += cellsOnLayer.weight[i];
     float northeast(0), northwest(0), southeast(0), southwest(0), all(0);
     for (int etaBin = search_box[0]; etaBin < search_box[1] + 1; ++etaBin) {
       for (int phiBin = search_box[2]; phiBin < search_box[3] + 1; ++phiBin) {
