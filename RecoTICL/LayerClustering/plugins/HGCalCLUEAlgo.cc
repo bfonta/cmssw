@@ -313,6 +313,8 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateLocalDensity(const T& lt,
         size_t binSize = lt[binId].size();
         for (unsigned int j = 0; j < binSize; j++) {
           unsigned int otherId = lt[binId][j];
+		  if (otherId == i)
+			continue;
           if (distance(lt, i, otherId, layerId) < delta) {
             int dIPhi = iPhiOf[otherId] - iPhiOf[i];
             dIPhi += abs(dIPhi) < 2 ? 0
@@ -324,27 +326,25 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateLocalDensity(const T& lt,
                                       << " otherIPhi: " << iPhiOf[otherId] << " iPhi: " << iPhiOf[i] << " otherIEta: " << iEtaOf[otherId]
                                       << " iEta: " << iEtaOf[i] << "\n";
 
-            if (otherId != i) {
-              auto neighborCellContribution = 0.5f * cellsOnLayer.weight[otherId];
-              all += neighborCellContribution;
-			  if (use2x2_) {
-				if (dIPhi >= 0 && dIEta >= 0)
-				  northeast += neighborCellContribution;
-				if (dIPhi <= 0 && dIEta >= 0)
-				  southeast += neighborCellContribution;
-				if (dIPhi >= 0 && dIEta <= 0)
-				  northwest += neighborCellContribution;
-				if (dIPhi <= 0 && dIEta <= 0)
-				  southwest += neighborCellContribution;
-				LogDebug("HGCalCLUEAlgo") << "  Debugging calculateLocalDensity for Scintillator: \n"
-										  << "    northeast: " << northeast << " southeast: " << southeast
-										  << " northwest: " << northwest << " southwest: " << southwest << "\n";
-			  }
-			  else {
-				LogDebug("HGCalCLUEAlgo") << "  Debugging calculateLocalDensity for Scintillator: \n"
-										  << "    all: " << all << "\n";
-			  }
-            }
+			auto neighborCellContribution = 0.5f * cellsOnLayer.weight[otherId];
+			all += neighborCellContribution;
+			if (use2x2_) {
+			  if (dIPhi >= 0 && dIEta >= 0)
+				northeast += neighborCellContribution;
+			  if (dIPhi <= 0 && dIEta >= 0)
+				southeast += neighborCellContribution;
+			  if (dIPhi >= 0 && dIEta <= 0)
+				northwest += neighborCellContribution;
+			  if (dIPhi <= 0 && dIEta <= 0)
+				southwest += neighborCellContribution;
+			  LogDebug("HGCalCLUEAlgo") << "  Debugging calculateLocalDensity for Scintillator: \n"
+										<< "    northeast: " << northeast << " southeast: " << southeast
+										<< " northwest: " << northwest << " southwest: " << southwest << "\n";
+			}
+			else {
+			  LogDebug("HGCalCLUEAlgo") << "  Debugging calculateLocalDensity for Scintillator: \n"
+										<< "    all: " << all << "\n";
+			}
           }
         }
       }
