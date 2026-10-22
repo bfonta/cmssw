@@ -90,7 +90,7 @@ public:
     int dim2BinMax = getDim2Bin(dim2Max);
     if constexpr (std::is_same_v<WRAPPER, PhiWrapper>) {
       // If the search window cross the phi-bin boundary, add T::nPhiBins to the
-      // max value. This guarantees that the caller can perform a valid doule
+      // max value. This guarantees that the caller can perform a valid double
       // loop on eta and phi. It is the caller responsibility to perform a module
       // operation on the phiBin values returned by this function, to explore the
       // correct bins.

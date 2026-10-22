@@ -291,6 +291,13 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateLocalDensity(const T& lt,
                                                         HGCalScintillatorStrategy) {
   auto& cellsOnLayer = cells_[layerId];
   unsigned int numberOfCells = cellsOnLayer.detid.size();
+  std::vector<int> iPhiOf(numberOfCells), iEtaOf(numberOfCells);
+  for (unsigned int i = 0; i < numberOfCells; ++i) {
+    const HGCScintillatorDetId id(cellsOnLayer.detid[i]);
+    iPhiOf[i] = id.iphi();
+    iEtaOf[i] = id.ieta();
+  }
+  
   for (unsigned int i = 0; i < numberOfCells; i++) {
 	cellsOnLayer.rho[i] += cellsOnLayer.weight[i];
     const float delta = deltas_c[cellsOnLayer.cellType[i]];
@@ -307,19 +314,15 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateLocalDensity(const T& lt,
         for (unsigned int j = 0; j < binSize; j++) {
           unsigned int otherId = lt[binId][j];
           if (distance(lt, i, otherId, layerId) < delta) {
-            int iPhi = HGCScintillatorDetId(cellsOnLayer.detid[i]).iphi();
-            int otherIPhi = HGCScintillatorDetId(cellsOnLayer.detid[otherId]).iphi();
-            int iEta = HGCScintillatorDetId(cellsOnLayer.detid[i]).ieta();
-            int otherIEta = HGCScintillatorDetId(cellsOnLayer.detid[otherId]).ieta();
-            int dIPhi = otherIPhi - iPhi;
+            int dIPhi = iPhiOf[otherId] - iPhiOf[i];
             dIPhi += abs(dIPhi) < 2 ? 0
                      : dIPhi < 0    ? scintMaxIphi_
                                     : -scintMaxIphi_;  // cells with iPhi=288 and iPhi=1 should be neighboring cells
-            int dIEta = otherIEta - iEta;
+            int dIEta = iEtaOf[otherId] - iEtaOf[i];
             LogDebug("HGCalCLUEAlgo") << "  Debugging calculateLocalDensity for Scintillator: \n"
                                       << "    cell: " << otherId << " energy: " << cellsOnLayer.weight[otherId]
-                                      << " otherIPhi: " << otherIPhi << " iPhi: " << iPhi << " otherIEta: " << otherIEta
-                                      << " iEta: " << iEta << "\n";
+                                      << " otherIPhi: " << iPhiOf[otherId] << " iPhi: " << iPhiOf[i] << " otherIEta: " << iEtaOf[otherId]
+                                      << " iEta: " << iEtaOf[i] << "\n";
 
             if (otherId != i) {
               auto neighborCellContribution = 0.5f * cellsOnLayer.weight[otherId];
