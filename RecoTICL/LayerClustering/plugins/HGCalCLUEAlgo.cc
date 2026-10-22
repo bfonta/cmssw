@@ -314,7 +314,7 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateLocalDensity(const T& lt,
             int dIPhi = otherIPhi - iPhi;
             dIPhi += abs(dIPhi) < 2 ? 0
                      : dIPhi < 0    ? scintMaxIphi_
-                                    : -scintMaxIphi_;  // cells with iPhi=288 and iPhi=1 should be neiboring cells
+                                    : -scintMaxIphi_;  // cells with iPhi=288 and iPhi=1 should be neighboring cells
             int dIEta = otherIEta - iEta;
             LogDebug("HGCalCLUEAlgo") << "  Debugging calculateLocalDensity for Scintillator: \n"
                                       << "    cell: " << otherId << " energy: " << cellsOnLayer.weight[otherId]
@@ -324,27 +324,30 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateLocalDensity(const T& lt,
             if (otherId != i) {
               auto neighborCellContribution = 0.5f * cellsOnLayer.weight[otherId];
               all += neighborCellContribution;
-              if (dIPhi >= 0 && dIEta >= 0)
-                northeast += neighborCellContribution;
-              if (dIPhi <= 0 && dIEta >= 0)
-                southeast += neighborCellContribution;
-              if (dIPhi >= 0 && dIEta <= 0)
-                northwest += neighborCellContribution;
-              if (dIPhi <= 0 && dIEta <= 0)
-                southwest += neighborCellContribution;
+			  if (use2x2_) {
+				if (dIPhi >= 0 && dIEta >= 0)
+				  northeast += neighborCellContribution;
+				if (dIPhi <= 0 && dIEta >= 0)
+				  southeast += neighborCellContribution;
+				if (dIPhi >= 0 && dIEta <= 0)
+				  northwest += neighborCellContribution;
+				if (dIPhi <= 0 && dIEta <= 0)
+				  southwest += neighborCellContribution;
+				LogDebug("HGCalCLUEAlgo") << "  Debugging calculateLocalDensity for Scintillator: \n"
+										  << "    northeast: " << northeast << " southeast: " << southeast
+										  << " northwest: " << northwest << " southwest: " << southwest << "\n";
+			  }
+			  else {
+				LogDebug("HGCalCLUEAlgo") << "  Debugging calculateLocalDensity for Scintillator: \n"
+										  << "    all: " << all << "\n";
+			  }
             }
-            LogDebug("HGCalCLUEAlgo") << "  Debugging calculateLocalDensity for Scintillator: \n"
-                                      << "    northeast: " << northeast << " southeast: " << southeast
-                                      << " northwest: " << northwest << " southwest: " << southwest << "\n";
           }
         }
       }
     }
-    float neighborsval = (std::max(northeast, northwest) > std::max(southeast, southwest))
-                             ? std::max(northeast, northwest)
-                             : std::max(southeast, southwest);
     if (use2x2_)
-      cellsOnLayer.rho[i] += neighborsval;
+      cellsOnLayer.rho[i] += std::max({northeast, northwest, southeast, southwest});
     else
       cellsOnLayer.rho[i] += all;
     LogDebug("HGCalCLUEAlgo") << "Debugging calculateLocalDensity: \n"
