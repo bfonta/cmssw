@@ -206,7 +206,11 @@ _truthLevels = cms.vstring(
     # One entry per tau, the last copy of each radiative chain, split by decay mode. The
     # member is the tau itself in both, so the visible part is its decay products without
     # the neutrinos.
-    "tauVisibleHadronic", "tauVisibleLeptonic"
+    "tauVisibleHadronic", "tauVisibleLeptonic",
+    # The particle-flow reference: generator-stable particles with at least two tracker or
+    # one calorimeter sim hit over their subgraph. Listed so its members are matchable
+    # candidates of every associator, which the PF candidate validation reads.
+    "pfReconstructable"
 )
 
 # The selection preset's seed species, so the signalSeeds product (the _signal

@@ -252,6 +252,7 @@ class LevelFlags_t : public CppUnit::TestFixture {
   CPPUNIT_TEST(testGenVertexReasonLeavesSimAndArtificialVertices);
   CPPUNIT_TEST(testLastCopyFollowsTheRadiatingChain);
   CPPUNIT_TEST(testParticlesAtSeveralLevels);
+  CPPUNIT_TEST(testPFReconstructableCountsTheSubgraphHits);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -269,6 +270,9 @@ public:
     auto const* base = reinterpret_cast<char const*>(&d);
     CPPUNIT_ASSERT_EQUAL(std::ptrdiff_t{28}, reinterpret_cast<char const*>(&d.levelFlags) - base);
     CPPUNIT_ASSERT_EQUAL(std::ptrdiff_t{89}, reinterpret_cast<char const*>(&d.role) - base);
+    // The sim-hit counts fill the tail padding after role, which is what keeps sizeof at 96.
+    CPPUNIT_ASSERT_EQUAL(std::ptrdiff_t{90}, reinterpret_cast<char const*>(&d.nTrackerSimHits) - base);
+    CPPUNIT_ASSERT_EQUAL(std::ptrdiff_t{92}, reinterpret_cast<char const*>(&d.nCaloSimHits) - base);
   }
 
   // REQUIRED: a stored flag says exactly what levelAntichain() would say. This is the
@@ -1151,6 +1155,73 @@ public:
     truth::Graph radiating = c.finish();
     CPPUNIT_ASSERT_EQUAL(uint32_t{1}, truth::lastCopyOf(radiating, 0));
     CPPUNIT_ASSERT_EQUAL(uint32_t{4}, truth::lastCopyOf(radiating, 4));
+  }
+
+  // REQUIRED: the particle-flow reference is the generator-stable particles the detector
+  // saw, counted over their subgraph. Every way to get it wrong is in one fixture:
+  //   p0  Z, decays at v0 (GEN)
+  //   p1  pi+,   status 1, 3 tracker hits of its own                  -> member
+  //   p2  gamma, status 1, no hits, converts at v1 (SIM) into p5, p6  -> member, via its pair
+  //   p3  K0L,   status 1, 1 calorimeter hit                          -> member
+  //   p4  nu,    status 1, invisible                                  -> not a member
+  //   p5  e-,    SIM, 1 tracker hit; p6 e+, SIM, 1 tracker hit         -> not GEN-stable
+  //   p7  pi-,   status 1, a single tracker hit                       -> below the threshold
+  //   p8  pi0,   status 2, decays at v2 (GEN) to p9 and p10           -> not stable
+  //   p9, p10  gamma, status 1, 1 calorimeter hit each                 -> members, not the pi0
+  void testPFReconstructableCountsTheSubgraphHits() {
+    GraphBuilder b(11, 3);
+    auto set = [&](uint32_t id, int32_t pdgId, int16_t status, bool gen, uint16_t tracker, uint16_t calo) {
+      auto& d = b.graph.particles()[id];
+      d.genNode = gen ? 100 + static_cast<int32_t>(id) : -1;
+      d.simNode = 300 + static_cast<int32_t>(id);
+      d.pdgId = pdgId;
+      d.status = status;
+      d.momentum = math::XYZTLorentzVectorD(10., 0., 0., 11.);
+      d.nTrackerSimHits = tracker;
+      d.nCaloSimHits = calo;
+    };
+    set(0, 23, 2, true, 0, 0);
+    set(1, 211, 1, true, 3, 0);
+    set(2, 22, 1, true, 0, 0);
+    set(3, 130, 1, true, 0, 1);
+    set(4, 14, 1, true, 0, 0);
+    set(5, 11, 0, false, 1, 0);
+    set(6, -11, 0, false, 1, 0);
+    set(7, -211, 1, true, 1, 0);
+    set(8, 111, 2, true, 0, 0);
+    set(9, 22, 1, true, 0, 1);
+    set(10, 22, 1, true, 0, 1);
+    b.graph.vertices()[1].genNode = -1;  // the conversion is Geant4's, not the generator's
+    b.addDecay(0, 0);
+    for (uint32_t id : {1u, 2u, 3u, 4u, 7u, 8u})
+      b.addProduction(0, id);
+    b.addDecay(2, 1);
+    b.addProduction(1, 5);
+    b.addProduction(1, 6);
+    b.addDecay(8, 2);
+    b.addProduction(2, 9);
+    b.addProduction(2, 10);
+    truth::Graph g = b.finish();
+
+    const auto counts = truth::subgraphSimHitCounts(g, 2);
+    CPPUNIT_ASSERT_EQUAL(uint32_t{2}, counts[0]);
+    CPPUNIT_ASSERT_EQUAL(uint32_t{0}, counts[1]);
+
+    // The early exit stops at the first threshold reached, and leaves the shared scratch
+    // clean for the next walk: the full walk afterwards still sees both pair members.
+    truth::SubgraphWalkScratch scratch;
+    const auto partial = truth::subgraphSimHitCounts(g, 2, scratch, 1, 1);
+    CPPUNIT_ASSERT_EQUAL(uint32_t{1}, partial[0]);
+    CPPUNIT_ASSERT(std::none_of(scratch.seen.begin(), scratch.seen.end(), [](uint8_t v) { return v != 0; }));
+    CPPUNIT_ASSERT_EQUAL(uint32_t{2}, truth::subgraphSimHitCounts(g, 2, scratch)[0]);
+
+    const std::vector<uint32_t> expected{1, 2, 3, 9, 10};
+    CPPUNIT_ASSERT(truth::levelAntichain(g, truth::Level::PFReconstructable) == expected);
+    truth::fillLevelFlags(g);
+    for (uint32_t id = 0; id < g.nParticles(); ++id) {
+      const bool member = std::find(expected.begin(), expected.end(), id) != expected.end();
+      CPPUNIT_ASSERT_EQUAL(member, g.particles()[id].isAtLevel(truth::LevelFlag::PFReconstructable));
+    }
   }
 };
 

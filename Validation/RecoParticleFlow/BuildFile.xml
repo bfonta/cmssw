@@ -1,6 +1,8 @@
 <use name="root"/>
 <use name="rootgpad"/>
 <use name="rootcore"/>
+<use name="FWCore/ParameterSet"/>
+<use name="FWCore/Utilities"/>
 <export>
   <lib name="1"/>
 </export>

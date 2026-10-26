@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <limits>
 #include <map>
 #include <queue>
 #include <unordered_map>
@@ -336,6 +337,17 @@ namespace {
         continue;
 
       output.particles()[newParticle].statusFlags |= input.particles()[oldParticle].statusFlags;
+      // So do the sim hits, which a level derived from them must not lose with a copy.
+      // A collapsed copy is GEN-only and carries none, unless the chain ran through SIM.
+      // The representative was copied whole, so only the other members of its chain add.
+      if (oldParticle != particleRepresentative[oldParticle]) {
+        auto saturatingAdd = [](uint16_t& total, uint16_t extra) {
+          total = static_cast<uint16_t>(
+              std::min<uint32_t>(static_cast<uint32_t>(total) + extra, std::numeric_limits<uint16_t>::max()));
+        };
+        saturatingAdd(output.particles()[newParticle].nTrackerSimHits, input.particles()[oldParticle].nTrackerSimHits);
+        saturatingAdd(output.particles()[newParticle].nCaloSimHits, input.particles()[oldParticle].nCaloSimHits);
+      }
     }
 
     std::vector<uint8_t> keepVertex(nVertices, 0);

@@ -60,6 +60,11 @@ namespace truth {
     // last-copy rule. A tau with a tau child is a radiative copy and is in neither tau
     // level.
     TauVisibleLeptonic = 1u << 12,
+    // The reference of the particle-flow validation: the generator-stable particles that
+    // left at least two tracker sim hits or at least one calorimeter sim hit, counted over
+    // the particle and its descendants so that a converted photon keeps the hits of its
+    // pair. Re-derivable from nTrackerSimHits and nCaloSimHits below.
+    PFReconstructable = 1u << 13,
   };
 
   // What a particle IS, mirroring VertexRole on the vertex side. Absence of a GEN and a
@@ -139,6 +144,13 @@ namespace truth {
     // for dictionary simplicity as VertexData::role is. Sits in the tail padding after
     // backscattered, so carrying it keeps sizeof(ParticleData) at 96.
     uint8_t role = static_cast<uint8_t>(ParticleRole::Normal);
+
+    // The sim hits on this particle's own SimTrack, positive energy only, as the logical
+    // graph producer reads them: tracker PSimHits and calorimeter PCaloHits, muon chambers
+    // excluded. Saturate at the type maximum. They make the hit-based levels re-derivable
+    // from the graph alone, and sit in the tail padding after role, so sizeof stays 96.
+    uint16_t nTrackerSimHits = 0;
+    uint16_t nCaloSimHits = 0;
 
     [[nodiscard]] ParticleRole particleRole() const { return static_cast<ParticleRole>(role); }
 

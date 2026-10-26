@@ -47,7 +47,7 @@ WP_ORDER = ["Fixed", "AdaptiveTight", "AdaptiveNominal"]
 # counts one object twice. That is the entry requirement for a truth denominator.
 LEVEL_ORDER = ["stableLegsFromInitialState", "caloBoundary", "stableDecayProducts", "hardProcess",
                "reconstructableFromSignal", "reconstructableFinalState", "underlyingEvent",
-               "partonJets", "bHadrons", "cHadrons", "tauVisibleHadronic", "tauVisibleLeptonic",
+               "partonJets", "bHadrons", "cHadrons", "tauVisibleHadronic", "tauVisibleLeptonic", "pfReconstructable",
                "signal", "signalNoSelection"]
 # What each truth-driven series IS. These are the efficiency DENOMINATORS, and they are not
 # interchangeable, but every one of them is an ANTICHAIN: no member is an ancestor of
@@ -87,6 +87,12 @@ LEVEL_MEANING = {
         "TenTau no-PU: 18.59 per event against 10.00 signal objects. This is the denominator to read for "
         "'was what the resonance actually produced reconstructed'. EMPTY on a sample produced before the signal "
         "flag existed, since it is stamped at DIGI.",
+    "pfReconstructable":
+        "the PARTICLE-FLOW reference: generator-stable particles that left at least two tracker sim hits or at "
+        "least one calorimeter sim hit, counted over the particle and its descendants so a converted photon "
+        "keeps the hits of its pair. A pi0 is its two photons, as particle flow reconstructs it. Its members "
+        "split into the particle-flow types by pdg id and charge: electrons, muons, photons, charged and "
+        "neutral hadrons. An antichain, being a subset of stableDecayProducts.",
     "underlyingEvent":
         "the stable legs of the UNDERLYING EVENT, the spectator activity hanging off the artificial "
         "UnderlyingEvent vertex. The counterpart of stableLegsFromInitialState, which holds the legs of the "

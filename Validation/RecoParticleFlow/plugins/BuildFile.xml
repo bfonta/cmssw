@@ -12,6 +12,13 @@
   <use name="RecoParticleFlow/Benchmark"/>
   <use name="RecoParticleFlow/PFProducer"/>
   <use name="CommonTools/UtilAlgos"/>
+  <use name="DataFormats/HGCalReco"/>
+  <use name="DataFormats/MuonReco"/>
+  <use name="DataFormats/TrackReco"/>
+  <use name="FWCore/Utilities"/>
+  <use name="SimDataFormats/Associations"/>
+  <use name="SimDataFormats/TruthInfo"/>
+  <use name="Validation/RecoParticleFlow"/>
   <flags EDM_PLUGIN="1"/>
 </library>
 

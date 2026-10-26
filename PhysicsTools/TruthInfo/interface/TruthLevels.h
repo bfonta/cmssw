@@ -21,6 +21,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -45,7 +46,8 @@ namespace truth {
     CHadrons,
     ReconstructableFinalState,
     TauVisibleHadronic,
-    TauVisibleLeptonic
+    TauVisibleLeptonic,
+    PFReconstructable
   };
 
   // One row per level: the enum value, the bit it stamps on the graph, and the name a
@@ -60,7 +62,7 @@ namespace truth {
     char const* name;
   };
 
-  inline constexpr std::array<LevelRow, 12> kLevelTable = {
+  inline constexpr std::array<LevelRow, 13> kLevelTable = {
       {{Level::StableLegsFromInitialState, LevelFlag::StableLegsFromInitialState, "stableLegsFromInitialState"},
        {Level::HardProcess, LevelFlag::HardProcess, "hardProcess"},
        {Level::StableDecayProducts, LevelFlag::StableDecayProducts, "stableDecayProducts"},
@@ -72,7 +74,8 @@ namespace truth {
        {Level::CHadrons, LevelFlag::CHadrons, "cHadrons"},
        {Level::ReconstructableFinalState, LevelFlag::ReconstructableFinalState, "reconstructableFinalState"},
        {Level::TauVisibleHadronic, LevelFlag::TauVisibleHadronic, "tauVisibleHadronic"},
-       {Level::TauVisibleLeptonic, LevelFlag::TauVisibleLeptonic, "tauVisibleLeptonic"}}};
+       {Level::TauVisibleLeptonic, LevelFlag::TauVisibleLeptonic, "tauVisibleLeptonic"},
+       {Level::PFReconstructable, LevelFlag::PFReconstructable, "pfReconstructable"}}};
 
   inline constexpr std::array<Level, kLevelTable.size()> kAllLevels = [] {
     std::array<Level, kLevelTable.size()> levels{};
@@ -404,6 +407,10 @@ namespace truth {
         return isTauVisibleHadronic(graph, id);
       case Level::TauVisibleLeptonic:
         return isTauVisibleLeptonic(graph, id);
+      case Level::PFReconstructable:
+        // A generator-stable particle with enough hits below it, answered by
+        // pfReconstructable, so it never reaches here.
+        return false;
       case Level::CHadrons:
         // A c hadron from a B decay is a legitimate member: the nesting that matters is
         // within one flavour, and beauty and charm are deliberately different levels.
@@ -654,6 +661,106 @@ namespace truth {
     return roots;
   }
 
+  // The hit thresholds of the PFReconstructable level: what a tracker needs to see a
+  // track at all, and a single calorimeter deposit.
+  inline constexpr uint32_t kPFReconstructableMinTrackerSimHits = 2;
+  inline constexpr uint32_t kPFReconstructableMinCaloSimHits = 1;
+
+  // Caller-owned scratch of subgraphSimHitCounts, so one level evaluation over a pile-up
+  // graph allocates once rather than once per member. seen is nParticles long and all
+  // zero between walks: a walk resets only the entries it set.
+  struct SubgraphWalkScratch {
+    std::vector<uint8_t> seen;
+    std::vector<uint32_t> stack;
+    std::vector<uint32_t> visited;
+  };
+
+  // The sim hits of a particle and of every descendant, tracker first, calorimeter second.
+  // A converted photon carries none of its own tracker hits, its pair does, and a
+  // hadron's shower deposits sit partly on the secondaries Geant4 created in it, so the
+  // particle alone undercounts what the detector saw of it. The seen mask makes the walk
+  // terminate on a graph with a cycle and counts a re-convergent descendant once.
+  //
+  // The walk stops as soon as the tracker count reaches stopAtTracker or the calorimeter
+  // count reaches stopAtCalo, so a caller that only needs to know whether a threshold is
+  // passed does not walk a whole hadronic shower; the counts returned are then partial.
+  // The parent comes first, so a particle with enough hits of its own costs one step.
+  [[nodiscard]] inline std::array<uint32_t, 2> subgraphSimHitCounts(
+      Graph const& graph,
+      uint32_t rootId,
+      SubgraphWalkScratch& scratch,
+      uint32_t stopAtTracker = std::numeric_limits<uint32_t>::max(),
+      uint32_t stopAtCalo = std::numeric_limits<uint32_t>::max()) {
+    const uint32_t nParticles = graph.nParticles();
+    std::array<uint32_t, 2> counts{{0u, 0u}};
+    if (rootId >= nParticles) {
+      return counts;
+    }
+    if (scratch.seen.size() != nParticles) {
+      scratch.seen.assign(nParticles, 0);
+    }
+    auto& seen = scratch.seen;
+    auto& stack = scratch.stack;
+    auto& visited = scratch.visited;
+    stack.assign(1, rootId);
+    visited.assign(1, rootId);
+    seen[rootId] = 1;
+    while (!stack.empty()) {
+      const uint32_t id = stack.back();
+      stack.pop_back();
+      counts[0] += graph.particles()[id].nTrackerSimHits;
+      counts[1] += graph.particles()[id].nCaloSimHits;
+      if (counts[0] >= stopAtTracker || counts[1] >= stopAtCalo) {
+        break;
+      }
+      for (const uint32_t vertexId : graph.decayVertices(id)) {
+        if (vertexId >= graph.nVertices()) {
+          continue;
+        }
+        for (const uint32_t child : graph.outgoingParticles(vertexId)) {
+          if (child < nParticles && seen[child] == 0) {
+            seen[child] = 1;
+            stack.push_back(child);
+            visited.push_back(child);
+          }
+        }
+      }
+    }
+    for (const uint32_t id : visited) {
+      seen[id] = 0;
+    }
+    return counts;
+  }
+
+  [[nodiscard]] inline std::array<uint32_t, 2> subgraphSimHitCounts(Graph const& graph, uint32_t rootId) {
+    SubgraphWalkScratch scratch;
+    return subgraphSimHitCounts(graph, rootId, scratch);
+  }
+
+  // The reference of the particle-flow validation: every generator-stable particle the
+  // detector saw, at least kPFReconstructableMinTrackerSimHits tracker hits or
+  // kPFReconstructableMinCaloSimHits calorimeter hits over its subgraph. Generator-stable
+  // rather than the reconstructable final state because particle flow reconstructs a pi0
+  // as its two photons. The level carries no species split: the particle-flow type is
+  // the pdg id and the charge of the member, read by the consumer. An antichain because
+  // StableDecayProducts is one.
+  [[nodiscard]] inline std::vector<uint32_t> pfReconstructable(Graph const& graph) {
+    std::vector<uint32_t> members;
+    const uint32_t nParticles = graph.nParticles();
+    SubgraphWalkScratch scratch;
+    for (uint32_t id = 0; id < nParticles; ++id) {
+      if (!atLevel(graph, id, Level::StableDecayProducts) || isInvisible(graph.particles()[id].pdgId)) {
+        continue;
+      }
+      const auto counts = subgraphSimHitCounts(
+          graph, id, scratch, kPFReconstructableMinTrackerSimHits, kPFReconstructableMinCaloSimHits);
+      if (counts[0] >= kPFReconstructableMinTrackerSimHits || counts[1] >= kPFReconstructableMinCaloSimHits) {
+        members.push_back(id);
+      }
+    }
+    return members;
+  }
+
   // PartonJets is defined in terms of the HardProcess antichain and levelAntichain
   // dispatches back to it, so one of the two has to be declared ahead of the other.
   [[nodiscard]] inline std::vector<uint32_t> levelAntichain(Graph const& graph, Level level);
@@ -759,6 +866,11 @@ namespace truth {
       std::vector<uint32_t> legs = stableLegsFromUnderlyingEvent(graph);
       dropCoveredMembers(graph, legs, false);
       return legs;
+    }
+    if (level == Level::PFReconstructable) {
+      std::vector<uint32_t> members = pfReconstructable(graph);
+      dropCoveredMembers(graph, members, false);
+      return members;
     }
     if (level == Level::PartonJets) {
       // Filtered from HardProcess, which dropCoveredMembers already reduced.
