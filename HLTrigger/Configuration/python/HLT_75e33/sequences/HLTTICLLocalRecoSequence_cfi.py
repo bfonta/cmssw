@@ -5,8 +5,7 @@ from ..modules.hltHGCalRecHit_cfi import *
 from ..modules.hltHGCalUncalibRecHit_cfi import *
 from ..sequences.HLTHgcalLayerClustersSequence_cfi import *
 # Barrel layer clusters
-from ..modules.hltBarrelLayerClustersEB_cfi import *
-from ..modules.hltBarrelLayerClustersHB_cfi import *
+from ..sequences.HLTBarrelLayerClustersSequence_cfi import *
 from ..sequences.HLTPfRecHitUnseededSequence_cfi import *
 
 from Configuration.ProcessModifiers.alpakaValidationHLT_cff import alpakaValidationHLT
@@ -35,8 +34,7 @@ _HLTTICLLocalRecoSequence_withBarrel = cms.Sequence(
         hltHGCalRecHit+
         HLTHgcalLayerClustersSequence+
         HLTPfRecHitUnseededSequence+
-        hltBarrelLayerClustersEB+
-        hltBarrelLayerClustersHB+
+        HLTBarrelLayerClustersSequence+
         hltMergeLayerClusters
 )
 ticl_barrel.toReplaceWith(HLTTICLLocalRecoSequence, _HLTTICLLocalRecoSequence_withBarrel)

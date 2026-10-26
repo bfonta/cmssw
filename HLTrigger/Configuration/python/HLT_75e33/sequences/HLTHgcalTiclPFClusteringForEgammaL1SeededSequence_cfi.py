@@ -13,7 +13,7 @@ from ..modules.hltParticleFlowRecHitHGCL1Seeded_cfi import *
 from ..modules.hltTiclLayerTileProducerL1Seeded_cfi import *
 from ..modules.hltTiclSeedingL1_cfi import *
 from ..modules.hltTiclTrackstersCLUE3DHighL1Seeded_cfi import *
-from ..modules.hltBarrelLayerClustersEBL1Seeded_cfi import *
+from ..sequences.HLTBarrelLayerClustersL1SeededSequence_cfi import *
 from ..modules.hltTiclEGammaSuperClusterProducerL1Seeded_cfi import hltTiclEGammaSuperClusterProducerL1Seeded
 from ..modules.hltTiclTracksterLinksSuperclusteringMustacheL1Seeded_cfi import hltTiclTracksterLinksSuperclusteringMustacheL1Seeded
 from ..modules.hltTiclTracksterLinksSuperclusteringDNNL1Seeded_cfi import hltTiclTracksterLinksSuperclusteringDNNL1Seeded
@@ -67,7 +67,7 @@ _HgcalLocalRecoL1SeededSequence_barrel = cms.Sequence(
     hltParticleFlowRecHitHGCL1Seeded+
     hltRechitInRegionsHGCAL+
     HLTHgcalLayerClustersL1SeededSequence+
-    hltBarrelLayerClustersEBL1Seeded+
+    HLTBarrelLayerClustersL1SeededSequence+
     hltMergeLayerClustersL1Seeded
 ) 
 ticl_barrel.toReplaceWith(_HgcalLocalRecoL1SeededSequence, _HgcalLocalRecoL1SeededSequence_barrel)

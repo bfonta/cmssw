@@ -66,6 +66,7 @@ fragment.load("HLTrigger/Configuration/HLT_75e33/eventsetup/TransientTrackBuilde
 ### It could come from RecoTracker/IterativeTracking/InitialStep_cff.py
 fragment.load("HLTrigger/Configuration/HLT_75e33/eventsetup/hltTiclGeomESProducer_cfi")
 fragment.load("HLTrigger/Configuration/HLT_75e33/eventsetup/hltTiclGeomWithBarrelESProducer_cfi")
+fragment.load("HLTrigger/Configuration/HLT_75e33/eventsetup/hltBarrelLayerClustersESProducers_cfi")
 fragment.load("HLTrigger/Configuration/HLT_75e33/eventsetup/hltInitialStepChi2Est_cfi")
 ### It could come from RecoTracker/IterativeTracking/python/HighPtTripletStep_cff.py
 fragment.load("HLTrigger/Configuration/HLT_75e33/eventsetup/hltHighPtTripletStepChi2Est_cfi")
