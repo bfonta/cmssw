@@ -265,8 +265,8 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateLocalDensity(const T& lt,
                                                  cellsOnLayer.dim2[i] - delta,
                                                  cellsOnLayer.dim2[i] + delta);
 
-    for (int xBin = search_box[0]; xBin < search_box[1] + 1; ++xBin) {
-      for (int yBin = search_box[2]; yBin < search_box[3] + 1; ++yBin) {
+    for (int xBin = search_box[0]; xBin <= search_box[1]; ++xBin) {
+      for (int yBin = search_box[2]; yBin <= search_box[3]; ++yBin) {
         int binId = lt.getGlobalBinByBin(xBin, yBin);
         size_t binSize = lt[binId].size();
 
@@ -311,8 +311,8 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateLocalDensity(const T& lt,
                                                  cellsOnLayer.dim2[i] - delta,
                                                  cellsOnLayer.dim2[i] + delta);
     float northeast(0), northwest(0), southeast(0), southwest(0), all(0);
-    for (int etaBin = search_box[0]; etaBin < search_box[1] + 1; ++etaBin) {
-      for (int phiBin = search_box[2]; phiBin < search_box[3] + 1; ++phiBin) {
+    for (int etaBin = search_box[0]; etaBin <= search_box[1]; ++etaBin) {
+      for (int phiBin = search_box[2]; phiBin <= search_box[3]; ++phiBin) {
         int phi = (phiBin % T::type::nRows);
         int binId = lt.getGlobalBinByBin(etaBin, phi);
         size_t binSize = lt[binId].size();
@@ -386,7 +386,6 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateDistanceToHigher(const T& lt,
 
   for (unsigned int i = 0; i < numberOfCells; i++) {
     // initialize delta and nearest higher for i
-    //
     auto const cellType = cellsOnLayer.cellType[i];
     auto const delta = deltas_o[cellType];
     float maxDelta = std::numeric_limits<float>::max();
@@ -398,8 +397,8 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateDistanceToHigher(const T& lt,
                                                  cellsOnLayer.dim2[i] - delta,
                                                  cellsOnLayer.dim2[i] + delta);
     // loop over all bins in the search box
-    for (int dim1Bin = search_box[0]; dim1Bin < search_box[1] + 1; ++dim1Bin) {
-      for (int dim2Bin = search_box[2]; dim2Bin < search_box[3] + 1; ++dim2Bin) {
+    for (int dim1Bin = search_box[0]; dim1Bin <= search_box[1]; ++dim1Bin) {
+      for (int dim2Bin = search_box[2]; dim2Bin <= search_box[3]; ++dim2Bin) {
         // get the id of this bin
         size_t binId = lt.getGlobalBinByBin(dim1Bin, dim2Bin);
         if constexpr (std::is_same_v<STRATEGY, HGCalScintillatorStrategy>)
