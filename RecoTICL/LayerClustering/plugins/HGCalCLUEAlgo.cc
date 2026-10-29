@@ -313,8 +313,7 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateLocalDensity(const T& lt,
     float northeast(0), northwest(0), southeast(0), southwest(0), all(0);
     for (int etaBin = search_box[0]; etaBin <= search_box[1]; ++etaBin) {
       for (int phiBin = search_box[2]; phiBin <= search_box[3]; ++phiBin) {
-        int phi = (phiBin % T::type::nRows);
-        int binId = lt.getGlobalBinByBin(etaBin, phi);
+        int binId = lt.getGlobalBinByBin(etaBin, (phiBin % T::type::nRows));
         size_t binSize = lt[binId].size();
         for (unsigned int j = 0; j < binSize; j++) {
           unsigned int otherId = lt[binId][j];
@@ -403,7 +402,7 @@ void HGCalCLUEAlgoT<T, STRATEGY>::calculateDistanceToHigher(const T& lt,
         size_t binId = lt.getGlobalBinByBin(dim1Bin, dim2Bin);
         if constexpr (std::is_same_v<STRATEGY, HGCalScintillatorStrategy>)
           binId = lt.getGlobalBinByBin(dim1Bin, (dim2Bin % T::type::nRows));
-        // get the size of this bin
+        // get the number of hits in this bin
         size_t binSize = lt[binId].size();
 
         // loop over all hits in this bin
@@ -463,8 +462,7 @@ int HGCalCLUEAlgoT<T, STRATEGY>::findAndAssignClusters(const unsigned int layerI
     auto const delta_seed = deltas_seed[cellType];
     auto const delta_o = deltas_o[cellType];
     float rho_c = kappa_ * cellsOnLayer.sigmaNoise[i];
-    // initialize clusterIndex
-    cellsOnLayer.clusterIndex[i] = -1;
+
     bool isSeed = (cellsOnLayer.delta[i] > delta_seed) && (cellsOnLayer.rho[i] >= rho_c);
     bool isOutlier = (cellsOnLayer.delta[i] > delta_o) && (cellsOnLayer.rho[i] < rho_c);
     if (isSeed) {
