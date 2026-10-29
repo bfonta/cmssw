@@ -90,6 +90,23 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             << "BarrelCLUEsteringTrackstersProducer: 'rhoc' must be positive, as the seed threshold of each barrel "
                "calorimeter.";
       }
+      if (std::ranges::any_of(parameters.sigmaT, [](float sigmaT) { return not(sigmaT > 0.f); })) {
+        throw edm::Exception(edm::errors::Configuration)
+            << "BarrelCLUEsteringTrackstersProducer: 'sigmaT' must be positive, as the transverse scale of each "
+               "barrel calorimeter.";
+      }
+      if (not(parameters.deltac > 0.f) or not(parameters.layerScale > 0.f)) {
+        throw edm::Exception(edm::errors::Configuration)
+            << "BarrelCLUEsteringTrackstersProducer: 'deltac' and 'layerScale' must be positive, as the density "
+               "radius and the longitudinal scale.";
+      }
+      // CLUEstering sizes the nearest-higher search window with the outlier distance: a larger seeding distance
+      // would look for nearest higher points outside of the searched tiles
+      if (parameters.seedingDistance > parameters.outlierDistance) {
+        throw edm::Exception(edm::errors::Configuration)
+            << "BarrelCLUEsteringTrackstersProducer: 'seedingDistance' must not exceed 'outlierDistance', which "
+               "sizes the nearest-higher search window.";
+      }
       return parameters;
     }
 

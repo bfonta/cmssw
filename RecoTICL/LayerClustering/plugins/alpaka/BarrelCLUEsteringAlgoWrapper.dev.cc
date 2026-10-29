@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstdint>
@@ -5,10 +6,10 @@
 #include <span>
 
 #include <alpaka/alpaka.hpp>
-#include <xtd/xtd.h>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
+#include "HeterogeneousCore/AlpakaInterface/interface/prefixScan.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
 #include "BarrelCLUEsteringAlgoWrapper.h"
@@ -43,29 +44,84 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       }
     };
 
+    // Kernel to mark the rechits of one layer: the inclusive scan of the marks is the rank of each rechit within its
+    // layer, which packs the points in the order of the input rechits on every backend
+    template <typename CAL>
+    struct KernelLayerFlags {
+      ALPAKA_FN_ACC void operator()(const Acc1D& acc,
+                                    reco::PFRecHitDeviceCollection::ConstView hits,
+                                    uint32_t wantedLayer,
+                                    uint32_t* flags,
+                                    uint32_t size) const {
+        for (auto i : uniform_elements(acc, size)) {
+          flags[i] = (CAL::layer(hits, i) == wantedLayer) ? 1u : 0u;
+        }
+      }
+    };
+
+    // Kernel to turn the inclusive scan of the marks into the rank within the layer
+    struct KernelRankWithinLayer {
+      ALPAKA_FN_ACC void operator()(const Acc1D& acc,
+                                    const uint32_t* flags,
+                                    const uint32_t* flagsEnd,
+                                    uint32_t* rank,
+                                    uint32_t size) const {
+        for (auto i : uniform_elements(acc, size)) {
+          if (flags[i] != 0) {
+            rank[i] = flagsEnd[i] - 1;
+          }
+        }
+      }
+    };
+
     template <typename CAL>
     struct KernelPrepareInputs {
       ALPAKA_FN_ACC void operator()(const Acc1D& acc,
                                     reco::PFRecHitDeviceCollection::ConstView hits,
                                     typename CAL::NoiseType::ConstView noise,
-                                    uint32_t* layerCursors,
+                                    const uint32_t* layerCursors,
+                                    const uint32_t* rank,
                                     BarrelCLUEsteringInputsDeviceCollection::View clueInputs,
                                     uint32_t size) const {
         for (auto i : uniform_elements(acc, size)) {
           const uint32_t layer = CAL::layer(hits, i);
           if (layer >= CAL::kNumberOfLayers)
             continue;
-          const auto j = alpaka::atomicAdd(acc, &layerCursors[layer], 1u, alpaka::hierarchy::Blocks{});
-          const auto x = hits[i].x();
-          const auto y = hits[i].y();
-          const auto z = hits[i].z();
-          clueInputs[j].eta() = xtd::asinh(z / xtd::sqrt(x * x + y * y));
-          clueInputs[j].phi() = xtd::atan2(y, x);
+          // The rank of the rechit within its layer, in input order: the cluster sums of CLUEstering would otherwise
+          // round in an order that depends on the thread scheduling, which flips the clustering decisions of the
+          // tie-rich barrel rechits
+          const auto j = layerCursors[layer] + rank[i];
+          // The coordinates are computed in double precision and rounded to float once: the float store removes
+          // the 1-ULP differences between the transcendentals of the backends
+          const double x = hits[i].x();
+          const double y = hits[i].y();
+          const double z = hits[i].z();
+          clueInputs[j].eta() = std::asinh(z / std::sqrt(x * x + y * y));
+          clueInputs[j].phi() = std::atan2(y, x);
           clueInputs[j].energy() = hits[i].energy();
           clueInputs[j].sigmaNoise() = CAL::sigmaNoise(noise, hits[i].denseId());
           clueInputs[j].detId() = hits[i].detId();
           clueInputs[j].hitIndex() = i;
         }
+      }
+    };
+
+    // The clustering distance of the 2D clustering: the Euclidean distance in (eta, phi) with phi periodic. It is
+    // computed in double precision and rounded to float once, like the coordinates: CLUEstering then compares the
+    // same values on every backend, and its distance ties break by tag deterministically.
+    struct PeriodicEuclideanMetric {
+      using value_type = float;
+
+      float phiPeriod;
+
+      template <typename TPoints>
+      ALPAKA_FN_HOST_ACC float operator()(const TPoints& points, std::size_t i, std::size_t j) const {
+        const auto pi = points[static_cast<int>(i)];
+        const auto pj = points[static_cast<int>(j)];
+        const double dEta = pi[0] - pj[0];
+        const double dPhi = std::abs(pi[1] - pj[1]);
+        const double dPhiWrapped = std::min(dPhi, static_cast<double>(phiPeriod) - dPhi);
+        return static_cast<float>(std::sqrt(dEta * dEta + dPhiWrapped * dPhiWrapped));
       }
     };
 
@@ -169,15 +225,27 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     const auto items = 256u;
 
+    // The rank of every rechit within its layer, in the order of the input rechits: the points of a layer are then
+    // packed deterministically on every backend (an atomic counter would order them by thread scheduling)
+    auto rank = make_device_buffer<uint32_t[]>(queue, size);
+    auto flags = make_device_buffer<uint32_t[]>(queue, size);
+    auto flagsEnd = make_device_buffer<uint32_t[]>(queue, size);
+    const auto fillWorkDiv = make_workdiv<Acc1D>(divide_up_by(size, items), items);
+    for (uint32_t layer = 0; layer < CAL::kNumberOfLayers; ++layer) {
+      alpaka::exec<Acc1D>(queue, fillWorkDiv, KernelLayerFlags<CAL>{}, inputs, layer, flags.data(), size);
+      iterativePrefixScan<Acc1D>(flags.data(), flagsEnd.data(), size, queue);
+      alpaka::exec<Acc1D>(queue, fillWorkDiv, KernelRankWithinLayer{}, flags.data(), flagsEnd.data(), rank.data(), size);
+    }
+
     BarrelCLUEsteringInputsDeviceCollection clueInputs(queue, nClusteredHits);
     auto clueInputs_v = clueInputs.view();
-    const auto prepareWorkDiv = make_workdiv<Acc1D>(divide_up_by(size, items), items);
     alpaka::exec<Acc1D>(queue,
-                        prepareWorkDiv,
+                        fillWorkDiv,
                         KernelPrepareInputs<CAL>{},
                         inputs,
                         noise,
                         d_layerCursors.data(),
+                        rank.data(),
                         clueInputs_v,
                         size);
 
@@ -200,7 +268,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     algo.make_clusters(queue,
                        d_points,
                        layerSizes,
-                       clue::PeriodicEuclideanMetric<2, float>{0.f, kTwoPi},
+                       PeriodicEuclideanMetric{.phiPeriod = kTwoPi},
                        clue::FlatKernel<float>{0.5f});
     alpaka::wait(queue);
 

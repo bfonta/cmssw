@@ -3,6 +3,8 @@
 #include <alpaka/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
+#include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
+#include "HeterogeneousCore/AlpakaInterface/interface/prefixScan.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
 #include "PFRecHitProducerKernel.h"
@@ -19,17 +21,18 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                   const typename CAL::CaloRecHitSoATypeDevice::ConstView recHits,
                                   reco::PFRecHitDeviceCollection::View pfRecHits,
                                   uint32_t* __restrict__ denseId2pfRecHit,
-                                  uint32_t* __restrict__ num_pfRecHits) const {
+                                  const uint32_t* __restrict__ accept,
+                                  const uint32_t* __restrict__ slotEnd,
+                                  const uint32_t* __restrict__ base) const {
       // Strided loop over CaloRecHits
       for (int32_t i : cms::alpakatools::uniform_elements(acc, recHits.metadata().size())) {
-        // Check energy thresholds/quality cuts (specialised for HCAL/ECAL)
-        if (!applyCuts(recHits[i], params, topology))
+        if (accept[i] == 0)
           continue;
 
-        // Use atomic operation to determine index of the PFRecHit to be constructed
-        // The index needs to be unique and consequtive across all threads in all blocks.
-        // This is achieved using the alpaka::hierarchy::Blocks argument.
-        const uint32_t j = alpaka::atomicInc(acc, num_pfRecHits, 0xffffffff, alpaka::hierarchy::Blocks{});
+        // The inclusive scan of the acceptance flags gives a unique consecutive index to every kept recHit, in the
+        // order of the input recHits on every backend (an atomic counter would order them by thread scheduling),
+        // after the PFRecHits of the preceding input collections
+        const uint32_t j = *base + slotEnd[i] - 1;
 
         // Construct PFRecHit from CAL recHit (specialised for HCAL/ECAL)
         constructPFRecHit(pfRecHits[j], recHits[i]);
@@ -46,6 +49,34 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     ALPAKA_FN_ACC static void constructPFRecHit(
         reco::PFRecHitDeviceCollection::View::element pfrh,
         const typename CAL::CaloRecHitSoATypeDevice::ConstView::const_element rh);
+  };
+
+  // Kernel to record where the PFRecHits of one input collection start in the shared output: the collections are
+  // packed one after the other, and the total is the number of PFRecHits for the topology kernel
+  struct KernelShiftBase {
+    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+                                  const uint32_t* __restrict__ last,
+                                  uint32_t* __restrict__ num_pfRecHits,
+                                  uint32_t* __restrict__ base) const {
+      if (cms::alpakatools::once_per_grid(acc)) {
+        *base = *num_pfRecHits;
+        *num_pfRecHits += *last;
+      }
+    }
+  };
+
+  // Kernel to apply the quality cuts: accept[i] is 1 if the input recHit i is kept
+  template <typename CAL>
+  struct PFRecHitProducerKernelAccept {
+    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+                                  const typename CAL::ParameterType::ConstView params,
+                                  const typename CAL::TopologyTypeDevice::ConstView topology,
+                                  const typename CAL::CaloRecHitSoATypeDevice::ConstView recHits,
+                                  uint32_t* __restrict__ accept) const {
+      for (int32_t i : cms::alpakatools::uniform_elements(acc, recHits.metadata().size())) {
+        accept[i] = PFRecHitProducerKernelConstruct<CAL>::applyCuts(recHits[i], params, topology) ? 1 : 0;
+      }
+    }
   };
 
   template <>
@@ -175,6 +206,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   PFRecHitProducerKernel<CAL>::PFRecHitProducerKernel(Queue& queue, const uint32_t num_recHits)
       : denseId2pfRecHit_(cms::alpakatools::make_device_buffer<uint32_t[]>(queue, CAL::kSize)),
         num_pfRecHits_(cms::alpakatools::make_device_buffer<uint32_t>(queue)),
+        accept_(cms::alpakatools::make_device_buffer<uint32_t[]>(queue, num_recHits)),
+        slotEnd_(cms::alpakatools::make_device_buffer<uint32_t[]>(queue, num_recHits)),
+        base_(cms::alpakatools::make_device_buffer<uint32_t>(queue)),
         work_div_(cms::alpakatools::make_workdiv<Acc1D>(1, 1)) {
     alpaka::memset(queue, denseId2pfRecHit_, 0xff);  // Reset denseId -> pfRecHit index map
     alpaka::memset(queue, num_pfRecHits_, 0x00);     // Reset global pfRecHit counter
@@ -190,6 +224,20 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                    const typename CAL::ParameterType& params,
                                                    const typename CAL::TopologyTypeDevice& topology,
                                                    reco::PFRecHitDeviceCollection& pfRecHits) {
+    const uint32_t n = recHits.view().metadata().size();
+    alpaka::exec<Acc1D>(
+        queue, work_div_, PFRecHitProducerKernelAccept<CAL>{}, params.view(), topology.view(), recHits.view(), accept_.data());
+    if (n > 0) {
+      // inclusive scan of the acceptance flags: kept recHits are packed in the order of the input recHits
+      cms::alpakatools::iterativePrefixScan<Acc1D>(accept_.data(), slotEnd_.data(), n, queue);
+      // the collections are packed one after the other in the shared output: where this one starts
+      alpaka::exec<Acc1D>(queue,
+                          cms::alpakatools::make_workdiv<Acc1D>(1, 1),
+                          KernelShiftBase{},
+                          slotEnd_.data() + n - 1,
+                          num_pfRecHits_.data(),
+                          base_.data());
+    }
     alpaka::exec<Acc1D>(queue,
                         work_div_,
                         PFRecHitProducerKernelConstruct<CAL>{},
@@ -198,7 +246,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                         recHits.view(),
                         pfRecHits.view(),
                         denseId2pfRecHit_.data(),
-                        num_pfRecHits_.data());
+                        accept_.data(),
+                        slotEnd_.data(),
+                        base_.data());
   }
 
   template <typename CAL>

@@ -28,6 +28,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   private:
     cms::alpakatools::device_buffer<Device, uint32_t[]> denseId2pfRecHit_;
     cms::alpakatools::device_buffer<Device, uint32_t> num_pfRecHits_;
+    // per input recHit: the acceptance flag and its inclusive slot scan, so that the PFRecHits are packed in the
+    // order of the input recHits on every backend (an atomic counter would order them by thread scheduling);
+    // base is where the current input collection starts in the shared output
+    cms::alpakatools::device_buffer<Device, uint32_t[]> accept_;
+    cms::alpakatools::device_buffer<Device, uint32_t[]> slotEnd_;
+    cms::alpakatools::device_buffer<Device, uint32_t> base_;
     WorkDiv<Dim1D> work_div_;
   };
 

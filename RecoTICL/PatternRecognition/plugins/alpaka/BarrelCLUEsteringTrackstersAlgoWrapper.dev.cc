@@ -90,11 +90,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         }
         const auto pi = points[static_cast<int>(i)];
         const auto pj = points[static_cast<int>(j)];
-        const float dEta = pi[0] - pj[0];
-        const float dPhi = std::abs(pi[1] - pj[1]);
-        const float dPhiWrapped = std::min(dPhi, phiPeriod - dPhi);
-        const float transverse = std::sqrt(dEta * dEta + dPhiWrapped * dPhiWrapped) * 2.f / (sigmaT[i] + sigmaT[j]);
-        return std::max(transverse, std::abs(layerI - layerJ) * invLayerScale);
+        // in double precision and rounded to float once, like the coordinates: CLUEstering then compares the same
+        // values on every backend, and its distance ties break deterministically
+        const double dEta = pi[0] - pj[0];
+        const double dPhi = std::abs(pi[1] - pj[1]);
+        const double dPhiWrapped = std::min(dPhi, static_cast<double>(phiPeriod) - dPhi);
+        const double transverse = std::sqrt(dEta * dEta + dPhiWrapped * dPhiWrapped) * 2.0 / (sigmaT[i] + sigmaT[j]);
+        return static_cast<float>(std::max(transverse, std::abs(double(layerI) - double(layerJ)) * invLayerScale));
       }
     };
 
@@ -114,15 +116,20 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           const float energy = layerClusters.energy()[i].energy();
           const DetId seed = layerClusters.indexes()[i].seedID();
           const uint32_t c = component(seed);
-          const float r = std::sqrt(position.x() * position.x() + position.y() * position.y());
+          // The coordinates are computed in double precision and rounded to float once: the float store removes
+          // the 1-ULP differences between the transcendentals of the backends, which would otherwise flip the
+          // clustering decisions of the tie-rich barrel layer clusters
+          const double px = position.x();
+          const double py = position.y();
+          const double r = std::sqrt(px * px + py * py);
           // a layer cluster without energy is at the origin, where eta is not defined
-          const bool isolated = not(energy > 0.f and r > 0.f);
-          float phi = std::atan2(position.y(), position.x());
-          if (phi < 0.f) {
+          const bool isolated = not(energy > 0.f and r > 0.);
+          double phi = std::atan2(py, px);
+          if (phi < 0.) {
             phi += kTwoPi;
           }
-          points[i].eta() = isolated ? 0.f : std::asinh(position.z() / r) * invSigmaRef;
-          points[i].phi() = isolated ? 0.f : phi * invSigmaRef;
+          points[i].eta() = isolated ? 0.f : static_cast<float>(std::asinh(position.z() / r) * invSigmaRef);
+          points[i].phi() = isolated ? 0.f : static_cast<float>(phi * invSigmaRef);
           points[i].weight() = isolated ? 0.f : energy;
           points[i].rhocScale() = rhocScale[c];
           points[i].tag() = seed.rawId();
