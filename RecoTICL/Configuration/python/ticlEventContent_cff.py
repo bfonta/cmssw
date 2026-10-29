@@ -68,10 +68,11 @@ TICL_RECO = cms.PSet(
 )
 TICL_RECO.outputCommands.extend(TICL_AOD.outputCommands)
 # ticl_dev: the tracksters of the pattern recognition on the device, converted to ticl::Trackster
-from Configuration.ProcessModifiers.ticl_dev import ticl_dev
+from Configuration.ProcessModifiers.ticl_dev_cff import ticl_dev
 ticl_dev.toModify(TICL_RECO, outputCommands = TICL_RECO.outputCommands + ['keep *_ticlTrackstersCLUEstering_*_*'])
 # ... and the barrel ones of ticl_barrel, clustering the EB and HB layer clusters together
 from Configuration.ProcessModifiers.ticl_barrel_cff import ticl_barrel
+ticl_barrel.toModify(TICL_RECO, outputCommands = TICL_RECO.outputCommands + ['keep *_ticlTrackstersCLUE3DBarrel_*_*'])
 (ticl_barrel & ticl_dev).toModify(
     TICL_RECO, outputCommands=TICL_RECO.outputCommands + ['keep *_ticlTrackstersCLUEsteringBarrel_*_*']
 )

@@ -28,7 +28,7 @@ from Configuration.ProcessModifiers.ticlv5_TrackLinkingGNN_cff import ticlv5_Tra
 
 from Configuration.ProcessModifiers.ticl_superclustering_mustache_ticl_cff import ticl_superclustering_mustache_ticl
 from Configuration.ProcessModifiers.ticl_barrel_cff import ticl_barrel
-from Configuration.ProcessModifiers.ticl_dev import ticl_dev
+from Configuration.ProcessModifiers.ticl_dev_cff import ticl_dev
 
 ticlLayerTileTask = cms.Task(ticlLayerTileProducer)
 

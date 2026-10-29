@@ -21,7 +21,7 @@ hgcalValidator = _hgcalValidator.clone(
 )
 
 # ticl_dev: the first iteration is the pattern recognition on the device with CLUEstering
-from Configuration.ProcessModifiers.ticl_dev import ticl_dev
+from Configuration.ProcessModifiers.ticl_dev_cff import ticl_dev
 ticl_dev.toModify(hgcalValidator,
     LayerClustersInputMask = cms.VInputTag(
         cms.InputTag("ticlTrackstersCLUEstering"),
