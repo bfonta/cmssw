@@ -100,8 +100,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       }
     };
 
-    // Per layer cluster -> per point: the clustering coordinates, weight, seed threshold, tag (the seed DetId, to break
-    // the ties deterministically), layer, sigmaT and the sigma of the search window of the point; then the ghosts.
+    // Per layer cluster -> per point: the clustering coordinates, weight, seed threshold scale, tag (the seed DetId,
+    // to break the ties deterministically), layer, sigmaT and the sigma of the search window of the point; then the
+    // ghosts.
     struct KernelFillPoints {
       ALPAKA_FN_ACC void operator()(const Acc1D& acc,
                                     float invSigmaRef,
@@ -193,13 +194,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // c, so the tracksters keep the order of the clusters.
     struct KernelWriteLayerClustersClustering {
       ALPAKA_FN_ACC void operator()(const Acc1D& acc,
-                                    uint32_t nClusters,
+                                    uint32_t nPoints,
                                     PointsDeviceCollection::ConstView points,
                                     const uint32_t* isTrackster,
                                     const uint32_t* tracksterEnd,
                                     HGCalSoALayerClustersExtraDeviceCollection::View layerClustersClustering) const {
         if (once_per_grid(acc)) {
-          layerClustersClustering.numberOfTrackstersScalar() = tracksterEnd[nClusters - 1];
+          layerClustersClustering.numberOfTrackstersScalar() = tracksterEnd[nPoints - 1];
         }
         for (auto i : uniform_elements(acc, layerClustersClustering.metadata().size())) {
           const int cluster = points[i].clusterIndex();

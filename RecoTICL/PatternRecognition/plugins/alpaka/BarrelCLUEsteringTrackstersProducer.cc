@@ -4,6 +4,7 @@
 
 #include "DataFormats/CaloRecHit/interface/alpaka/CaloClusterDeviceCollection.h"
 #include "DataFormats/HGCalReco/interface/alpaka/HGCalSoALayerClustersExtraDeviceCollection.h"
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
@@ -30,6 +31,17 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           parameters_{makeParameters(config)} {}
 
     void produce(device::Event& iEvent, const device::EventSetup&) override {
+      if (not logged_) {
+        logged_ = true;
+        // the tuning in the log, once per stream: a wrong trackster number is otherwise hard to trace back to the
+        // parameters used
+        edm::LogPrint("BarrelCLUEsteringTrackstersProducer")
+            << "clustering with deltac " << parameters_.deltac << ", outlierDistance " << parameters_.outlierDistance
+            << ", seedingDistance " << parameters_.seedingDistance << ", rhoc " << parameters_.rhoc[0] << '/'
+            << parameters_.rhoc[1] << " GeV, sigmaT " << parameters_.sigmaT[0] << '/' << parameters_.sigmaT[1]
+            << ", layerScale " << parameters_.layerScale << ", sameLayerNeighbours " << parameters_.sameLayerNeighbours
+            << ", minLayerClusters " << parameters_.minLayerClusters;
+      }
       const auto layerClusters = iEvent.get(layerClustersToken_).const_view();
 
       HGCalSoALayerClustersExtraDeviceCollection layerClustersClustering(iEvent.queue(),
@@ -40,6 +52,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     }
 
     static void fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+      // The defaults mirror the legacy barrel CLUE3D tuning of CLUE3DBarrel_cff.py: criticalDensity 0.5 GeV,
+      // criticalEtaPhiDistance 3 sigmaT, outlierMultiplier 2, no same-layer neighbours, minNumLayerCluster 1.
       edm::ParameterSetDescription desc;
       desc.add<edm::InputTag>("layerClustersSoA", edm::InputTag("barrelSoAMergeLayerClusters"))
           ->setComment("The EB and HB layer clusters, merged on the device.");
@@ -107,6 +121,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             << "BarrelCLUEsteringTrackstersProducer: 'seedingDistance' must not exceed 'outlierDistance', which "
                "sizes the nearest-higher search window.";
       }
+      if (parameters.minLayerClusters < 1) {
+        throw edm::Exception(edm::errors::Configuration)
+            << "BarrelCLUEsteringTrackstersProducer: 'minLayerClusters' must be at least 1, as the minimum number of "
+               "layer clusters of a trackster.";
+      }
       return parameters;
     }
 
@@ -114,6 +133,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     const device::EDPutToken<HGCalSoALayerClustersExtraDeviceCollection> layerClustersClusteringToken_;
     const BarrelCLUEsteringTrackstersAlgoWrapper::Parameters parameters_;
     const BarrelCLUEsteringTrackstersAlgoWrapper algo_{};
+    bool logged_ = false;
   };
 
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE

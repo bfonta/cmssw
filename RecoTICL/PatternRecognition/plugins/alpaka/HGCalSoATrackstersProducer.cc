@@ -11,6 +11,7 @@
 #include "DataFormats/CaloRecHit/interface/alpaka/CaloClusterDeviceCollection.h"
 #include "DataFormats/HGCalReco/interface/alpaka/HGCalSoALayerClustersExtraDeviceCollection.h"
 #include "FWCore/Framework/interface/ConsumesCollector.h"
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
@@ -77,6 +78,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       }
 
       const unsigned int nTracksters = (*counts_)[0];
+      edm::LogPrint("HGCalSoATrackstersProducer") << nTracksters << " tracksters, " << (*counts_)[1]
+                                                  << " layer clusters in them";
       ticl::TracksterDeviceCollection tracksters(
           iEvent.queue(), nTracksters, nTracksters, nTracksters, nTracksters, nTracksters, nTracksters, (*counts_)[1]);
       algo_.run(iEvent.queue(),

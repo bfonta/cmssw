@@ -122,9 +122,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       }
     };
 
-    // Per trackster, one block: its energy, barycenter, time and principal components from its layer clusters, as
-    // ticl::assignPCAtoTracksters does. The threads of the block share the layer clusters of the trackster and sum over
-    // them in shared memory; after each sum, every thread computes what depends on it.
+    // Per trackster: its energy, barycenter, time and principal components from its layer clusters, as
+    // ticl::assignPCAtoTracksters does. One thread per trackster (see run() below) sums over its layer clusters in
+    // their order into the block-shared sums; with one thread per block the shared memory holds the sums and the
+    // block synchronisations are no-ops.
     struct KernelTracksterProperties {
       ALPAKA_FN_ACC void operator()(const Acc1D& acc,
                                     HGCalTrackstersSoAAlgoWrapper::Parameters parameters,

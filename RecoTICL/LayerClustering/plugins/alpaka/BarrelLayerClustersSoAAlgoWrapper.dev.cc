@@ -16,6 +16,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   namespace {
 
+    // The double-precision scratch sums of a cluster: energy and energy-weighted x, y, z
+    constexpr uint32_t kSumsPerCluster = 4;
+
     // Energy, number of hits, seed and energy-weighted position of each cluster.
     // Without sharing every rechit belongs to at most one cluster, with fraction 1.
     // The sums are accumulated in double precision: the products of the two floats are exact in double, and the
@@ -33,10 +36,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           if (clIdx == kInvalidCluster)
             continue;
           const auto energy = inputRecHits[i].energy();
-          sums[4 * clIdx] += static_cast<double>(energy);
-          sums[4 * clIdx + 1] += static_cast<double>(inputRecHits[i].x()) * energy;
-          sums[4 * clIdx + 2] += static_cast<double>(inputRecHits[i].y()) * energy;
-          sums[4 * clIdx + 3] += static_cast<double>(inputRecHits[i].z()) * energy;
+          sums[kSumsPerCluster * clIdx] += static_cast<double>(energy);
+          sums[kSumsPerCluster * clIdx + 1] += static_cast<double>(inputRecHits[i].x()) * energy;
+          sums[kSumsPerCluster * clIdx + 2] += static_cast<double>(inputRecHits[i].y()) * energy;
+          sums[kSumsPerCluster * clIdx + 3] += static_cast<double>(inputRecHits[i].z()) * energy;
           outputs.position()[clIdx].cells() += 1;
           if (inputClusters[i].isSeed() == 1) {
             outputs.indexes()[clIdx].seedID() = inputRecHits[i].detId();
@@ -53,12 +56,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                     uint32_t numberOfClusters) const {
         for (auto clIdx : cms::alpakatools::uniform_elements(acc, numberOfClusters)) {
           // As in the legacy BarrelCLUEAlgo, a cluster without energy is placed at the origin
-          const auto energy = static_cast<float>(sums[4 * clIdx]);
+          const auto energy = static_cast<float>(sums[kSumsPerCluster * clIdx]);
           const auto invEnergy = (energy != 0.f) ? 1.f / energy : 0.f;
           outputs.energy()[clIdx].energy() = energy;
-          outputs.position()[clIdx].x() = static_cast<float>(sums[4 * clIdx + 1]) * invEnergy;
-          outputs.position()[clIdx].y() = static_cast<float>(sums[4 * clIdx + 2]) * invEnergy;
-          outputs.position()[clIdx].z() = static_cast<float>(sums[4 * clIdx + 3]) * invEnergy;
+          outputs.position()[clIdx].x() = static_cast<float>(sums[kSumsPerCluster * clIdx + 1]) * invEnergy;
+          outputs.position()[clIdx].y() = static_cast<float>(sums[kSumsPerCluster * clIdx + 2]) * invEnergy;
+          outputs.position()[clIdx].z() = static_cast<float>(sums[kSumsPerCluster * clIdx + 3]) * invEnergy;
           // Same defaults as reco::CaloCluster; the time is computed when converting to the legacy format
           outputs.energy()[clIdx].correctedEnergy() = -1.f;
           outputs.energy()[clIdx].correctedEnergyUncertainty() = -1.f;
@@ -81,7 +84,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       return;
 
     // The double-precision accumulators of the cluster sums: energy and energy-weighted position
-    auto sums = make_device_buffer<double[]>(queue, 4 * numberOfClusters);
+    auto sums = make_device_buffer<double[]>(queue, kSumsPerCluster * numberOfClusters);
     alpaka::memset(queue, sums, 0x0);
     auto cells = make_device_view<int>(queue, outputs.position().cells(), numberOfClusters);
     alpaka::memset(queue, cells, 0x0);

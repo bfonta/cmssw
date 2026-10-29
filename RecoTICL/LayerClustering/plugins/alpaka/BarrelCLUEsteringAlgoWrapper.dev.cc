@@ -2,6 +2,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstdint>
+#include <numbers>
 #include <numeric>
 #include <span>
 
@@ -106,10 +107,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       }
     };
 
-    // The clustering distance of the 2D clustering: the Euclidean distance in (eta, phi) with phi periodic. It is
-    // computed in double precision and rounded to float once, like the coordinates: CLUEstering then compares the
-    // same values on every backend, and its distance ties break by tag deterministically.
-    struct PeriodicEuclideanMetric {
+    // The clustering distance of the 2D clustering: the Euclidean distance in (eta, phi) with phi periodic, like
+    // clue::PeriodicEuclideanMetric<2>. It is computed in double precision and rounded to float once, like the
+    // coordinates: CLUEstering then compares the same values on every backend, and its distance ties break by tag
+    // deterministically.
+    struct DeterministicPeriodicEuclideanMetric {
       using value_type = float;
 
       float phiPeriod;
@@ -125,8 +127,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       }
     };
 
-    // The cluster indices assigned by CLUEstering depend on the order of the rechits, which is not
-    // deterministic: renumber the clusters ordering them by the (layer, detId) of their seed.
+    // The cluster indices assigned by CLUEstering follow the order in which it finds the seeds, which is an internal
+    // detail of the algorithm: renumber the clusters ordering them by the (layer, detId) of their seed, a canonical
+    // order independent of that numbering and of the backend.
     template <typename CAL>
     struct KernelRankClusters {
       ALPAKA_FN_ACC void operator()(const Acc1D& acc,
@@ -262,13 +265,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // higher-density rechit within dc: the outlier distance is dc as well.
     clue::Clusterer<2> algo(queue, dc, kappa, dc);
     // Clustering in (eta, phi), with phi periodic
-    constexpr float kTwoPi = 2.f * static_cast<float>(M_PI);
+    constexpr float kTwoPi = 2.f * std::numbers::pi_v<float>;
     algo.setWrappedCoordinates(0, 1);
     // The same weight of the legacy BarrelCLUEAlgo: 1 for the rechit itself, 0.5 for its neighbours
     algo.make_clusters(queue,
                        d_points,
                        layerSizes,
-                       PeriodicEuclideanMetric{.phiPeriod = kTwoPi},
+                       DeterministicPeriodicEuclideanMetric{.phiPeriod = kTwoPi},
                        clue::FlatKernel<float>{0.5f});
     alpaka::wait(queue);
 

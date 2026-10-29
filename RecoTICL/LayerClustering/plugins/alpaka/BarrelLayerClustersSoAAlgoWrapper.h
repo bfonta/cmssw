@@ -14,6 +14,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   template <typename CAL>
   class BarrelLayerClustersSoAAlgoWrapper {
   public:
+    // Energy, number of hits, seed and energy-weighted position of each cluster. The sums accumulate in the order
+    // of the input rechits in double precision, so the layer clusters are the same on every backend; the endcap
+    // HGCalLayerClustersSoAAlgoWrapper sums with atomics and still varies at the rounding level between backends.
     void run(Queue& queue,
              const unsigned int numberOfClusters,
              const reco::PFRecHitDeviceCollection::ConstView inputRecHits,

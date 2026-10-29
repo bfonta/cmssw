@@ -22,8 +22,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     // Fills the tracksters from the clustering of the layer clusters: the layer clusters of each trackster, and its
     // energy, barycenter, time and principal components, as ticl::assignPCAtoTracksters does with energy weighting
-    // and the local time, except for the spreads. The sums over the layer clusters are atomic, so on a GPU their
-    // order, and the results at the rounding level, vary from run to run.
+    // and the local time, except for the spreads. The sums over the layer clusters of a trackster accumulate in
+    // their order, one thread per trackster, so the tracksters are the same on every backend and every run.
     void run(Queue& queue,
              const Parameters& parameters,
              reco::CaloClusterDeviceCollection::ConstView layerClusters,
