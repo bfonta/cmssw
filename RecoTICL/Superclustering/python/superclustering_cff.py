@@ -25,7 +25,7 @@ ticlTracksterLinksSuperclusteringMustache = _tracksterLinksProducer.clone(
 )
 
 # ticl_dev: the superclustering uses the tracksters of CLUEstering
-from Configuration.ProcessModifiers.ticl_dev import ticl_dev
+from Configuration.ProcessModifiers.ticl_dev_cff import ticl_dev
 ticl_dev.toModify(ticlTracksterLinksSuperclusteringDNN, tracksters_collections = ['ticlTrackstersCLUEstering'])
 ticl_dev.toModify(ticlTracksterLinksSuperclusteringMustache, tracksters_collections = ['ticlTrackstersCLUEstering'])
 ticl_dev.toModify(ticlEGammaSuperClusterProducer, ticlTrackstersEM = 'ticlTrackstersCLUEstering')

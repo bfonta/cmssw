@@ -44,7 +44,7 @@ ticlDumper = ticlDumper_.clone(
 
 
 ticl_superclustering_mustache_pf.toModify(ticlDumper, saveSuperclustering=False, recoSuperClusters_sourceTracksterCollection=cms.InputTag("ticlTrackstersCLUE3DHigh"))
-from Configuration.ProcessModifiers.ticl_dev import ticl_dev
+from Configuration.ProcessModifiers.ticl_dev_cff import ticl_dev
 (ticl_superclustering_mustache_pf & ticl_dev).toModify(ticlDumper, recoSuperClusters_sourceTracksterCollection=cms.InputTag("ticlTrackstersCLUEstering"))
 
 simTrackstersBarrelCollections = ["ticlSimTrackstersBarrel", "ticlSimTrackstersBarrelfromCPs"]
