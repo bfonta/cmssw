@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 from SimCalorimetry.HGCalAssociatorProducers.HitToTracksterAssociation_cfi import *
 from SimCalorimetry.HGCalAssociatorProducers.AllTracksterToSimTracksterAssociatorsByHitsProducer_cfi import AllTracksterToSimTracksterAssociatorsByHitsProducer
-from RecoTICL.Configuration.iterativeTICL_cff import ticlIterLabelsPSet
+from RecoTICL.Configuration.iterativeTICL_cff import ticlIterLabelsPSet, ticlBarrelIterLabelsPSet
 
 allTrackstersToSimTrackstersAssociationsByHits = AllTracksterToSimTracksterAssociatorsByHitsProducer.clone(    
     tracksterCollections = cms.VInputTag(
@@ -27,7 +27,7 @@ allBarrelTrackstersToSimTrackstersAssociationsByHits = AllBarrelTracksterToSimTr
     allHitToTSAccoc = cms.string('allHitToBarrelTracksterAssociations'),
     hitToCaloParticleMap = cms.InputTag("barrelHitToSimClusterCaloParticleAssociator", "hitToCaloParticleMap"),
     hitToSimClusterMap = cms.InputTag("barrelHitToSimClusterCaloParticleAssociator", "hitToSimClusterMap"),
-    tracksterCollections = cms.VInputTag('ticlTrackstersCLUE3DBarrel'),
+    tracksterCollections = cms.VInputTag(*ticlBarrelIterLabelsPSet.labels),
     simTracksterCollections = cms.VInputTag(
         'ticlSimTrackstersBarrel',
         'ticlSimTrackstersBarrel:fromCPs'

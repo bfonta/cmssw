@@ -3,7 +3,7 @@ from Validation.TICLValidation.ticlDumper_cfi import ticlDumper as ticlDumper_
 
 from Configuration.ProcessModifiers.ticl_barrel_cff import ticl_barrel
 
-from RecoTICL.Configuration.iterativeTICL_cff import ticlIterLabelsPSet, associatorsInstances
+from RecoTICL.Configuration.iterativeTICL_cff import ticlIterLabelsPSet, ticlBarrelIterLabelsPSet, associatorsInstances
 
 
 simTrackstersCollections = ["ticlSimTracksters", "ticlSimTrackstersfromCPs"]
@@ -41,7 +41,7 @@ ticlDumper = ticlDumper_.clone(
 )
 
 simTrackstersBarrelCollections = ["ticlSimTrackstersBarrel", "ticlSimTrackstersBarrelfromCPs"]
-ticlBarrelIterLabels = ["ticlTrackstersCLUE3DBarrel"]
+ticlBarrelIterLabels = ticlBarrelIterLabelsPSet.labels.copy()
 dumperAssociatorsBarrel = []
 
 for simTrackstersCollection in simTrackstersBarrelCollections:
