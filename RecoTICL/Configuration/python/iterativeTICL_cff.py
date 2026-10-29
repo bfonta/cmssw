@@ -12,6 +12,7 @@ from RecoTICL.Configuration.CLUE3DEM_cff import *
 from RecoTICL.Configuration.CLUE3DHAD_cff import *
 from RecoTICL.Configuration.PRbyRecovery_cff import *
 from RecoTICL.Configuration.CLUE3DBarrel_cff import *
+from RecoTICL.Configuration.CLUEsteringBarrel_cff import *
 
 from RecoTICL.LayerClustering.ticlLayerTileProducer_cfi import ticlLayerTileProducer
 from RecoTICL.ParticleFlow.pfTICLProducer_cfi import pfTICLProducer as _pfTICLProducer
@@ -227,4 +228,13 @@ iterBarrelTICLTask = cms.Task(ticlLayerTileBarrel
 )
 
 ticl_barrel.toModify(mergeTICLTask, func=lambda x : x.add(ticlLayerTileBarrelTask, iterBarrelTICLTask))
+# ticl_dev: the barrel tracksters are built on the device with CLUEstering, which needs no layer tiles
+(ticl_barrel & ticl_dev).toReplaceWith(ticlLayerTileBarrelTask, cms.Task())
+(ticl_barrel & ticl_dev).toReplaceWith(iterBarrelTICLTask, ticlCLUEsteringBarrelTask)
+
+# The barrel tracksters, for the associators and the validation
+ticlBarrelIterLabelsPSet = cms.PSet(
+    labels = cms.vstring('ticlTrackstersCLUE3DBarrel')
+)
+(ticl_barrel & ticl_dev).toModify(ticlBarrelIterLabelsPSet, labels = ['ticlTrackstersCLUEsteringBarrel'])
 

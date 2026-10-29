@@ -5,7 +5,7 @@ from Configuration.ProcessModifiers.ticl_superclustering_mustache_pf_cff import 
 from Configuration.ProcessModifiers.ticl_superclustering_mustache_ticl_cff import ticl_superclustering_mustache_ticl
 from Configuration.ProcessModifiers.ticl_barrel_cff import ticl_barrel
 
-from RecoTICL.Configuration.iterativeTICL_cff import ticlIterLabelsPSet, associatorsInstances
+from RecoTICL.Configuration.iterativeTICL_cff import ticlIterLabelsPSet, ticlBarrelIterLabelsPSet, associatorsInstances
 
 
 simTrackstersCollections = ["ticlSimTracksters", "ticlSimTrackstersfromCPs"]
@@ -48,7 +48,7 @@ from Configuration.ProcessModifiers.ticl_dev import ticl_dev
 (ticl_superclustering_mustache_pf & ticl_dev).toModify(ticlDumper, recoSuperClusters_sourceTracksterCollection=cms.InputTag("ticlTrackstersCLUEstering"))
 
 simTrackstersBarrelCollections = ["ticlSimTrackstersBarrel", "ticlSimTrackstersBarrelfromCPs"]
-ticlBarrelIterLabels = ["ticlTrackstersCLUE3DBarrel"]
+ticlBarrelIterLabels = ticlBarrelIterLabelsPSet.labels.copy()
 dumperAssociatorsBarrel = []
 
 for simTrackstersCollection in simTrackstersBarrelCollections:

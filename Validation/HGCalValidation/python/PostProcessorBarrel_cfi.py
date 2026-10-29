@@ -1,8 +1,9 @@
 import FWCore.ParameterSet.Config as cms
 from DQMServices.Core.DQMEDHarvester import DQMEDHarvester
 from Validation.HGCalValidation.BarrelValidator_cff import barrelValidator
+from RecoTICL.Configuration.iterativeTICL_cff import ticlBarrelIterLabelsPSet
 
-tracksterLabels = ['ticlTrackstersCLUE3DBarrel']
+tracksterLabels = ticlBarrelIterLabelsPSet.labels.copy()
 tracksterLabels.extend(['ticlSimTrackstersBarrel', 'ticlSimTrackstersBarrel_fromCPs'])
 
 prefix = 'BarrelCalorimeters/BarrelValidator/'

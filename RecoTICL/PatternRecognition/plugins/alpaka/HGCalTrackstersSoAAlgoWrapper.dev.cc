@@ -8,6 +8,7 @@
 
 #include <alpaka/alpaka.hpp>
 
+#include "DataFormats/DetId/interface/DetId.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/prefixScan.h"
@@ -125,7 +126,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // them in shared memory; after each sum, every thread computes what depends on it.
     struct KernelTracksterProperties {
       ALPAKA_FN_ACC void operator()(const Acc1D& acc,
-                                    float zLimitEm,
+                                    HGCalTrackstersSoAAlgoWrapper::Parameters parameters,
                                     reco::CaloClusterDeviceCollection::ConstView layerClusters,
                                     ticl::TracksterDeviceCollection::View tracksters) const {
         constexpr auto block = alpaka::hierarchy::Threads{};
@@ -147,7 +148,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             const auto position = layerClusters.position()[i];
             const float energy = layerClusters.energy()[i].energy();
             alpaka::atomicAdd(acc, &s.energy, energy, block);
-            if (std::abs(position.z()) <= zLimitEm) {
+            const bool isEm = parameters.barrel ? layerClusters.indexes()[i].seedID().det() == DetId::Ecal
+                                                : std::abs(position.z()) <= parameters.zLimitEm;
+            if (isEm) {
               alpaka::atomicAdd(acc, &s.emEnergy, energy, block);
             }
             alpaka::atomicAdd(acc, &s.position[0], energy * position.x(), block);
@@ -171,7 +174,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           for (auto vertex : independent_group_elements(acc, first, last)) {
             const uint32_t i = vertices.content()[vertex].values();
             const auto position = layerClusters.position()[i];
-            const int32_t slot = cleaningSlot(position.layer());
+            const int32_t slot = parameters.pcaCleaning ? cleaningSlot(position.layer()) : -1;
             if (slot >= 0) {
               alpaka::atomicMax(
                   acc, &s.layerMaxEnergyKey[slot], energyKey(layerClusters.energy()[i].energy(), i), block);
@@ -196,8 +199,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           }
           alpaka::syncBlockThreads(acc);
 
-          // the PCA uses the most energetic layer cluster of each layer of the cleaning window
+          // the PCA uses the most energetic layer cluster of each layer of the cleaning window, or all of them without
+          // cleaning
           auto isCleaned = [&](uint32_t i) {
+            if (not parameters.pcaCleaning) {
+              return true;
+            }
             const int32_t slot = cleaningSlot(layerClusters.position()[i].layer());
             return slot >= 0 and layerClusterOfEnergyKey(s.layerMaxEnergyKey[slot]) == i;
           };
@@ -205,15 +212,23 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           // the PCA needs at least 3 layer clusters; the condition is the same for all the threads of the block
           const bool hasPCA = last - first > 2;
           if (hasPCA) {
-            for (auto vertex : independent_group_elements(acc, first, last)) {
-              const uint32_t i = vertices.content()[vertex].values();
-              if (isCleaned(i)) {
-                const auto position = layerClusters.position()[i];
-                const float energy = layerClusters.energy()[i].energy();
-                alpaka::atomicAdd(acc, &s.cleanedEnergy, energy, block);
-                alpaka::atomicAdd(acc, &s.cleanedPosition[0], energy * position.x(), block);
-                alpaka::atomicAdd(acc, &s.cleanedPosition[1], energy * position.y(), block);
-                alpaka::atomicAdd(acc, &s.cleanedPosition[2], energy * position.z(), block);
+            if (parameters.pcaCleaning) {
+              for (auto vertex : independent_group_elements(acc, first, last)) {
+                const uint32_t i = vertices.content()[vertex].values();
+                if (isCleaned(i)) {
+                  const auto position = layerClusters.position()[i];
+                  const float energy = layerClusters.energy()[i].energy();
+                  alpaka::atomicAdd(acc, &s.cleanedEnergy, energy, block);
+                  alpaka::atomicAdd(acc, &s.cleanedPosition[0], energy * position.x(), block);
+                  alpaka::atomicAdd(acc, &s.cleanedPosition[1], energy * position.y(), block);
+                  alpaka::atomicAdd(acc, &s.cleanedPosition[2], energy * position.z(), block);
+                }
+              }
+            } else if (once_per_block(acc)) {
+              // all the layer clusters are used: the sums are those of the trackster
+              s.cleanedEnergy = s.energy;
+              for (int k = 0; k < 3; ++k) {
+                s.cleanedPosition[k] = s.position[k];
               }
             }
             alpaka::syncBlockThreads(acc);
@@ -323,7 +338,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   }  // namespace
 
   void HGCalTrackstersSoAAlgoWrapper::run(Queue& queue,
-                                          float zLimitEm,
+                                          const Parameters& parameters,
                                           reco::CaloClusterDeviceCollection::ConstView layerClusters,
                                           HGCalSoALayerClustersExtraDeviceCollection::ConstView layerClustersClustering,
                                           ticl::TracksterDeviceCollection::View tracksters) const {
@@ -357,7 +372,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // One warp per trackster: most tracksters have a few layer clusters, the largest a few hundred
     const auto threadsPerTrackster = static_cast<uint32_t>(alpaka::getPreferredWarpSize(alpaka::getDev(queue)));
     const auto workDivTracksters = make_workdiv<Acc1D>(nTracksters, threadsPerTrackster);
-    alpaka::exec<Acc1D>(queue, workDivTracksters, KernelTracksterProperties{}, zLimitEm, layerClusters, tracksters);
+    alpaka::exec<Acc1D>(queue, workDivTracksters, KernelTracksterProperties{}, parameters, layerClusters, tracksters);
   }
 
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE

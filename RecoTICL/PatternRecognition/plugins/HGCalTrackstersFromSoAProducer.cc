@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "DataFormats/CaloRecHit/interface/CaloCluster.h"
 #include "DataFormats/HGCalReco/interface/Trackster.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -15,15 +16,22 @@
 #include "FWCore/Utilities/interface/EDMException.h"
 #include "FWCore/Utilities/interface/EDPutToken.h"
 #include "FWCore/Utilities/interface/InputTag.h"
+#include "FWCore/Utilities/interface/transform.h"
 
 // Converts the tracksters built on the device to ticl::Trackster, in the same order, and masks their layer clusters
 // in a copy of the original layer cluster mask, as TrackstersProducer does. The layer clusters of the tracksters are
-// indices in the merged layer clusters, which index the same layer clusters as hgcalMergeLayerClusters.
+// indices in the merged layer clusters, which index the same layer clusters as hgcalMergeLayerClusters once shifted by
+// the number of the layer clusters that hgcalMergeLayerClusters merges before them (those of HGCAL for the barrel).
 class HGCalTrackstersFromSoAProducer : public edm::global::EDProducer<> {
 public:
   HGCalTrackstersFromSoAProducer(const edm::ParameterSet& config)
       : tracksterSoAToken_(consumes(config.getParameter<edm::InputTag>("src"))),
         originalMaskToken_(consumes(config.getParameter<edm::InputTag>("originalMask"))),
+        precedingLayerClustersTokens_(
+            edm::vector_transform(config.getParameter<std::vector<edm::InputTag>>("precedingLayerClusters"),
+                                  [this](const edm::InputTag& tag) {
+                                    return consumes<std::vector<reco::CaloCluster>>(tag);
+                                  })),
         trackstersToken_(produces<std::vector<ticl::Trackster>>()),
         maskToken_(produces<std::vector<float>>()) {}
 
@@ -31,6 +39,11 @@ public:
     const auto tracksterSoA = iEvent.get(tracksterSoAToken_).const_view();
     const auto vertices = tracksterSoA.vertices();
     std::vector<float> mask = iEvent.get(originalMaskToken_);
+
+    unsigned int offset = 0;
+    for (const auto& token : precedingLayerClustersTokens_) {
+      offset += iEvent.get(token).size();
+    }
 
     std::vector<ticl::Trackster> tracksters(vertices.keys());
     for (unsigned int i = 0; i < tracksters.size(); ++i) {
@@ -41,11 +54,14 @@ public:
       trackster.vertices().assign(layerClusters.begin(), layerClusters.end());
       std::ranges::sort(trackster.vertices());
       trackster.vertex_multiplicity().assign(layerClusters.size(), 1.f);
-      for (const auto layerCluster : trackster.vertices()) {
+      for (auto& layerCluster : trackster.vertices()) {
+        layerCluster += offset;
         if (layerCluster >= mask.size()) {
           throw edm::Exception(edm::errors::LogicError)
               << "HGCalTrackstersFromSoAProducer: a trackster uses layer cluster " << layerCluster << " of "
-              << mask.size() << ". The layer clusters must be merged on the device in the order of the legacy ones.";
+              << mask.size()
+              << ". The layer clusters must be merged on the device in the order of the legacy ones, after those of "
+                 "precedingLayerClusters.";
         }
         mask[layerCluster] = 0.f;
       }
@@ -82,12 +98,17 @@ public:
     desc.add<edm::InputTag>("src", edm::InputTag("ticlSoATracksters"));
     desc.add<edm::InputTag>("originalMask", edm::InputTag("hgcalMergeLayerClusters", "InitialLayerClustersMask"))
         ->setComment("The mask of the layer clusters before the tracksters: theirs are set to 0 in the output mask.");
+    desc.add<std::vector<edm::InputTag>>("precedingLayerClusters", {})
+        ->setComment(
+            "The layer clusters that hgcalMergeLayerClusters merges before those of the tracksters: their number shifts "
+            "the layer cluster indices of the tracksters.");
     descriptions.addWithDefaultLabel(desc);
   }
 
 private:
   const edm::EDGetTokenT<ticl::TracksterHostCollection> tracksterSoAToken_;
   const edm::EDGetTokenT<std::vector<float>> originalMaskToken_;
+  const std::vector<edm::EDGetTokenT<std::vector<reco::CaloCluster>>> precedingLayerClustersTokens_;
   const edm::EDPutTokenT<std::vector<ticl::Trackster>> trackstersToken_;
   const edm::EDPutTokenT<std::vector<float>> maskToken_;
 };
