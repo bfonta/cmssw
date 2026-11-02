@@ -14,6 +14,7 @@
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 #include "DataFormats/Common/interface/Handle.h"
+#include "FWCore/Utilities/interface/Exception.h"
 
 #include "DataFormats/METReco/interface/MET.h"
 #include "DataFormats/METReco/interface/METFwd.h"
@@ -30,12 +31,11 @@ HLTHtMhtProducer::HLTHtMhtProducer(const edm::ParameterSet& iConfig)
       maxEtaJetMht_(iConfig.getParameter<double>("maxEtaJetMht")),
       jetsLabel_(iConfig.getParameter<edm::InputTag>("jetsLabel")),
       pfCandidatesLabel_(iConfig.getParameter<edm::InputTag>("pfCandidatesLabel")) {
-
   m_theJetToken = consumes<reco::CandidateView>(jetsLabel_);
   m_thePFCandidateToken = consumes<reco::PFCandidateCollection>(pfCandidatesLabel_);
 
-  if (excludePFMuons_)
-    assert(!pfCandidatesLabel_.label().empty());
+  if (excludePFMuons_ and pfCandidatesLabel_.label().empty())
+    throw cms::Exception("Configuration") << "HLTHtMhtProducer: excludePFMuons requires a non-empty pfCandidatesLabel.";
 
   // Register the products
   produces<reco::METCollection>();
@@ -68,7 +68,7 @@ void HLTHtMhtProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
   edm::Handle<reco::CandidateView> jets;
   iEvent.getByToken(m_theJetToken, jets);
-	
+
   edm::Handle<reco::PFCandidateCollection> pfCandidates;
   if (excludePFMuons_)
     iEvent.getByToken(m_thePFCandidateToken, pfCandidates);
