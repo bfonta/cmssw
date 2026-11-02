@@ -184,6 +184,8 @@ private:
 
   int phiNbins = 100;
   int metNbins = 1600;
+  int metDiffNbins = 600;
+  int metRatioNbins = 600;
 };
 
 #endif  // METTESTER_H

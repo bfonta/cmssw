@@ -11,7 +11,8 @@ def _sumModules(alist):
     return reduce(lambda x, y: x + y, alist)
 
 metmht_common_analyzers = [hltMetAnalyzerPF, hltMetAnalyzerPFCalo, hltMetTypeOneAnalyzerPF] 
-metmht_run3_analyzers = metmht_common_analyzers + [hltMetAnalyzerPFNoMu, hltMhtAnalyzer, hltMhtAnalyzerPFTightID]
+# metmht_run3_analyzers = metmht_common_analyzers + [hltMetAnalyzerPFNoMu, hltMhtAnalyzer, hltMhtAnalyzerPFTightID]
+metmht_run3_analyzers = metmht_common_analyzers + [hltMetAnalyzerPFNoMu]
 metmht_ph2_analyzers =  metmht_common_analyzers + [hltMetAnalyzerPFPuppi, hltMhtAnalyzerPFPuppi]
 
 ##please do NOT include paths here!

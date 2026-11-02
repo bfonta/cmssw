@@ -179,13 +179,13 @@ void METTester::bookHistograms(DQMStore::IBooker &ibooker, edm::Run const &iRun,
   }
   if (!isGenMET) {
 	mMETDiff_vs_GenMETTrue = ibooker.book2D("METDiffvsGenMETTrue", "MET Diff vs Gen MET True",
-											metDiffEdge, -metDiffEdge, metDiffEdge, metNbins, 0., metEdge);
+											metDiffNbins, -metDiffEdge, metDiffEdge, metNbins, 0., metEdge);
 	mMETDiff_vs_GenMETPhi = ibooker.book2D("METDiffvsGenMETPhi", "MET Diff vs Gen MET Phi",
-										   metDiffEdge, -metDiffEdge, metDiffEdge, phiNbins, -phiEdge, phiEdge);
+										   metDiffNbins, -metDiffEdge, metDiffEdge, phiNbins, -phiEdge, phiEdge);
 	mMETRatio_vs_GenMETTrue = ibooker.book2D("METRatiovsGenMETTrue", "MET Ratio vs Gen MET True",
-											 metRatioEdge, -metRatioEdge, metRatioEdge, metNbins, 0., metEdge);
+											 metRatioNbins, -metRatioEdge, metRatioEdge, metNbins, 0., metEdge);
 	mMETRatio_vs_GenMETPhi = ibooker.book2D("METRatiovsGenMETPhi", "MET Ratio vs Gen MET Phi",
-											 metRatioEdge, -metRatioEdge, metRatioEdge, phiNbins, -phiEdge, phiEdge);
+											 metRatioNbins, -metRatioEdge, metRatioEdge, phiNbins, -phiEdge, phiEdge);
 	mMETDeltaPhi_vs_GenMETTrue = ibooker.book2D("METDeltaPhivsGenMETTrue", "MET DeltaPhi vs Gen MET True",
 												phiNbins, 0., phiEdge, metNbins, 0., metEdge);
 	mMETDeltaPhi_vs_GenMETPhi = ibooker.book2D("METDeltaPhivsGenMETPhi", "MET DeltaPhi vs Gen MET Phi",
@@ -399,6 +399,7 @@ void METTester::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetup)
 
   // MET differences (Reco - Gen)
   if (!isGenMET) {
+	std::cout << "=========================== " << metDiff << ", " << genMET  << std::endl;
 	mMETDiff_vs_GenMETTrue->Fill(metDiff, genMET);
 	mMETDiff_vs_GenMETPhi->Fill(metDiff, genMETPhi);
 	mMETRatio_vs_GenMETTrue->Fill(metRatio, genMET);

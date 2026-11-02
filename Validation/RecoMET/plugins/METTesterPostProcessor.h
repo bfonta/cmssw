@@ -58,6 +58,7 @@ private:
   float mComputeSignErr(float significance, float metRMS, float metMean, float metRMSError);
   std::vector<std::unordered_map<std::string,float>> projectionMeanAndRMS(MElem* src, const std::vector<float>& bins, std::string axis = "X");
   void fillProjectionHisto(MElem* src, MElem* dest, const std::vector<float>& bins);
+  void logDebugEmptyHisto(std::string);
 };
 
 #endif

@@ -109,75 +109,81 @@ void METTesterPostProcessor::mFillAggrHistograms(std::string metdir, DQMStore::I
   mMETDeltaPhi_vs_GenMETTrue = iget.get(metdir + "/METDeltaPhivsGenMETTrue");
   mMETDeltaPhi_vs_GenMETPhi  = iget.get(metdir + "/METDeltaPhivsGenMETPhi");
 
-  // check one object, if it exists, then the remaining ME's exists too
+  // check if object exists
   // for genmet none of these ME's are filled
-  if (!mCheckHisto(mGenMETTrue_vs_MET)) {
-	LogDebug("METTesterPostProcessor") << "Histogram is empty.";
-	return;
-  }
+  if (!mCheckHisto(mGenMETTrue_vs_MET))				 logDebugEmptyHisto("mGenMETTrue_vs_MET");
+  else if (!mCheckHisto(mGenMETPhi_vs_MET))			 logDebugEmptyHisto("mGenMETPhi_vs_MET");
+  else if (!mCheckHisto(mGenMETTrue_vs_mGenMETPhi))	 logDebugEmptyHisto("mGenMETTrue_vs_mGenMETPhi");
+  else if (!mCheckHisto(mMETDiff_vs_GenMETTrue))	 logDebugEmptyHisto("mMETDiff_vs_GenMETTrue");
+  else if (!mCheckHisto(mMETDiff_vs_GenMETPhi))		 logDebugEmptyHisto("mMETDiff_vs_GenMETPhi");
+  else if (!mCheckHisto(mMETRatio_vs_GenMETTrue))	 logDebugEmptyHisto("mMETRatio_vs_GenMETTrue");
+  else if (!mCheckHisto(mMETRatio_vs_GenMETPhi))	 logDebugEmptyHisto("mMETRatio_vs_GenMETPhi");
+  else if (!mCheckHisto(mMETDeltaPhi_vs_GenMETTrue)) logDebugEmptyHisto("mMETDeltaPhi_vs_GenMETTrue");
+  else if (!mCheckHisto(mMETDeltaPhi_vs_GenMETPhi))  logDebugEmptyHisto("mMETDeltaPhi_vs_GenMETPhi");
 
   // log histograms with zero entries
-  if (mGenMETTrue_vs_MET->getEntries() < mEpsilonDouble or mGenMETPhi_vs_MET->getEntries() < mEpsilonDouble
-	  or mGenMETTrue_vs_mGenMETPhi->getEntries() < mEpsilonDouble
-	  or mMETDiff_vs_GenMETTrue->getEntries() < mEpsilonDouble or mMETDiff_vs_GenMETPhi->getEntries() < mEpsilonDouble
-	  or mMETRatio_vs_GenMETTrue->getEntries() < mEpsilonDouble or mMETRatio_vs_GenMETPhi->getEntries() < mEpsilonDouble
-	  or mMETDeltaPhi_vs_GenMETTrue->getEntries() < mEpsilonDouble or mMETDeltaPhi_vs_GenMETPhi->getEntries() < mEpsilonDouble) {
-	LogDebug("METTesterPostProcessor")
-	  << "At least one of the histograms has zero entries:\n"
-	  << "  Gen MET vs MET: "           << mGenMETTrue_vs_MET->getEntries()         << "\n"
-	  << "  Gen MET Phi vs MET: "       << mGenMETPhi_vs_MET->getEntries()          << "\n"
-	  << "  Gen MET vs Gen MET Phi: "   << mGenMETTrue_vs_mGenMETPhi->getEntries()  << "\n"
-	  << "  MET Diff vs Gen MET: "      << mMETDiff_vs_GenMETTrue->getEntries()     << "\n"
-	  << "  MET Diff vs Gen MET Phi: "  << mMETDiff_vs_GenMETPhi->getEntries()      << "\n"
-	  << "  MET Ratio vs Gen MET: "     << mMETRatio_vs_GenMETTrue->getEntries()    << "\n"
-	  << "  MET Ratio vs Gen MET Phi: " << mMETRatio_vs_GenMETPhi->getEntries()     << "\n"
-	  << "  MET Delta Phi vs Gen MET: " << mMETDeltaPhi_vs_GenMETTrue->getEntries() << "\n"
-	  << "  MET Delta Phi vs Gen Phi: " << mMETDeltaPhi_vs_GenMETPhi->getEntries(); 
-  }
+  if (mGenMETTrue_vs_MET->getEntries() < mEpsilonDouble)
+	LogDebug("METTesterPostProcessor") << "Gen MET vs MET entries: " << mGenMETTrue_vs_MET->getEntries();
+  else if (mGenMETPhi_vs_MET->getEntries() < mEpsilonDouble)
+	LogDebug("METTesterPostProcessor") << "Gen MET Phi vs MET entries: " << mGenMETPhi_vs_MET->getEntries();
+  else if (mGenMETTrue_vs_mGenMETPhi->getEntries() < mEpsilonDouble)
+	LogDebug("METTesterPostProcessor") << "Gen MET vs Gen MET Phi entries: " << mGenMETTrue_vs_mGenMETPhi->getEntries();
+  else if (mMETDiff_vs_GenMETTrue->getEntries() < mEpsilonDouble)
+	LogDebug("METTesterPostProcessor") << "MET Diff vs Gen MET entries: " << mMETDiff_vs_GenMETTrue->getEntries();
+  // else if (mMETDiff_vs_GenMETPhi->getEntries() < mEpsilonDouble)
+  // 	LogDebug("METTesterPostProcessor") << "MET Diff vs Gen MET Phi entries: " << mMETDiff_vs_GenMETPhi->getEntries();
+  // else if (mMETRatio_vs_GenMETTrue->getEntries() < mEpsilonDouble)
+  // 	LogDebug("METTesterPostProcessor") << "MET Ratio vs Gen MET entries: " << mMETRatio_vs_GenMETTrue->getEntries();
+  // else if (mMETRatio_vs_GenMETPhi->getEntries() < mEpsilonDouble)
+  // 	LogDebug("METTesterPostProcessor") << "MET Ratio vs Gen MET Phi: " << mMETRatio_vs_GenMETPhi->getEntries();
+  // else if (mMETDeltaPhi_vs_GenMETTrue->getEntries() < mEpsilonDouble)
+  // 	LogDebug("METTesterPostProcessor") << "MET Delta Phi vs Gen MET entries: " << mMETDeltaPhi_vs_GenMETTrue->getEntries();
+  // else if (mMETDeltaPhi_vs_GenMETPhi->getEntries() < mEpsilonDouble)
+  // 	LogDebug("METTesterPostProcessor") << "MET Delta Phi vs Gen Phi: " << mMETDeltaPhi_vs_GenMETPhi->getEntries();
 
-  fillProjectionHisto(mMETDiff_vs_GenMETTrue, mMETDiffAggr["MET"], mMETBins);
-  fillProjectionHisto(mMETDeltaPhi_vs_GenMETTrue, mMETDeltaPhiAggr["MET"], mMETBins);
-  fillProjectionHisto(mMETDiff_vs_GenMETPhi, mMETDiffAggr["Phi"], mPhiBins);
-  fillProjectionHisto(mMETDeltaPhi_vs_GenMETPhi, mMETDeltaPhiAggr["Phi"], mPhiBins);
+  // fillProjectionHisto(mMETDiff_vs_GenMETTrue, mMETDiffAggr["MET"], mMETBins);
+  // fillProjectionHisto(mMETDeltaPhi_vs_GenMETTrue, mMETDeltaPhiAggr["MET"], mMETBins);
+  // fillProjectionHisto(mMETDiff_vs_GenMETPhi, mMETDiffAggr["Phi"], mPhiBins);
+  // fillProjectionHisto(mMETDeltaPhi_vs_GenMETPhi, mMETDeltaPhiAggr["Phi"], mPhiBins);
 
-  fillProjectionHisto(mMETRatio_vs_GenMETTrue, mMETRespAggr["MET"], mMETBins);
-  fillProjectionHisto(mMETRatio_vs_GenMETPhi, mMETRespAggr["Phi"], mPhiBins);
+  // fillProjectionHisto(mMETRatio_vs_GenMETTrue, mMETRespAggr["MET"], mMETBins);
+  // fillProjectionHisto(mMETRatio_vs_GenMETPhi, mMETRespAggr["Phi"], mPhiBins);
 
-  std::vector<std::unordered_map<std::string,float>> metRecoStats = projectionMeanAndRMS(mGenMETPhi_vs_MET, mMETBins, "Y");
-  std::vector<std::unordered_map<std::string,float>> metGenStats = projectionMeanAndRMS(mGenMETTrue_vs_mGenMETPhi, mMETBins);
-  for (unsigned binId=1; binId<=mNPhiBins; binId++) {
-	// reconstructed MET
-	const float& metMean   = metRecoStats[binId]["mean"];
-	const float& metRMS	   = metRecoStats[binId]["rms"];
-	const float& metRMSErr = metRecoStats[binId]["rmserror"];
-	mMETResolAggr["Phi"]->setBinContent(binId, metRMS);
-	mMETResolAggr["Phi"]->setBinError(binId, metRMSErr);
+  // std::vector<std::unordered_map<std::string,float>> metRecoStats = projectionMeanAndRMS(mGenMETPhi_vs_MET, mMETBins, "Y");
+  // std::vector<std::unordered_map<std::string,float>> metGenStats = projectionMeanAndRMS(mGenMETTrue_vs_mGenMETPhi, mMETBins);
+  // for (unsigned binId=1; binId<=mNPhiBins; binId++) {
+  // 	// reconstructed MET
+  // 	const float& metMean   = metRecoStats[binId]["mean"];
+  // 	const float& metRMS	   = metRecoStats[binId]["rms"];
+  // 	const float& metRMSErr = metRecoStats[binId]["rmserror"];
+  // 	mMETResolAggr["Phi"]->setBinContent(binId, metRMS);
+  // 	mMETResolAggr["Phi"]->setBinError(binId, metRMSErr);
 
-	float significance = metRMS < mEpsilonFloat ? 0.f : metMean / metRMS;
-	float significanceErr = ( (metRMS < mEpsilonFloat or metMean < mEpsilonFloat)
-							  ? 0.f : mComputeSignErr(significance, metRMS, metMean, metRMSErr) );
-	mMETSignAggr["Phi"]->setBinContent(binId, significance);
-	mMETSignAggr["Phi"]->setBinError(binId, significanceErr);
+  // 	float significance = metRMS < mEpsilonFloat ? 0.f : metMean / metRMS;
+  // 	float significanceErr = ( (metRMS < mEpsilonFloat or metMean < mEpsilonFloat)
+  // 							  ? 0.f : mComputeSignErr(significance, metRMS, metMean, metRMSErr) );
+  // 	mMETSignAggr["Phi"]->setBinContent(binId, significance);
+  // 	mMETSignAggr["Phi"]->setBinError(binId, significanceErr);
 
-	// generated MET
-	const float& metGenMean		= metGenStats[binId]["mean"];
-	const float& metGenRMS		= metGenStats[binId]["rms"];
-	const float& metGenRMSErr	= metGenStats[binId]["rmserror"];
-	mMETGenResolAggr["Phi"]->setBinContent(binId, metGenRMS);
-	mMETGenResolAggr["Phi"]->setBinError(binId, metGenRMSErr);
+  // 	// generated MET
+  // 	const float& metGenMean		= metGenStats[binId]["mean"];
+  // 	const float& metGenRMS		= metGenStats[binId]["rms"];
+  // 	const float& metGenRMSErr	= metGenStats[binId]["rmserror"];
+  // 	mMETGenResolAggr["Phi"]->setBinContent(binId, metGenRMS);
+  // 	mMETGenResolAggr["Phi"]->setBinError(binId, metGenRMSErr);
 
-	float significanceGen = metGenRMS < mEpsilonFloat ? 0.f : metGenMean / metGenRMS;
-	float significanceGenErr = ( (metGenRMS < mEpsilonFloat or metGenMean < mEpsilonFloat)
-								 ? 0.f : mComputeSignErr(significanceGen, metGenRMS, metGenMean, metGenRMSErr) );
-	mMETGenSignAggr["Phi"]->setBinContent(binId, significanceGen);
-	mMETGenSignAggr["Phi"]->setBinError(binId, significanceGenErr);
+  // 	float significanceGen = metGenRMS < mEpsilonFloat ? 0.f : metGenMean / metGenRMS;
+  // 	float significanceGenErr = ( (metGenRMS < mEpsilonFloat or metGenMean < mEpsilonFloat)
+  // 								 ? 0.f : mComputeSignErr(significanceGen, metGenRMS, metGenMean, metGenRMSErr) );
+  // 	mMETGenSignAggr["Phi"]->setBinContent(binId, significanceGen);
+  // 	mMETGenSignAggr["Phi"]->setBinError(binId, significanceGenErr);
 
-	// differences
-	mMETResolDiffAggr["Phi"]->setBinContent(binId, metRMS - metGenRMS);
-	mMETResolDiffAggr["Phi"]->setBinError(binId, std::sqrt(metGenRMSErr*metGenRMSErr + metRMSErr*metRMSErr));
-	mMETSignDiffAggr["Phi"]->setBinContent(binId, significance - significanceGen);
-	mMETSignDiffAggr["Phi"]->setBinError(binId, std::sqrt(significanceErr*significanceErr + significanceGenErr*significanceGenErr));
-  }
+  // 	// differences
+  // 	mMETResolDiffAggr["Phi"]->setBinContent(binId, metRMS - metGenRMS);
+  // 	mMETResolDiffAggr["Phi"]->setBinError(binId, std::sqrt(metGenRMSErr*metGenRMSErr + metRMSErr*metRMSErr));
+  // 	mMETSignDiffAggr["Phi"]->setBinContent(binId, significance - significanceGen);
+  // 	mMETSignDiffAggr["Phi"]->setBinError(binId, std::sqrt(significanceErr*significanceErr + significanceGenErr*significanceGenErr));
+  // }
 }
 
 // Compute significance error
@@ -190,4 +196,9 @@ void METTesterPostProcessor::fillDescriptions(edm::ConfigurationDescriptions &de
   edm::ParameterSetDescription desc;
   desc.addUntracked<std::string>("runDir", "JetMET/METValidation");
   descriptions.addWithDefaultLabel(desc);
+}
+
+void METTesterPostProcessor::logDebugEmptyHisto(std::string hname) {
+  LogDebug("METTesterPostProcessor") << "Histogram " << hname << " is empty.";
+  return;
 }
