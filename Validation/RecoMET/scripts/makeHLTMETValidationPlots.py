@@ -322,7 +322,7 @@ def varsToPlot(metColl):
     vars1D = {
         # MET and MHT common variables
         'MET'                     : HLTMETInputs(x=r'$MET_\text{Reco}$ [GeV]', y=nEvts, rebin=2, logy=False),
-        'METGenTrue'              : HLTMETInputs(x=r'$MET_\text{Gen}$ [GeV]', y=nEvts, rebin=2),
+        'GenMETTrue'              : HLTMETInputs(x=r'$MET_\text{Gen}$ [GeV]', y=nEvts, rebin=2),
         'MEx'                     : HLTMETInputs(x=r'$MET_x$ [GeV]', y=nEvts, rebin=4),
         'MEy'                     : HLTMETInputs(x=r'$MET_y$ [GeV]', y=nEvts, rebin=4),
         'METPhi'                  : HLTMETInputs(x=r'$\text{MET}\phi_\text{Reco}$', y=nEvts, rebin=2),
@@ -375,20 +375,27 @@ def varsToPlot(metColl):
             vars1D[k].y = vars1D[k].y.replace('MET', 'MHT')
 
     vars2D = {
-        'METvsMHT': HLTMETInputs(x=r'$MET_\text{Reco}$ [GeV]', y=r'$MHT_\text{Reco}$ [GeV]', logz=False, drawdiag=True),
-        'GenMETTruevsGenMHT': HLTMETInputs(x=r'$MET_\text{Gen}$ [GeV]', y=r'$MHT_\text{Gen}$ [GeV]', drawdiag=True),
         'GenMETTruevsMET': HLTMETInputs(x=r'$MET_\text{Gen}$ [GeV]', y=r'$MET_\text{Reco}$ [GeV]', drawdiag=True),
         'GenMETPhivsMET': HLTMETInputs(x=r'$\text{MET}\phi_\text{Gen}$', y=r'$MET_\text{Reco}$ [GeV]'),
         'GenMETTruevsGenMETPhi': HLTMETInputs(x=r'$MET_\text{Gen}$ [GeV]', y=r'$\text{MET}\phi_\text{Gen}$'),
         'METDiffvsGenMETTrue': HLTMETInputs(x=r'$\text{MET}_\text{Reco} - \text{MET}_\text{Gen}$ [GeV]', y=r'$\text{MET}_\text{Gen}$ [GeV]'),
         'METDiffvsGenMETPhi': HLTMETInputs(x=r'$\text{MET}_\text{Reco} - \text{MET}_\text{Gen}$ [GeV]', y=r'$\text{MET}\phi_\text{Gen}$'),
-        'METRatiovsGenMETTrue': HLTMETInputs(x=r'$\text{MET}_\text{Reco} / \text{MET}_\text{Gen}$ [GeV]', y=r'$\text{MET}_\text{Gen}$ [GeV]'),
-        'METRatiovsGenMETPhi': HLTMETInputs(x=r'$\text{MET}_\text{Reco} / \text{MET}_\text{Gen}$ [GeV]', y=r'$\text{MET}\phi_\text{Gen}$'),
-        'METDeltaPhivsGenMETTrue': HLTMETInputs(x=r'$\text{MET}\phi_\text{Reco} / \text{MET}\phi_\text{Gen}$', y=r'$\text{MET}_\text{Gen}$ [GeV]'),
-        'METDeltaPhivsGenMETPhi': HLTMETInputs(x=r'$\text{MET}\phi_\text{Reco} / \text{MET}\phi_\text{Gen}$', y=r'$\text{MET}\phi_\text{Gen}$'),
+        'METRatiovsGenMETTrue': HLTMETInputs(x=r'$\text{MET}_\text{Reco} / \text{MET}_\text{Gen}$', y=r'$\text{MET}_\text{Gen}$ [GeV]'),
+        'METRatiovsGenMETPhi': HLTMETInputs(x=r'$\text{MET}_\text{Reco} / \text{MET}_\text{Gen}$', y=r'$\text{MET}\phi_\text{Gen}$'),
+        'METDeltaPhivsGenMETTrue': HLTMETInputs(x=r'$\text{MET}\phi_\text{Reco} - \text{MET}\phi_\text{Gen}$', y=r'$\text{MET}_\text{Gen}$ [GeV]'),
+        'METDeltaPhivsGenMETPhi': HLTMETInputs(x=r'$\text{MET}\phi_\text{Reco} - \text{MET}\phi_\text{Gen}$', y=r'$\text{MET}\phi_\text{Gen}$'),
     }
 
     return vars1D, vars2D
+
+def varsToPlotMETvsMHT():
+    """
+    Variables stored in the `METvsMHT/<MET>_<MHT>` folders.
+    """
+    return {
+        'METvsMHT': HLTMETInputs(x=r'$MET_\text{Reco}$ [GeV]', y=r'$MHT_\text{Reco}$ [GeV]', logz=False, drawdiag=True),
+        'GenMETTruevsGenMHT': HLTMETInputs(x=r'$MET_\text{Gen}$ [GeV]', y=r'$MHT_\text{Gen}$ [GeV]', drawdiag=True),
+    }
 
 if __name__ == '__main__':
 
@@ -493,6 +500,14 @@ if __name__ == '__main__':
                      mode='1D', metType=METType[metType])
             plotVars(afile, dqm_dir_met, varsToPlot(metType)[1], outdir=os.path.join(args.odir, metType),
                      mode='2D', metType=METType[metType])
+
+        # Plot MET vs MHT comparisons, one folder per MET-MHT pair
+        metvsmht_dir = afile.Get(os.path.join(dqm_dir, 'METvsMHT'))
+        if metvsmht_dir:
+            for key in metvsmht_dir.GetListOfKeys():
+                pair = key.GetName()
+                plotVars(afile, os.path.join(dqm_dir, 'METvsMHT', pair), varsToPlotMETvsMHT(), mode='2D',
+                         outdir=os.path.join(args.odir, 'METvsMHT', pair), metType=pair.replace('_', ' vs '))
     
         # Plot MET turn-on curve for Phase 2
         # trigger = 'HLT_PFPuppiMETTypeOne140_PFPuppiMHT140'

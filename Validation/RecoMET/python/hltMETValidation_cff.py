@@ -16,24 +16,20 @@ _hltMetTester = _metTester.clone(
     primaryVertices = 'hltPixelVertices',
     genMetTrueLabel = 'genMetTrue',
     genMetCaloLabel = 'genMetCalo',
-)
-
-_hltMhtTester = _metTester.clone(
-    runDir = "HLT/JetMET/METValidation/",
-    primaryVertices = 'hltPixelVertices',
-    genMetTrueLabel = 'genMht',
-    genMetCaloLabel = 'genMht',
+    genMhtLabel = 'genMht',
+    inputMHTLabel = '',
 )
 
 from Configuration.Eras.Modifier_phase2_common_cff import phase2_common
 phase2_common.toModify(_hltMetTester, primaryVertices = 'hltPhase2PixelVertices')
-phase2_common.toModify(_hltMhtTester, primaryVertices = 'hltPhase2PixelVertices')
+
+# MET vs MHT plots are filled by the MHT analyzers (`inputMETLabel` defines the MET companion),
+# in the `METvsMHT/<MET>_<MHT>` folder. Each MET-MHT pair must be configured in a single module.
 
 ####### MET #######
 hltMetAnalyzerPF = _hltMetTester.clone(
     inputMETLabel = 'hltPFMETProducer',
     METType = 'pf',
-    inputMHTLabel = 'hltPFMHTTightID', 
 )
 phase2_common.toModify(hltMetAnalyzerPF, inputMETLabel = 'hltPFMET')
 
@@ -63,19 +59,22 @@ hltMetAnalyzerPFNoMu = _hltMetTester.clone(
 
 ####### MHT #######
 # Run 3 only
-hltMhtAnalyzer = _hltMhtTester.clone(
-    inputMHTLabel = 'hltMht', 
+hltMhtAnalyzer = _hltMetTester.clone(
+    inputMHTLabel = 'hltMht',
+    inputMETLabel = 'hltMet',
     METType = 'mht',
 )
 
 # Run 3 only
-hltMhtAnalyzerPFTightID = _hltMhtTester.clone(
+hltMhtAnalyzerPFTightID = _hltMetTester.clone(
     inputMHTLabel = 'hltPFMHTTightID',
+    inputMETLabel = 'hltPFMETProducer',
     METType = 'mht',
 )
 
-hltMhtAnalyzerPFPuppi = _hltMhtTester.clone(
+hltMhtAnalyzerPFPuppi = _hltMetTester.clone(
     inputMHTLabel = 'dummy (phase2-only)',
+    inputMETLabel = 'dummy (phase2-only)',
     METType = 'mht',
 )
-phase2_common.toModify(hltMhtAnalyzerPFPuppi, inputMHTLabel = 'hltPFPuppiMHT')
+phase2_common.toModify(hltMhtAnalyzerPFPuppi, inputMHTLabel = 'hltPFPuppiMHT', inputMETLabel = 'hltPFPuppiMET')
