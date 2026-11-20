@@ -30,10 +30,11 @@ namespace ticl {
 
   GENERATE_SOA_LAYOUT(TracksterSoAId, SOA_EIGEN_COLUMN(TracksterIdProbabilities, idProbabilities))
 
-  // The layer clusters of each trackster, as indices in the merged layer clusters. 
+  // The layer clusters of each trackster, as indices in the merged layer clusters.
+  // AssociationMapLayout<uint32_t, uint32_t> is not dependent: no typename/template keywords, which ROOT would keep
+  // in the name of the vertices_ member, so that it would not match the dictionary of the layout.
   template <CMS_SOA_BYTE_SIZE_TYPE ALIGNMENT, bool ALIGNMENT_ENFORCEMENT>
-  using TracksterSoAVertices =
-      typename AssociationMapLayout<uint32_t, uint32_t>::template Layout<ALIGNMENT, ALIGNMENT_ENFORCEMENT>;
+  using TracksterSoAVertices = AssociationMapLayout<uint32_t, uint32_t>::Layout<ALIGNMENT, ALIGNMENT_ENFORCEMENT>;
 
   GENERATE_SOA_BLOCKS(TracksterSoALayout,
                       SOA_BLOCK(energy, TracksterSoAEnergy),
