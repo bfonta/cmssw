@@ -155,7 +155,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     const auto nClusteredHits = std::accumulate(layerSizes.begin(), layerSizes.end(), 0u);
 
     auto clusterIndexView = make_device_view(queue, outputs.clusterIndex().data(), size);
-    alpaka::memset(queue, clusterIndexView, kInvalidClusterByte);
+    // every byte 0xff: each cluster index is kInvalidCluster (-1)
+    static_assert(kInvalidCluster == -1);
+    alpaka::memset(queue, clusterIndexView, 0xff);
     auto isSeedView = make_device_view(queue, outputs.isSeed().data(), size);
     alpaka::memset(queue, isSeedView, 0x0);
     if (nClusteredHits == 0)
