@@ -109,7 +109,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           *extents = emptyExtents();
         }
         for (auto i : uniform_elements(acc, layerClusters.position().metadata().size())) {
-          const bool isScintillator = layerClusters.indexes()[i].seedID().det() == DetId::HGCalHSc;
+          const bool isScintillator = DetId(layerClusters.indexes()[i].seedID()).det() == DetId::HGCalHSc;
           isPoint[i] = isScintillator or layerClusters.position()[i].cells() >= static_cast<int>(minSiliconCells);
           layerClustersClustering[i].tracksterIndex() = kInvalidTrackster;
         }
@@ -338,7 +338,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                         isPoint.data(),
                         extents.data());
     // inclusive scan of the point flags
-    iterativePrefixScan<Acc1D>(isPoint.data(), pointEnd.data(), nLayerClusters, queue);
+    prefixScan<Acc1D>(queue, isPoint.data(), pointEnd.data(), nLayerClusters);
     alpaka::memcpy(queue, hostNPoints, make_device_view(queue, pointEnd.data() + nLayerClusters - 1, 1));
     alpaka::exec<Acc1D>(queue,
                         workDivLayerClusters,
@@ -387,8 +387,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     clusteringPoints.set_sigma(0, std::span<const float>(pointsView.searchSigma().data(), nPoints));
     clusteringPoints.set_sigma(1, std::span<const float>(pointsView.searchSigma().data(), nPoints));
 
-    clue::Clusterer<3> algo(
-        queue, parameters.deltac, parameters.rhoc, parameters.outlierDistance, parameters.seedingDistance);
+    clue::Clusterer<3> algo(parameters.deltac, parameters.rhoc, parameters.outlierDistance, parameters.seedingDistance);
     algo.make_clusters(queue, clusteringPoints, CylinderMetric{pointsView.sigmaT().data()});
 
     // There are at most as many clusters as points: the sizes of the unused slots stay 0, below any minLayerClusters
@@ -409,7 +408,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                         isTrackster.data(),
                         layerClustersClustering);
     // inclusive scan of the trackster flags
-    iterativePrefixScan<Acc1D>(isTrackster.data(), tracksterEnd.data(), nPoints, queue);
+    prefixScan<Acc1D>(queue, isTrackster.data(), tracksterEnd.data(), nPoints);
     alpaka::exec<Acc1D>(queue,
                         workDivLayerClusters,
                         KernelWriteLayerClustersClustering{},
