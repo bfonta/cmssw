@@ -6,6 +6,7 @@
  *
  */
 
+#include <cmath>
 #include <memory>
 
 #include "HLTrigger/JetMET/interface/HLTHtMhtProducer.h"
