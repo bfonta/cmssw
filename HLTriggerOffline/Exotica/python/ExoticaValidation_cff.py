@@ -27,8 +27,7 @@ recoExoticaValidationMETNoMu = cms.EDProducer(
     minNJetHt = cms.int32( 0 ),
     minNJetMht = cms.int32( 0 ),
     jetsLabel = cms.InputTag( "ak4PFJetsCHS" ),
-    excludePFMuons = cms.bool( True ),
-    pfCandidatesLabel = cms.InputTag("particleFlow")
+    excludePFMuons = cms.bool( True )
     )
 
 recoExoticaValidationMHTNoMu = cms.EDProducer( 

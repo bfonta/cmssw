@@ -28,13 +28,8 @@ HLTHtMhtProducer::HLTHtMhtProducer(const edm::ParameterSet& iConfig)
       minPtJetMht_(iConfig.getParameter<double>("minPtJetMht")),
       maxEtaJetHt_(iConfig.getParameter<double>("maxEtaJetHt")),
       maxEtaJetMht_(iConfig.getParameter<double>("maxEtaJetMht")),
-      jetsLabel_(iConfig.getParameter<edm::InputTag>("jetsLabel")),
-      pfCandidatesLabel_(iConfig.getParameter<edm::InputTag>("pfCandidatesLabel")) {
+      jetsLabel_(iConfig.getParameter<edm::InputTag>("jetsLabel")) {
   m_theJetToken = consumes<reco::CandidateView>(jetsLabel_);
-  if (pfCandidatesLabel_.label().empty())
-    excludePFMuons_ = false;
-  else if (excludePFMuons_)
-    m_thePFCandidateToken = consumes<reco::PFCandidateCollection>(pfCandidatesLabel_);
 
   // Register the products
   produces<reco::METCollection>();
@@ -56,7 +51,6 @@ void HLTHtMhtProducer::fillDescriptions(edm::ConfigurationDescriptions& descript
   desc.add<double>("maxEtaJetHt", 3.);
   desc.add<double>("maxEtaJetMht", 5.);
   desc.add<edm::InputTag>("jetsLabel", edm::InputTag("hltCaloJetL1FastJetCorrected"));
-  desc.add<edm::InputTag>("pfCandidatesLabel", edm::InputTag("hltParticleFlow"));
   descriptions.add("hltHtMhtProducer", desc);
 }
 
@@ -67,10 +61,6 @@ void HLTHtMhtProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
   edm::Handle<reco::CandidateView> jets;
   iEvent.getByToken(m_theJetToken, jets);
-
-  edm::Handle<reco::PFCandidateCollection> pfCandidates;
-  if (excludePFMuons_)
-    iEvent.getByToken(m_thePFCandidateToken, pfCandidates);
 
   int nj_ht = 0, nj_mht = 0;
   double ht = 0., mhx = 0., mhy = 0.;
@@ -91,14 +81,16 @@ void HLTHtMhtProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
       mhx -= px;
       mhy -= py;
       ++nj_mht;
-    }
-  }
 
-  if (excludePFMuons_) {
-    for (auto const& aCand : *pfCandidates) {
-      if (std::abs(aCand.pdgId()) == 13) {
-        mhx += aCand.px();
-        mhy += aCand.py();
+      // Add back the muons clustered in this (selected) jet
+      if (excludePFMuons_) {
+        for (unsigned int i = 0; i < aJet.numberOfDaughters(); ++i) {
+          auto const& constituent = *aJet.daughter(i);
+          if (std::abs(constituent.pdgId()) == 13) {
+            mhx += constituent.px();
+            mhy += constituent.py();
+          }
+        }
       }
     }
   }

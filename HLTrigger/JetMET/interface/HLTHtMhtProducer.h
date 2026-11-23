@@ -26,8 +26,6 @@
 
 #include "DataFormats/Common/interface/View.h"
 #include "DataFormats/Candidate/interface/CandidateFwd.h"
-#include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
-#include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
 
 namespace edm {
   class ConfigurationDescriptions;
@@ -45,8 +43,9 @@ private:
   /// Use pt; otherwise, use et.
   bool usePt_;
 
-  /// Exclude PF muons in the MHT calculation (but not HT)
-  /// Ignored if pfCandidatesLabel_ is empty.
+  /// Exclude PF muons in the MHT calculation (but not HT):
+  /// muons that are constituents of jets passing the MHT selection are added back.
+  /// Requires jets whose daughters are PF candidates (e.g. PFJets).
   bool excludePFMuons_;
 
   /// Minimum number of jets passing pt and eta requirements
@@ -61,12 +60,10 @@ private:
   double maxEtaJetHt_;
   double maxEtaJetMht_;
 
-  /// Input jet, PFCandidate collections
+  /// Input jet collection
   edm::InputTag jetsLabel_;
-  edm::InputTag pfCandidatesLabel_;
 
   edm::EDGetTokenT<reco::CandidateView> m_theJetToken;
-  edm::EDGetTokenT<reco::PFCandidateCollection> m_thePFCandidateToken;
 };
 
 #endif  // HLTHtMhtProducer_h_
