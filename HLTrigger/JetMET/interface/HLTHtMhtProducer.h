@@ -10,11 +10,13 @@
  *
  *  - MHT: magnitude of the negative vector sum of all jets' pT in an event,
  *    subject to kinematic selections.
- *    - It is the vector counterpart of HT, the scalar sum of the same jets' pT.
- *    - MHT measures how unbalanced the hadronic activity is in the transverse plane.
- *    - HT measures how much hadronic activity is present.
+ *  - HT, the scalar sum of the same jets' pT.
+ *
+ *  - MHT measures how unbalanced the hadronic activity is in the transverse plane.
+ *  - HT measures how much hadronic activity is present.
  *
  *  MHT can include or exclude the contribution from muons.
+ *  HT always includes the contribution from muons.
  *  HT is stored as `sumet_`, MHT is stored as `p4_` in the output.
  *
  */
